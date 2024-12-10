@@ -1,0 +1,19 @@
+{
+    errdata = "\27[01m\27[Ksmart-fetch/smart_fetch.c:\27[m\27[K In function ‘\27[01m\27[Ksmart_fetch_get_memory\27[m\27[K’:\
+\27[01m\27[Ksmart-fetch/smart_fetch.c:104:9:\27[m\27[K \27[01;35m\27[Kwarning: \27[m\27[K‘\27[01m\27[Kreturn\27[m\27[K’ with no value, in function returning non-void\
+  104 |         \27[01;35m\27[Kreturn\27[m\27[K ;\
+      |         \27[01;35m\27[K^~~~~~\27[m\27[K\
+\27[01m\27[Ksmart-fetch/smart_fetch.c:97:5:\27[m\27[K \27[01;36m\27[Knote: \27[m\27[Kdeclared here\
+   97 | int \27[01;36m\27[Ksmart_fetch_get_memory\27[m\27[K()\
+      |     \27[01;36m\27[K^~~~~~~~~~~~~~~~~~~~~~\27[m\27[K\
+\27[01m\27[Ksmart-fetch/smart_fetch.c:\27[m\27[K In function ‘\27[01m\27[Ksmart_fetch_param_parser\27[m\27[K’:\
+\27[01m\27[Ksmart-fetch/smart_fetch.c:252:13:\27[m\27[K \27[01;35m\27[Kwarning: \27[m\27[K‘\27[01m\27[Kreturn\27[m\27[K’ with no value, in function returning non-void\
+  252 |             \27[01;35m\27[Kreturn\27[m\27[K ;\
+      |             \27[01;35m\27[K^~~~~~\27[m\27[K\
+\27[01m\27[Ksmart-fetch/smart_fetch.c:222:5:\27[m\27[K \27[01;36m\27[Knote: \27[m\27[Kdeclared here\
+  222 | int \27[01;36m\27[Ksmart_fetch_param_parser\27[m\27[K(int argc, char **argv)\
+      |     \27[01;36m\27[K^~~~~~~~~~~~~~~~~~~~~~~~\27[m\27[K\
+At top level:\
+\27[01m\27[Kcc1:\27[m\27[K \27[01;36m\27[Knote: \27[m\27[Kunrecognized command-line option ‘\27[01m\27[K-Wno-gnu-line-marker\27[m\27[K’ may have been intended to silence earlier diagnostics\
+"
+}

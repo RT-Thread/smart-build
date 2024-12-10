@@ -1,0 +1,9 @@
+{
+    errdata = "\27[01m\27[Kplayer/main.c:\27[m\27[K In function ‘\27[01m\27[Kmain\27[m\27[K’:\
+\27[01m\27[Kplayer/main.c:79:12:\27[m\27[K \27[01;35m\27[Kwarning: \27[m\27[Kassignment discards ‘\27[01m\27[Kconst\27[m\27[K’ qualifier from pointer target type [\27[01;35m\27[K-Wdiscarded-qualifiers\27[m\27[K]\
+   79 |     pCodec \27[01;35m\27[K=\27[m\27[K avcodec_find_decoder(pCodecParameters->codec_id);\
+      |            \27[01;35m\27[K^\27[m\27[K\
+At top level:\
+\27[01m\27[Kcc1:\27[m\27[K \27[01;36m\27[Knote: \27[m\27[Kunrecognized command-line option ‘\27[01m\27[K-Wno-gnu-line-marker\27[m\27[K’ may have been intended to silence earlier diagnostics\
+"
+}

@@ -1,0 +1,246 @@
+mainmenu "Chip and Board Configuration"
+
+#
+# 厂商选择
+#
+choice
+    prompt "Select Vendor"
+    default VENDOR_NXP
+
+config VENDOR_NXP
+    bool "NXP"
+    help
+      Select NXP vendor.
+
+config VENDOR_ROCKCHIP
+    bool "Rockchip"
+    help
+      Select Rockchip vendor.
+
+config VENDOR_QEMU
+    bool "QEMU"
+    help
+      Select QEMU vendor.
+
+config VENDOR_CVITEK
+    bool "Cvitek"
+    help
+      Select Cvitek vendor.
+
+endchoice
+
+#
+# 根据选择的厂商配置芯片型号
+#
+if VENDOR_NXP
+    choice
+        prompt "Select Chip Model for NXP"
+        default CHIP_MODEL_IMX
+
+    config CHIP_MODEL_IMX
+        bool "i.MX Chip"
+        help
+          Select i.MX series chips.
+
+    config CHIP_MODEL_LPC
+        bool "LPC Chip"
+        help
+          Select LPC series chips.
+
+    config CHIP_MODEL_MCX
+        bool "MCX Chip"
+        help
+          Select MCX series chips.
+
+    endchoice
+
+    #
+    # 根据选择的芯片配置开发板
+    #
+    if CHIP_MODEL_IMX
+        choice
+            prompt "Select Development Board for i.MX Chips"
+            default BOARD_IMX6ULL_SMART
+
+        config BOARD_IMX6SX
+            bool "i.MX6SX Development Board"
+            help
+              Select i.MX6SX development board.
+
+        config BOARD_IMX6UL
+            bool "i.MX6UL Development Board"
+            help
+              Select i.MX6UL development board.
+
+        config BOARD_IMX6ULL_SMART
+            bool "i.MX6ULL Smart Development Board"
+            help
+              Select i.MX6ULL Smart development board.
+
+        config BOARD_IMXRT
+            bool "i.MXRT Development Board"
+            help
+              Select i.MXRT development board.
+
+        endchoice
+    endif
+
+    if CHIP_MODEL_LPC
+        # 可以为 LPC 选择开发板
+        choice
+            prompt "Select Development Board for LPC Chips"
+            default BOARD_LPC1
+
+        config BOARD_LPC1
+            bool "LPC Development Board 1"
+            help
+              Select LPC development board 1.
+
+        config BOARD_LPC2
+            bool "LPC Development Board 2"
+            help
+              Select LPC development board 2.
+
+        endchoice
+    endif
+
+    if CHIP_MODEL_MCX
+        # 可以为 MCX 选择开发板
+        choice
+            prompt "Select Development Board for MCX Chips"
+            default BOARD_MCX1
+
+        config BOARD_MCX1
+            bool "MCX Development Board 1"
+            help
+              Select MCX development board 1.
+
+        config BOARD_MCX2
+            bool "MCX Development Board 2"
+            help
+              Select MCX development board 2.
+
+        endchoice
+    endif
+endif
+
+#
+# 如果选择了 Rockchip，配置相应芯片和开发板
+#
+if VENDOR_ROCKCHIP
+    choice
+        prompt "Select Chip Model for Rockchip"
+        default CHIP_MODEL_RK3500
+
+    config CHIP_MODEL_RK3500
+        bool "RK3500 Chip"
+        help
+          Select RK3500 chip.
+
+    endchoice
+
+    choice
+        prompt "Select Development Board for RK3500"
+        default BOARD_RK3500
+
+    config BOARD_RK3500
+        bool "RK3500 Development Board"
+        help
+          Select RK3500 development board.
+
+    endchoice
+endif
+
+#
+# 如果选择了 QEMU，配置相应的开发板
+#
+if VENDOR_QEMU
+    choice
+        prompt "Select Development Board for QEMU"
+        default BOARD_VIRT64_AARCH64
+
+    config BOARD_VIRT64_AARCH64
+        bool "virt64 aarch64"
+        help
+          Select QEMU virt64 aarch64 development board.
+
+    config BOARD_VEXPRESS_A9
+        bool "vexpress A9"
+        help
+          Select QEMU vexpress A9 development board.
+
+    endchoice
+endif
+
+
+#
+# 选择开发板后，配置您想使用的 app
+#
+menu "Application Configuration"
+
+config APP_BUSYBOX
+    bool "busybox"
+    help
+      Select busybox application.
+
+config APP_CPP
+    bool "cpp"
+    help
+      Select cpp application.
+
+config APP_FFMPEG
+    bool "ffmpeg"
+    help
+      Select ffmpeg application.
+
+config APP_HELLO
+    bool "hello"
+    help
+      Select hello application.
+
+config APP_MICROPYTHON
+    bool "micropython"
+    help
+      Select micropython application.
+
+config APP_PLAYER
+    bool "player"
+    help
+      Select player application.
+
+config APP_SHM_PING
+    bool "shm_ping"
+    help
+      Select shm_ping application.
+
+config APP_SHM_PONG
+    bool "shm_pong"
+    help
+      Select shm_pong application.
+
+config APP_SMART_FETCH
+    bool "smart-fetch"
+    help
+      Select smart-fetch application.
+
+config APP_UMAILBOX
+    bool "umailbox"
+    help
+      Select umailbox application.
+
+config APP_WEBCLIENT
+    bool "webclient"
+    help
+      Select webclient application.
+
+config APP_WEBSERVER
+    bool "webserver"
+    help
+      Select webserver application.
+
+config APP_ZLIB
+    bool "zlib"
+    help
+      Select zlib application.
+
+endmenu
