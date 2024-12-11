@@ -14,9 +14,11 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
 ## 快速入门
 
+ ![image-20241211512457800](./assets/image-20241211512457800.png)
+
 > 此次以 qemu-virt64-aarch64 为例讲解
 
-1. **安装 xmake**
+1. **安装 xmake及kconfiglib库**
 
    请根据 [xmake 官方文档](https://xmake.io/#/zh-cn/guide/installation?id=ubuntu) 进行安装。
 
@@ -26,6 +28,7 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
    sudo add-apt-repository ppa:xmake-io/xmake
    sudo apt update
    sudo apt install xmake
+   pip install kconfiglib
    ```
 
 2. **克隆仓库**
@@ -34,10 +37,10 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
 
    ```shell
    cd $WS
-   git clone https://github.com/RT-Thread/userapps.git
+   git clone https://github.com/RT-Thread/smart-build.git
    ```
 
-3. **编译用户态应用程序**
+3. **选择我们想要编译的开发板及应用**
 
    文件系统由多个应用程序组成，这些应用程序都放在 `apps` 目录下。由于 smart 采用 xmake 编译用户态环境，因此 smart 的编译方式非常简单。
 
@@ -48,40 +51,33 @@ xmake 是一个基于 Lua 的轻量级跨平台构建工具，使用 xmake.lua �
    source ./env.sh
    ```
 
-   进入 apps 目录进行编译
+   进入 models 目录进行选择
 
    ```shell
-   cd apps
-   xmake f -a aarch64 # 配置为 aarch64平台，如果不执行该条指令进行配置，则默认为 aarch64
-   xmake -j$(nproc)
+   cd models
+   xmake menu #进入菜单选择界面
    ```
+
+   ![image-20241211173829621](./assets/image-20241211173829621.png)
 
    目前支持的平台：arm、aarch64、riscv64gc。
 
    ![image-20230531173059551](./assets/image-20230531173059551.png)
 
 
-4. **制作文件系统**
+4. **制作镜像文件**
 
-   运行 `xmake smart-rootfs` 制作 rootfs，所谓制作文件系统，就是将上一步编译生成的用户程序按照文件系统的布局拷贝到 `$WS/userapps/apps/build/rootfs` 路径下。
-
-   ```shell
-   xmake smart-rootfs
-   ```
-
-5. **制作镜像**
-
-   运行 `xmake smart-image` 制作镜像，将上一步制作的 `$WS/userapps/apps/build/rootfs` 目录下的文件系统打包生成特定格式的 image 文件。
+   运行 `xmake` 制作image镜像，所谓制作文件系统，就是将上一步编译生成的用户程序按照文件系统的布局拷贝到 `$WS/userapps/models/build/rootfs` 路径下，并根据提前写好的on_run.lua脚本打包生成特定格式的 image 文件。
 
    ```shell
-   xmake smart-image -f ext4 #制作 ext4 镜像
+   xmake
    ```
 
    目前支持的镜像格式包括 ext4/fat/cromfs。
 
-   这里的例子会在 `$WS/userapps/apps/build` 路径下生成 `ext4.img` 文件。
+   这里的例子会在 `$WS/userapps/models/build` 路径下生成 `ext4.img` 文件。
 
-   ![image-20230531173829621](./assets/image-20230531173829621.png)
+   ![image-20241211512457899.png](./assets/image-20241211512457899.png)
 
 ## prebuilt 的版本
 
