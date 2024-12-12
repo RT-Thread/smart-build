@@ -1,0 +1,36 @@
+# 可执行文件
+*.exe
+*.dll
+*.so
+*.elf
+*.bin
+*.hex
+*.axf
+*.pdb
+
+# 对象文件和库文件
+*.o
+*.obj
+*.lib
+*.a
+
+# 编译相关的临时文件
+*.dep
+*.i
+*.d
+*.dfinish
+*.su
+*.bak
+*.old
+*.crf
+*.dblite
+
+# xmake 相关
+build/
+.xmake/
+xmake.lua.bak
+xmake.lua~
+xmake_require_lock.lua
+xmake_requires.lua
+xmake_requires_lock.lua
+xmake_logs/
