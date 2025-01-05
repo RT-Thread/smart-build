@@ -29,6 +29,12 @@ add_requires("xmake::rt-thread", {optional = true})
 target("image")
     set_kind("phony")
 
+    if os.isdir("~/.env/tools/scripts") then
+        local current_path = os.getenv("PATH")
+        current_path = "~/.env/tools/scripts" .. ":" .. current_path
+        add_runenvs("PATH", current_path)
+    end
+
     add_packages("apps")
     add_packages("rt-thread")
 

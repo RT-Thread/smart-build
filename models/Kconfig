@@ -1,3 +1,8 @@
+# TARGET_FILE置空，不再生成rtconfig.h文件
+config TARGET_FILE
+    string
+    default ""
+
 mainmenu "Chip and Board Configuration"
 
 #

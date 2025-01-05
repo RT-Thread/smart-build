@@ -5,7 +5,6 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export XMAKE_RCFILES=${script_dir}/tools/scripts/xmake.lua
 export RT_XMAKE_LINK_TYPE="static"
 
-
 # Check whether unzip is installed.
 if ! command -v unzip &> /dev/null; then
     echo "Unzip is not installed. Installing unzip"
@@ -26,6 +25,7 @@ if ! command -v unzip &> /dev/null; then
     fi
 
     echo "Unzip has been successfully installed."
+    echo "smart-build env ready!"
 else
-    echo "Unzip is installed."
+    echo "smart-build env ready!"
 fi
