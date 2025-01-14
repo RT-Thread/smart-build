@@ -30,12 +30,28 @@ do
     on_install("cross@linux,windows", function(package)
         local sourcedir_files = path.join(os.curdir(),"apps", "player", "*")
         local bakdir = path.join(os.curdir())
+        local items_to_remove = {
+            "apps",
+            "assets",
+            "env.sh",
+            "README.md",
+            "repo",
+            "sdk",
+            "tools"
+        }
         print("sourcedir_files: " .. sourcedir_files)
         print("bakdir: " .. bakdir)
-        
+
         os.cp(sourcedir_files, bakdir)
+        for _, item in ipairs(items_to_remove) do
+            local item_path = path.join(bakdir, item)
+            if os.exists(item_path) then
+                print("Removing: " .. item_path)
+                os.rm(item_path)
+        end
 
         import("package.tools.xmake").install(package)
+        end
     end)
 
 end
