@@ -38,6 +38,51 @@ do
     end
 task_end()
 
+task("clean")
+do
+    on_run(function ()
+        local build_dir = path.join(os.curdir(), "build") 
+
+        if os.exists(build_dir) then
+            os.rm(build_dir)
+            print("Cleaned build directory.")
+        else
+            print("Build directory does not exist.")
+        end
+        
+        local xmake_dir = path.join(os.curdir(), ".xmake")
+        if os.exists(xmake_dir) then
+            os.rm(xmake_dir)
+            print("Cleaned .xmake directory.")
+        else
+            print(".xmake directory does not exist.")
+        end
+
+        local kernel_dir = path.join(os.curdir(), "rtthread.bin")
+        if os.exists(kernel_dir) then
+            os.rm(kernel_dir)
+            print("Cleaned rt-thread.bin")
+        else
+            print(" rt-thread.bin does not exist.")
+        end
+        
+        local global_xmake_dir = path.join(os.getenv("HOME"), ".xmake/packages/a/apps")
+        if os.exists(global_xmake_dir) then
+            os.rm(global_xmake_dir)
+            print("Cleaned global xmake a/apps directory.")
+        else
+            print("$Home/.xmake/packages/a/apps directory does not exist.")
+        end
+    end)
+    set_category("plugin")
+    set_menu {
+        usage = "menuconfig",
+        description = "Launch menuconfig to configure the build",
+        options = {}
+    }
+    end
+task_end()
+
 task("smart-image")
 do
     on_run("tasks/smart-image/on_run")

@@ -29,3 +29,6 @@ if ! command -v unzip &> /dev/null; then
 else
     echo "smart-build env ready!"
 fi
+
+export PATH=`python3 -m site --user-base`/bin:$HOME/.env/tools/scripts:$PATH
+export RTT_EXEC_PATH=/usr/bin

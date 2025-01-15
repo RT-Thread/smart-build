@@ -28,19 +28,29 @@ do
 
     on_load(function(package)
         import("rt.private.build.rtflags")
+        import("devel.git")
+        import("net.http")
         local toolchainsdir = rtflags.get_package_info(package).toolchainsdir
 
         -- 获取 package 的安装目录
         local rt_install_dir = package:installdir()
         local rt_dir = path.join(rt_install_dir, "rt-thread")
-        print("Installing RT-Thread to: " .. rt_install_dir)
+        local env_dir = path.join(rt_install_dir, "env")
+        print("Installing RT-Thread env to: " .. rt_install_dir)
+        if not os.isdir(env_dir) then
+            print("Cloning RT-Thread env repository into package directory...")
+            git.clone("https://github.com/RT-Thread/env.git", {outputdir = env_dir})
+            http.download("https://raw.githubusercontent.com/RT-Thread/env/master/install_ubuntu.sh", path.join(rt_install_dir, "install_ubuntu.sh"))
+            os.exec("chmod +x " .. path.join(rt_install_dir, "install_ubuntu.sh"))
+            os.exec(path.join(rt_install_dir, "install_ubuntu.sh"))
+        else
+            print("RT-Thread env repository already exists in package directory. Skipping clone.")
+        end   
 
+        print("Installing RT-Thread to: " .. rt_install_dir)
         if not os.isdir(rt_dir) then
             print("Cloning RT-Thread repository into package directory...")
-            import("devel.git")
             git.clone("https://gitee.com/rtthread/rt-thread.git", {outputdir = rt_dir})
-            
-            -- os.execv("git -C " .. rt_dir .. " checkout 45aba1bcd7242777de7facc80824f5b832dbb56d")
             
         else
             print("RT-Thread repository already exists in package directory. Skipping clone.")
@@ -51,10 +61,8 @@ do
         local config_file = ".config"
         local function read_config_file(config_file)
             local file = io.open(config_file, "r")
-            -- local cwd = os.curdir()
-            -- print("cwd:",cwd)
             if not file then
-                error("无法打开配置文件: " .. config_file)
+                error("cannot open: " .. config_file)
             end
             local content = file:read("*all")
             file:close()
@@ -83,11 +91,11 @@ do
             local bsp_dir = table.concat(parts, "_")
             local bsp_dir = bsp_dir:lower()  -- BSP小写
             bsp_dir = bsp_dir .. ".build"
-            print(1,bsp_dir)
+            -- print(1,bsp_dir)
             local bsp_file = bsp_dir .. ".lua"
             -- print(2,bsp_file)
             local bsp_packages = path.join(os.scriptdir(), "bsp")
-            print(3,bsp_packages)
+            -- print(3,bsp_packages)
             local bsp_path = path.join(bsp_packages,bsp_file)
             
             import(bsp_dir, {rootdir = bsp_packages})(toolchainsdir)
