@@ -23,7 +23,7 @@
 add_rules("mode.debug", "mode.release")
 
 add_requires("apps")
--- add_requires("rt-thread")
+
 add_requires("xmake::rt-thread", {optional = true})
 
 target("image")
