@@ -65,6 +65,14 @@ do
         else
             print(" rt-thread.bin does not exist.")
         end
+
+        local image_dir = path.join(os.curdir(), "sd.img")
+        if os.exists(image_dir) then
+            os.rm(image_dir)
+            print("Cleaned sd.image")
+        else
+            print(" sd.image does not exist.")
+        end
         
         local global_xmake_dir = path.join(os.getenv("HOME"), ".xmake/packages/a/apps")
         if os.exists(global_xmake_dir) then

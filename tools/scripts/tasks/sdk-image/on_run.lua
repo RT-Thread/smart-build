@@ -104,8 +104,6 @@ local function get_other_files_from_curdir()
 end
 
 function main()
-    -- print("=======================", os.curdir(), "=======================")
-    -- print("=======================", os.scriptdir(), "=======================")
 
     -- 获取文件路径
     local rtthread_bin = get_kernel_from_curdir()        -- 获取内核文件
@@ -118,7 +116,7 @@ function main()
     local idbloader_img = other_files.idbloader
 
     -- 删除现有镜像文件
-    os.iorun("rm rk35xx.img -f")
+    os.iorun("rm sd.img -f")
 
     -- 确保文件存在
     check_required_param(rtthread_bin, "kernel")
@@ -128,10 +126,10 @@ function main()
     check_required_param(rootfs_img, "rootfs")
 
     -- 镜像文件名
-    local imgname = "rk35xx.img"
+    local imgname = "sd.img"
     local pwd = os.getenv("PWD")
     
-    -- 创建空白的 rk35xx.img 文件并初始化
+    -- 创建空白的 sd.img 文件并初始化
     os.execv("dd", {"if=/dev/zero", "of="..pwd .. "/" .. imgname, "bs=1M", "count=1000"})
     os.execv("ls -al")
     os.execv("parted", {"-s", pwd .. "/" .. imgname, "mklabel", "gpt"})

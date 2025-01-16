@@ -10,12 +10,12 @@ mainmenu "Chip and Board Configuration"
 #
 choice
     prompt "Select Vendor"
-    default VENDOR_NXP
+    default VENDOR_QEMU
 
-config VENDOR_NXP
-    bool "NXP"
-    help
-      Select NXP vendor.
+#config VENDOR_NXP
+#    bool "NXP"
+#    help
+#      Select NXP vendor.
 
 config VENDOR_ROCKCHIP
     bool "Rockchip"
@@ -27,10 +27,10 @@ config VENDOR_QEMU
     help
       Select QEMU vendor.
 
-config VENDOR_CVITEK
-    bool "Cvitek"
-    help
-      Select Cvitek vendor.
+#config VENDOR_CVITEK
+#    bool "Cvitek"
+#    help
+#      Select Cvitek vendor.
 
 endchoice
 
@@ -179,14 +179,52 @@ endif
 
 
 #
+# 可选内核来源，如果本地有rt-thread仓库，可以指定本地目录，xmake编译过程中将不会再次拉取rt-thread仓库
+#
+menu "Kernel Configuration"
+
+choice KERNEL_SOURCE
+    prompt "Select Kernel Source"
+    help
+      Choose how to provide the kernel source.
+    default KERNEL_SOURCE_GIT
+
+config KERNEL_SOURCE_GIT
+    bool "Fetch from Git repository"
+    help
+      Fetch the kernel source from a Git repository.
+
+config KERNEL_SOURCE_LOCAL
+    bool "Use a local directory"
+    help
+      Use an existing kernel source directory on the local file system.
+
+endchoice
+
+config KERNEL_LOCAL_DIR
+    string "Local Kernel Directory"
+    default "/home/rtthread/rt-thread/"
+    depends on KERNEL_SOURCE_LOCAL
+    help
+      Specify the path to the local kernel source directory. This option
+      is only available if "Use a local directory" is selected above.
+
+endmenu
+
+#
 # 选择开发板后，配置您想使用的 app
 #
-menu "Application Configuration"
+menu "Selection the desired apps Application"
 
 config APP_BUSYBOX
     bool "busybox"
     help
       Select busybox application.
+
+config FORCE_APP_BUSYBOX
+    bool
+    default y
+    select APP_BUSYBOX
 
 config APP_CPP
     bool "cpp"

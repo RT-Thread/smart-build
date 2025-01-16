@@ -32,6 +32,38 @@ do
         import("net.http")
         local toolchainsdir = rtflags.get_package_info(package).toolchainsdir
 
+        local config_file = ".config"
+        local function read_config_file(config_file)
+            local file = io.open(config_file, "r")
+            if not file then
+                error("cannot open: " .. config_file)
+            end
+            local content = file:read("*all")
+            file:close()
+            return content
+        end
+
+        -- 获取配置项的值
+        local function get_config_values(config_file, vendor_key, model_key, board_key,kernel_key)
+            local content = read_config_file(config_file)
+            local vendor_pattern = vendor_key .. "([^%s=]*)=y"
+            local model_pattern = model_key .. "([^%s=]*)=y"
+            local board_pattern = board_key .. "([^%s=]*)=y"
+            local kernel_pattern = kernel_key .. "([^%s=]*)=y"
+
+            local vendor = content:match(vendor_pattern)
+            local model = content:match(model_pattern)
+            local board = content:match(board_pattern)
+            local kernel_source = content:match(kernel_pattern)
+            if kernel_source == "LOCAL" then
+            local kernel_config = 'CONFIG_KERNEL_LOCAL_DIR="(.-)"'
+            kernel_source = content:match(kernel_config)
+        end
+            return vendor, model, board, kernel_source
+        end
+
+        local vendor, model, board, kernel_source= get_config_values(config_file, "CONFIG_VENDOR_", "CONFIG_CHIP_MODEL_", "CONFIG_BOARD_", "CONFIG_KERNEL_SOURCE_")
+
         -- 获取 package 的安装目录
         local rt_install_dir = package:installdir()
         local rt_dir = path.join(rt_install_dir, "rt-thread")
@@ -47,42 +79,20 @@ do
             print("RT-Thread env repository already exists in package directory. Skipping clone.")
         end   
 
-        print("Installing RT-Thread to: " .. rt_install_dir)
-        if not os.isdir(rt_dir) then
+        if kernel_source == "GIT" then
+            print("Installing RT-Thread to: " .. rt_install_dir)
+            os.setenv("RT_THREAD_DIR", rt_dir)
+            if not os.isdir(rt_dir) then
             print("Cloning RT-Thread repository into package directory...")
             git.clone("https://gitee.com/rtthread/rt-thread.git", {outputdir = rt_dir})
-            
-        else
-            print("RT-Thread repository already exists in package directory. Skipping clone.")
-        end
-        
-        
-        os.setenv("RT_THREAD_DIR", rt_dir)
-        local config_file = ".config"
-        local function read_config_file(config_file)
-            local file = io.open(config_file, "r")
-            if not file then
-                error("cannot open: " .. config_file)
+            else
+                print("RT-Thread repository already exists in package directory. Skipping clone.")
             end
-            local content = file:read("*all")
-            file:close()
-            return content
-        end
-
-        -- 获取配置项的值
-        local function get_config_values(config_file, vendor_key, model_key, board_key)
-            local content = read_config_file(config_file)
-            local vendor_pattern = vendor_key .. "([^%s=]*)=y"
-            local model_pattern = model_key .. "([^%s=]*)=y"
-            local board_pattern = board_key .. "([^%s=]*)=y"
-
-            local vendor = content:match(vendor_pattern)
-            local model = content:match(model_pattern)
-            local board = content:match(board_pattern)
-            return vendor, model, board
-        end
-
-        local vendor, model, board = get_config_values(config_file, "CONFIG_VENDOR_", "CONFIG_CHIP_MODEL_", "CONFIG_BOARD_")
+        else
+            os.setenv("RT_THREAD_DIR", kernel_source)
+            print("RT-Thread repository already exists in package directory. Skipping clone.")
+    end
+        
         if vendor or model or board then
             local parts = {}
             if vendor then table.insert(parts, vendor:lower()) end
@@ -97,7 +107,6 @@ do
             local bsp_packages = path.join(os.scriptdir(), "bsp")
             -- print(3,bsp_packages)
             local bsp_path = path.join(bsp_packages,bsp_file)
-            
             import(bsp_dir, {rootdir = bsp_packages})(toolchainsdir)
 
             else
