@@ -87,7 +87,7 @@ local function get_rootfs_from_curdir()
 end
 
 local function get_other_files_from_curdir()
-    local file_dir = path.join(os.curdir(), "../repo/packages/r/rt-thread/bsp/u-boot/")
+    local file_dir = path.join(os.curdir(), "../repo/packages/r/rt-thread/bsp/rk3500/")
     print("Base directory: ", file_dir)
 
     local files = {
