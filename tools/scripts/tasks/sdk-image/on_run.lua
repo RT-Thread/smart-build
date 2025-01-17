@@ -87,10 +87,13 @@ local function get_rootfs_from_curdir()
 end
 
 local function get_other_files_from_curdir()
+    local file_dir = path.join(os.curdir(), "../repo/packages/r/rt-thread/bsp/u-boot/")
+    print("Base directory: ", file_dir)
+
     local files = {
-        uboot = os.curdir() .. "/u-boot.itb",
-        fdt = os.curdir() .. "/fdt",
-        idbloader = os.curdir() .. "/idbloader.img",
+        uboot = path.join(file_dir, "rkxx_u-boot.itb"),
+        fdt = path.join(file_dir, "rkxx_fdt"),
+        idbloader = path.join(file_dir, "rkxx_idbloader.img"),
     }
 
     for name, path in pairs(files) do

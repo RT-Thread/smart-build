@@ -45,7 +45,7 @@ target("image")
     after_build(function (target)
         os.exec("xmake smart-rootfs")
         os.exec("xmake smart-image")
-        -- os.exec("xmake sdk")
+        os.exec("xmake sdk")
     end)
 
 target_end()

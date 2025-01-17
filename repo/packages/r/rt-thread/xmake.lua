@@ -101,11 +101,8 @@ do
             local bsp_dir = table.concat(parts, "_")
             local bsp_dir = bsp_dir:lower()  -- BSP小写
             bsp_dir = bsp_dir .. ".build"
-            -- print(1,bsp_dir)
             local bsp_file = bsp_dir .. ".lua"
-            -- print(2,bsp_file)
             local bsp_packages = path.join(os.scriptdir(), "bsp")
-            -- print(3,bsp_packages)
             local bsp_path = path.join(bsp_packages,bsp_file)
             import(bsp_dir, {rootdir = bsp_packages})(toolchainsdir)
 

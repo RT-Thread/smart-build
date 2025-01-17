@@ -12,13 +12,13 @@
 --
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
--- @author      xqyjlj
+-- @author      zchenxiao
 -- @file        deploy.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2023-05-09     xqyjlj       initial version
+-- 2025-1-14     zchenxiao       initial version
 --
 import("rt.rt_utils")
 
@@ -27,20 +27,4 @@ function main(rootfs, installdir, version)
         local filename = path.filename(filepath)
         rt_utils.cp_with_symlink(filepath, path.join(rootfs, "bin", filename))
     end
-
-    for _, filepath in ipairs(os.files(path.join(installdir, "usr", "bin") .. "/*")) do
-        local filename = path.filename(filepath)
-        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "usr", "bin", filename))
-    end
-
-    for _, filepath in ipairs(os.files(path.join(installdir, "usr", "sbin") .. "/*")) do
-        local filename = path.filename(filepath)
-        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "usr", "sbin", filename))
-    end
-
-    for _, filepath in ipairs(os.files(path.join(installdir, "sbin") .. "/*")) do
-        local filename = path.filename(filepath)
-        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "sbin", filename))
-    end
-    
 end
