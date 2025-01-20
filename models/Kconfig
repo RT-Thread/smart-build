@@ -6,16 +6,16 @@ config TARGET_FILE
 mainmenu "Chip and Board Configuration"
 
 #
-# 厂商选择
+# 芯片厂商选择
 #
 choice
     prompt "Select Vendor"
-    default VENDOR_NXP
+    default VENDOR_QEMU
 
-config VENDOR_NXP
-    bool "NXP"
-    help
-      Select NXP vendor.
+#config VENDOR_NXP
+#    bool "NXP"
+#    help
+#      Select NXP vendor.
 
 config VENDOR_ROCKCHIP
     bool "Rockchip"
@@ -27,10 +27,10 @@ config VENDOR_QEMU
     help
       Select QEMU vendor.
 
-config VENDOR_CVITEK
-    bool "Cvitek"
-    help
-      Select Cvitek vendor.
+#config VENDOR_CVITEK
+#    bool "Cvitek"
+#    help
+#      Select Cvitek vendor.
 
 endchoice
 
@@ -60,7 +60,7 @@ if VENDOR_NXP
     endchoice
 
     #
-    # 根据选择的芯片配置开发板
+    # 根据选择的芯片配置开发板厂商
     #
     if CHIP_MODEL_IMX
         choice
@@ -133,28 +133,40 @@ endif
 # 如果选择了 Rockchip，配置相应芯片和开发板
 #
 if VENDOR_ROCKCHIP
-    choice
-        prompt "Select Chip Model for Rockchip"
-        default CHIP_MODEL_RK3500
-
-    config CHIP_MODEL_RK3500
-        bool "RK3500 Chip"
+    menu "RKxx soc"
+    config CHIP_MODEL_RK3568
+        bool "RK3568 Chip"
+        default y
         help
-          Select RK3500 chip.
+          Select RK3568 series chips.
+    endmenu
+    #
+    # 根据 RK3568 芯片选择开发板
+    #
+    if CHIP_MODEL_RK3568
+        menu "FriendlyARM Company"
 
-    endchoice
+            config COMPANY_FRIENDLY
+                bool "FriendlyARM Company"
+                default y
+                help
+                  Select FriendlyARM Company for RK3568.
 
-    choice
-        prompt "Select Development Board for RK3500"
-        default BOARD_RK3500
+            if COMPANY_FRIENDLY
+                menu "NanoPi Series"
 
-    config BOARD_RK3500
-        bool "RK3500 Development Board"
-        help
-          Select RK3500 development board.
+                    config BOARD_NANOPI_R5S
+                        bool "NanoPi R5S Board"
+                        help
+                          Select NanoPi R5S board for RK3568.
 
-    endchoice
+                endmenu
+            endif
+
+        endmenu
+    endif
 endif
+
 
 #
 # 如果选择了 QEMU，配置相应的开发板
@@ -177,16 +189,87 @@ if VENDOR_QEMU
     endchoice
 endif
 
+#
+# 可选内核来源，如果本地有rt-thread仓库，可以指定本地目录，xmake编译过程中将不会再次拉取rt-thread仓库
+#
+menu "Kernel Configuration"
+
+choice KERNEL_SOURCE
+    prompt "Select Kernel Source"
+    help
+      Choose how to provide the kernel source.
+    default KERNEL_SOURCE_GIT
+
+config KERNEL_SOURCE_GIT
+    bool "Fetch from Git repository"
+    help
+      Fetch the kernel source from a Git repository.
+
+config KERNEL_SOURCE_LOCAL
+    bool "Use a local directory"
+    help
+      Use an existing kernel source directory on the local file system.
+
+endchoice
+
+config KERNEL_LOCAL_DIR
+    string "Local Kernel Directory"
+    default "/home/rtthread/rt-thread/"
+    depends on KERNEL_SOURCE_LOCAL
+    help
+      Specify the path to the local kernel source directory. This option
+      is only available if "Use a local directory" is selected above.
+
+endmenu
+
+
+#
+# 可选交叉编译工具链来源，如果本地有toolchain，可以指定本地目录，xmake编译过程中将不会再次拉取交叉编译工具链
+#
+#menu "toolchain Configuration"
+#
+#choice TOOLCHAIN_SOURCE
+#    prompt "Select toolchain Source"
+#    help
+#      Choose how to provide the toolchain source.
+#    default TOOLCHAIN_SOURCE_GIT
+#
+#config TOOLCHAIN_SOURCE_GIT
+#    bool "Fetch from Git repository"
+#    help
+#      Fetch the TOOLCHAIN source from a Git repository.
+#
+#config TOOLCHAIN_SOURCE_LOCAL
+#    bool "Use a local directory"
+#    help
+#      Use an existing toolchain source directory on the local file system.
+#
+#endchoice
+#
+#config TOOLCHAIN_LOCAL_DIR
+#    string "Local toolchain Directory"
+#    default "/home/rtthread/tool/a/aarch64-smart-musleabi/"
+#    depends on TOOLCHAIN_SOURCE_LOCAL
+#    help
+#      Specify the path to the local toolchain source directory. This option
+#      is only available if "Use a local directory" is selected above.
+#
+#endmenu
 
 #
 # 选择开发板后，配置您想使用的 app
 #
-menu "Application Configuration"
+menu "Selection the desired apps Application"
 
 config APP_BUSYBOX
     bool "busybox"
     help
       Select busybox application.
+
+config FORCE_APP_BUSYBOX
+    bool
+    default y
+    select APP_BUSYBOX
 
 config APP_CPP
     bool "cpp"

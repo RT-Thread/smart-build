@@ -13,29 +13,18 @@
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
 -- @author      zchenxiao
--- @file        xmake.lua
+-- @file        deploy.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2024-12-9     zchenxiao       initial version
+-- 2025-1-14     zchenxiao       initial version
 --
--- rockchip_rk3500_rk3500.lua
-function build(toolchainsdir)
-    os.setenv("RTT_CC_PREFIX", "aarch64-linux-musleabi-")
-    os.setenv("RTT_EXEC_PATH",  toolchainsdir)
-    os.setenv("PATH", os.getenv("RTT_EXEC_PATH") .. ":" .. os.getenv("PATH"))
+import("rt.rt_utils")
 
-    print("Environment configured:")
-    print("RTT_CC_PREFIX=" .. os.getenv("RTT_CC_PREFIX"))
-    print("RTT_EXEC_PATH=" .. os.getenv("RTT_EXEC_PATH"))
-    print("Starting build process...")
-    local rt_dir = os.getenv("RT_THREAD_DIR")
-    local build = path.join(rt_dir,"/bsp/rockchip/rk3500")
-    local build_dir = os.curdir()
-    os.cd(build)
-    os.exec("scons --menuconfig")
-    os.exec("scons")
-    os.execv("cp", {build .. "/rtthread.bin", build_dir})
+function main(rootfs, installdir, version)
+    for _, filepath in ipairs(os.files(path.join(installdir, "bin") .. "/*")) do
+        local filename = path.filename(filepath)
+        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "bin", filename))
+    end
 end
-

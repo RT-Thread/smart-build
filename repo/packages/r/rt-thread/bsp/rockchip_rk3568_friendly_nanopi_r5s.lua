@@ -20,20 +20,20 @@
 -- ------------   ----------   -----------------------------------------------
 -- 2024-12-9     zchenxiao       initial version
 --
--- qemu_virt64_aarch64.lua
+-- rockchip_rk3500_rk3500.lua
 function build(toolchainsdir)
-    print("building qemu_aarch64 kernel")
     os.setenv("RTT_CC_PREFIX", "aarch64-linux-musleabi-")
     os.setenv("RTT_EXEC_PATH",  toolchainsdir)
     os.setenv("PATH", os.getenv("RTT_EXEC_PATH") .. ":" .. os.getenv("PATH"))
+
     print("Environment configured:")
     print("RTT_CC_PREFIX=" .. os.getenv("RTT_CC_PREFIX"))
     print("RTT_EXEC_PATH=" .. os.getenv("RTT_EXEC_PATH"))
     print("Starting build process...")
     local rt_dir = os.getenv("RT_THREAD_DIR")
-    local build = path.join(rt_dir,"/bsp/qemu-virt64-aarch64")
+    local build = path.join(rt_dir,"/bsp/rockchip/rk3500")
     local build_dir = os.curdir()
-    local config_dir = path.join(os.scriptdir(),"qemu_aarch64_defconfig")
+    local config_dir = path.join(os.scriptdir(),"rockchip_rk3500_defconfig")
     os.cp(config_dir,path.join(build,".config"))
     os.cd(build)
     os.exec("scons --pyconfig-silent")
@@ -41,3 +41,4 @@ function build(toolchainsdir)
     os.exec("scons")
     os.execv("cp", {build .. "/rtthread.bin", build_dir})
 end
+

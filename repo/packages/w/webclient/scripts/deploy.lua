@@ -13,39 +13,18 @@
 -- Copyright (C) 2023-2023 RT-Thread Development Team
 --
 -- @author      zchenxiao
--- @file        xmake.lua
+-- @file        deploy.lua
 --
 -- Change Logs:
 -- Date           Author       Notes
 -- ------------   ----------   -----------------------------------------------
--- 2024-12-9     zchenxiao       initial version
+-- 2025-1-14     zchenxiao       initial version
 --
-add_rules("mode.debug", "mode.release")
+import("rt.rt_utils")
 
-add_requires("apps")
-
-add_requires("xmake::rt-thread", {optional = true})
-
-target("image")
-    set_kind("phony")
-
-    if os.isdir("~/.env/tools/scripts") then
-        local current_path = os.getenv("PATH")
-        current_path = "~/.env/tools/scripts" .. ":" .. current_path
-        add_runenvs("PATH", current_path)
+function main(rootfs, installdir, version)
+    for _, filepath in ipairs(os.files(path.join(installdir, "bin") .. "/*")) do
+        local filename = path.filename(filepath)
+        rt_utils.cp_with_symlink(filepath, path.join(rootfs, "bin", filename))
     end
-
-    add_packages("apps")
-    add_packages("rt-thread")
-
-    on_build(function (target)
-        print("Building image target...")
-    end)
-
-    after_build(function (target)
-        os.exec("xmake smart-rootfs")
-        os.exec("xmake smart-image")
-        os.exec("xmake sdk")
-    end)
-
-target_end()
+end
