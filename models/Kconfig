@@ -143,17 +143,7 @@ if VENDOR_ROCKCHIP
           Select RK3500 chip.
 
     endchoice
-
-    choice
-        prompt "Select Development Board for RK3500"
-        default BOARD_RK3500
-
-    config BOARD_RK3500
-        bool "RK3500 Development Board"
-        help
-          Select RK3500 development board.
-
-    endchoice
+    
 endif
 
 #
@@ -176,7 +166,6 @@ if VENDOR_QEMU
 
     endchoice
 endif
-
 
 #
 # 可选内核来源，如果本地有rt-thread仓库，可以指定本地目录，xmake编译过程中将不会再次拉取rt-thread仓库
@@ -210,6 +199,40 @@ config KERNEL_LOCAL_DIR
       is only available if "Use a local directory" is selected above.
 
 endmenu
+
+
+#
+# 可选交叉编译工具链来源，如果本地有toolchain，可以指定本地目录，xmake编译过程中将不会再次拉取交叉编译工具链
+#
+#menu "toolchain Configuration"
+#
+#choice TOOLCHAIN_SOURCE
+#    prompt "Select toolchain Source"
+#    help
+#      Choose how to provide the toolchain source.
+#    default TOOLCHAIN_SOURCE_GIT
+#
+#config TOOLCHAIN_SOURCE_GIT
+#    bool "Fetch from Git repository"
+#    help
+#      Fetch the TOOLCHAIN source from a Git repository.
+#
+#config TOOLCHAIN_SOURCE_LOCAL
+#    bool "Use a local directory"
+#    help
+#      Use an existing toolchain source directory on the local file system.
+#
+#endchoice
+#
+#config TOOLCHAIN_LOCAL_DIR
+#    string "Local toolchain Directory"
+#    default "/home/rtthread/tool/a/aarch64-smart-musleabi/"
+#    depends on TOOLCHAIN_SOURCE_LOCAL
+#    help
+#      Specify the path to the local toolchain source directory. This option
+#      is only available if "Use a local directory" is selected above.
+#
+#endmenu
 
 #
 # 选择开发板后，配置您想使用的 app
