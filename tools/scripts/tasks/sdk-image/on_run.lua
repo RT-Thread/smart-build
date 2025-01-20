@@ -91,9 +91,9 @@ local function get_other_files_from_curdir()
     print("Base directory: ", file_dir)
 
     local files = {
-        uboot = path.join(file_dir, "rkxx_u-boot.itb"),
-        fdt = path.join(file_dir, "rkxx_fdt"),
-        idbloader = path.join(file_dir, "rkxx_idbloader.img"),
+        uboot = path.join(file_dir, "nanopi_r5s_u-boot.itb"),
+        fdt = path.join(file_dir, "nanopi_r5s.fdt"),
+        idbloader = path.join(file_dir, "nanopi_r5s_idbloader.img"),
     }
 
     for name, path in pairs(files) do

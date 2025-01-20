@@ -6,7 +6,7 @@ config TARGET_FILE
 mainmenu "Chip and Board Configuration"
 
 #
-# 厂商选择
+# 芯片厂商选择
 #
 choice
     prompt "Select Vendor"
@@ -60,7 +60,7 @@ if VENDOR_NXP
     endchoice
 
     #
-    # 根据选择的芯片配置开发板
+    # 根据选择的芯片配置开发板厂商
     #
     if CHIP_MODEL_IMX
         choice
@@ -133,18 +133,40 @@ endif
 # 如果选择了 Rockchip，配置相应芯片和开发板
 #
 if VENDOR_ROCKCHIP
-    choice
-        prompt "Select Chip Model for Rockchip"
-        default CHIP_MODEL_RK3500
-
-    config CHIP_MODEL_RK3500
-        bool "RK3500 Chip"
+    menu "RKxx soc"
+    config CHIP_MODEL_RK3568
+        bool "RK3568 Chip"
+        default y
         help
-          Select RK3500 chip.
+          Select RK3568 series chips.
+    endmenu
+    #
+    # 根据 RK3568 芯片选择开发板
+    #
+    if CHIP_MODEL_RK3568
+        menu "FriendlyARM Company"
 
-    endchoice
-    
+            config COMPANY_FRIENDLY
+                bool "FriendlyARM Company"
+                default y
+                help
+                  Select FriendlyARM Company for RK3568.
+
+            if COMPANY_FRIENDLY
+                menu "NanoPi Series"
+
+                    config BOARD_NANOPI_R5S
+                        bool "NanoPi R5S Board"
+                        help
+                          Select NanoPi R5S board for RK3568.
+
+                endmenu
+            endif
+
+        endmenu
+    endif
 endif
+
 
 #
 # 如果选择了 QEMU，配置相应的开发板

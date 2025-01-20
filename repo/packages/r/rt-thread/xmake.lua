@@ -44,25 +44,23 @@ do
         end
 
         -- 获取配置项的值
-        local function get_config_values(config_file, vendor_key, model_key, board_key,kernel_key)
+        local function get_config_values(config_file,configkey)
             local content = read_config_file(config_file)
-            local vendor_pattern = vendor_key .. "([^%s=]*)=y"
-            local model_pattern = model_key .. "([^%s=]*)=y"
-            local board_pattern = board_key .. "([^%s=]*)=y"
-            local kernel_pattern = kernel_key .. "([^%s=]*)=y"
+            local key = configkey .. "([^%s=]*)=y"
 
-            local vendor = content:match(vendor_pattern)
-            local model = content:match(model_pattern)
-            local board = content:match(board_pattern)
-            local kernel_source = content:match(kernel_pattern)
-            if kernel_source == "LOCAL" then
+            local config_key = content:match(key)
+            if config_key == "LOCAL" then
             local kernel_config = 'CONFIG_KERNEL_LOCAL_DIR="(.-)"'
-            kernel_source = content:match(kernel_config)
+            config_key = content:match(kernel_config)
         end
-            return vendor, model, board, kernel_source
+            return config_key
         end
 
-        local vendor, model, board, kernel_source= get_config_values(config_file, "CONFIG_VENDOR_", "CONFIG_CHIP_MODEL_", "CONFIG_BOARD_", "CONFIG_KERNEL_SOURCE_")
+        local vendor = get_config_values(config_file, "CONFIG_VENDOR_", "CONFIG_CHIP_MODEL_", "CONFIG_BOARD_", "CONFIG_KERNEL_SOURCE_")
+        local model = get_config_values(config_file, "CONFIG_CHIP_MODEL_")
+        local board = get_config_values(config_file, "CONFIG_BOARD_")
+        local company = get_config_values(config_file, "CONFIG_COMPANY_")
+        local kernel_source = get_config_values(config_file, "CONFIG_KERNEL_SOURCE_")
 
         -- 获取 package 的安装目录
         local rt_install_dir = package:installdir()
@@ -93,13 +91,15 @@ do
             print("RT-Thread repository already exists in package directory. Skipping clone.")
     end
         
-        if vendor or model or board then
+        if vendor or model or board or company then
             local parts = {}
             if vendor then table.insert(parts, vendor:lower()) end
             if model then table.insert(parts, model:lower()) end
+            if company then table.insert(parts, company:lower()) end
             if board then table.insert(parts, board:lower()) end
             local bsp_dir = table.concat(parts, "_")
             local bsp_dir = bsp_dir:lower()  -- BSP小写
+            print("bsp_dir:",bsp_dir)
             bsp_dir = bsp_dir .. ".build"
             local bsp_file = bsp_dir .. ".lua"
             local bsp_packages = path.join(os.scriptdir(), "bsp")
