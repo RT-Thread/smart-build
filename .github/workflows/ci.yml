@@ -32,3 +32,12 @@ jobs:
           xmake -vyD
           '
         shell: bash
+
+        - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            models/rtthread.bin
+            models/build/ext4.img
+          retention-days: 7

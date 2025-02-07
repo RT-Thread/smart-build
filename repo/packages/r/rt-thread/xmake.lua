@@ -56,7 +56,7 @@ do
             return config_key
         end
 
-        local vendor = get_config_values(config_file, "CONFIG_VENDOR_", "CONFIG_CHIP_MODEL_", "CONFIG_BOARD_", "CONFIG_KERNEL_SOURCE_")
+        local vendor = get_config_values(config_file, "CONFIG_VENDOR_")
         local model = get_config_values(config_file, "CONFIG_CHIP_MODEL_")
         local board = get_config_values(config_file, "CONFIG_BOARD_")
         local company = get_config_values(config_file, "CONFIG_COMPANY_")
