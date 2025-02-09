@@ -19,7 +19,7 @@ jobs:
           sudo add-apt-repository ppa:xmake-io/xmake -y
           sudo apt update
           sudo apt install -y nim
-          sudo apt install -y xmake python3-pip
+          sudo apt install -y xmake python3-pip qemu-system-aarch64
           pip install --upgrade pip
           pip install kconfiglib scons requests tqdm psutil
 
@@ -33,11 +33,22 @@ jobs:
           '
         shell: bash
 
-        - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+      - name: Set file permissions
+        run: |
+          chmod +r ./models/rtthread.bin
+          chmod +r ./models/build/ext4.img
+          ls -lh ./models/build/
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
-            models/rtthread.bin
-            models/build/ext4.img
+            ./models/rtthread.bin
+            ./models/build/ext4.img
           retention-days: 7
+
+      - name: Run QEMU and Execute /bin/hello
+        run: |
+          chmod +x ./.github/workflows/run_qemu.sh
+          ./.github/workflows/run_qemu.sh
