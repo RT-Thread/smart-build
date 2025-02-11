@@ -106,8 +106,8 @@ local function get_other_files_from_curdir()
     return files
 end
 
-function main()
-
+-- rk3500的sd.image打包函数
+local function packages_rk3500()
     -- 获取文件路径
     local rtthread_bin = get_kernel_from_curdir()        -- 获取内核文件
     local rootfs_img = get_rootfs_from_curdir()          -- 获取根文件系统
@@ -117,10 +117,7 @@ function main()
     local uboot_img = other_files.uboot
     local fdt = other_files.fdt
     local idbloader_img = other_files.idbloader
-
-    -- 删除现有镜像文件
-    os.iorun("rm sd.img -f")
-
+    
     -- 确保文件存在
     check_required_param(rtthread_bin, "kernel")
     check_required_param(uboot_img, "uboot")
@@ -131,7 +128,7 @@ function main()
     -- 镜像文件名
     local imgname = "sd.img"
     local pwd = os.getenv("PWD")
-    
+
     -- 创建空白的 sd.img 文件并初始化
     os.execv("dd", {"if=/dev/zero", "of="..pwd .. "/" .. imgname, "bs=1M", "count=1000"})
     os.execv("ls -al")
@@ -160,4 +157,24 @@ function main()
 
     -- 清理临时的 boot.img 文件
     os.iorun("rm boot.img")
+end
+
+function main()
+    -- 删除现有镜像文件
+    os.iorun("rm sd.img -f")
+
+    local config_file = ".config"
+    local file = io.open(config_file, "r")
+    local content = file:read("*all")
+    file:close()
+    local vendor = content:match("CONFIG_VENDOR_" .. "([^%s=]*)=y")
+    local model = content:match("CONFIG_CHIP_MODEL_" .. "([^%s=]*)=y")
+    print("sdk_vendor:",vendor)
+    if vendor == "QEMU" then 
+    end
+    if vendor == "ROCKCHIP" then
+        if model == "RK3568" then
+            packages_rk3500()
+    end
+    end
 end
