@@ -20,15 +20,27 @@
 -- ------------   ----------   -----------------------------------------------
 -- 2023-05-06     xqyjlj       initial version
 -- 2024-10-17     zhujiale     add sdk task
--- 2024-12-9     zchenxiao    add menu task
+-- 2024-12-9     zchenxiao     add menu task
 
 set_xmakever("2.7.2")
 
+task("conf")
+do
+    on_run("tasks/sdk-conf/on_run")
+    set_category("plugin")
+    set_menu {
+        usage = "conf",
+        description = "Use the default defconfg configuration",
+        options = {
+            {"i",   "import", "kv", nil, "image format"},    
+        }
+    }
+    end
+task_end()
+
 task("menu")
 do
-    on_run(function ()
-        os.exec("menuconfig")
-    end)
+    on_run("tasks/sdk-menuconfig/on_run")
     set_category("plugin")
     set_menu {
         usage = "menuconfig",

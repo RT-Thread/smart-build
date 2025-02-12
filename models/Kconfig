@@ -27,6 +27,11 @@ config VENDOR_QEMU
     help
       Select QEMU vendor.
 
+config VENDOR_K230
+    bool "K230"
+    help
+      Select K230 vendor.
+
 #config VENDOR_CVITEK
 #    bool "Cvitek"
 #    help
@@ -187,6 +192,26 @@ if VENDOR_QEMU
           Select QEMU vexpress A9 development board.
 
     endchoice
+endif
+
+if VENDOR_K230
+    menu "k230 xmake config"
+    config ARCH
+        string "K230 ARCH"
+        default "riscv64gc"
+        help
+          set k230 system arch.
+    config CRUX
+        string "K230 CRUX"
+          default "k230"
+          help
+            set k230 board crux.
+    config TARGET_OS
+          string "target_os"
+          default "smart-linux"
+          help
+            set k230 run os.
+    endmenu
 endif
 
 #
