@@ -48,6 +48,7 @@ if rcfiles then
 end
 
 includes(dir .. "modules.lua")
+includes(dir .. "option.lua")
 includes(dir .. "rules.lua")
 includes(dir .. "tasks.lua")
 includes(dir .. "toolchains.lua")
@@ -72,6 +73,20 @@ local archs = {
     riscv64gc = "riscv64gc-unknown-smart-musl"
 }
 
+local cruxs = {
+    k230 = {
+        toolchain = {
+            "xuantie_900-gcc",
+            "riscv64gc-unknown-smart-musl"
+        },
+        arch = "riscv64gc"
+    }
+}
+
+if not get_config("xuantie_ver") then
+    set_config("xuantie_ver", "2.6.0")
+end
+
 if not get_config("target_os") then
     set_config("target_os", "rt-smart")
 end
@@ -93,4 +108,26 @@ if target_os == "rt-smart" then
 elseif target_os == "linux" then
     add_requires("x86_64-linux-musl")
     set_toolchains("@x86_64-linux-musl")
+
+elseif target_os == "smart-linux" then
+    if not get_config("crux") then
+        set_config("crux", "k230")
+    end
+    if not get_config("arch") then
+        set_config("arch", "riscv64gc")
+    end
+
+    local crux = get_config("crux")
+    if table.contains(table.keys(cruxs), crux) then
+        local toolchains = {}
+        for _, pkgs in ipairs(cruxs[crux].toolchain) do
+            table.insert(toolchains, "@" .. pkgs)
+            if pkgs:startswith("xuantie") and get_config("xuantie_ver") then
+                add_requires(pkgs .. " " .. get_config("xuantie_ver"))
+            else
+                add_requires(pkgs)
+            end
+        end
+        set_toolchains(table.unpack(toolchains))
+    end
 end
