@@ -2,53 +2,62 @@ DESCRIPTION = "RT-Smart User Applications"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=b97a012949927931feb7793eee5ed924"
 
-SRC_URI = "git://github.com/RT-Thread/userapps.git;branch=main;protocol=https"
-#指定Git仓库哈希，AUTOINC表示最新提交
-SRCREV = "${AUTOREV}"
-#SRCREV = "f1611c9f4b15f79ae8a5d58cb672940959a5f72f"
-#${WORKDIR}: tmp/work/cortexa57-poky-linux/busybox/0.1
-S = "${WORKDIR}/git"
+APP_NAME = "busybox-1.35.0"
+APP_MD5SUM = "585949b1dd4292b604b7d199866e9913"
+SRC_URI = "https://www.busybox.net/downloads/${APP_NAME}.tar.bz2;md5sum=${APP_MD5SUM}"
 
 # 禁用默认任务
 #do_patch[noexec] = "1"
 
-do_build_userapps() {
-    bbplain "==================================="
-    #bbplain "${PATH}"
-    bbplain "****** Begin to build userapps..."
-    bbplain "****** Checking source directory: ${S}"
-    if [ -d "${S}" ]; then
-        cd "${S}" || bbfatal "Failed to enter ${S}"
-        bbplain "****** Set env"
-        #source env.sh  ##source command not found 
-        #bash env.sh    ##后面xmake执行提示返回错误代码
-        export XMAKE_RCFILES="${S}/tools/scripts/xmake.lua"
-        export RT_XMAKE_LINK_TYPE="shared"
+python do_fetch() {
+     bb.plain("##############################")
+     uri = d.getVar('SRC_URI').split()
+     fetcher = bb.fetch2.Fetch(uri, d)
+     bb.plain("****** Begin downloading busybox...")
+     fetcher.download()
+     bb.plain("****** Begin unpacking...")
+     fetcher.unpack(d.getVar('WORKDIR'))
+     bb.plain("****** Finish downloaded busybox.")
+}
 
-        cd apps || bbfatal "apps directory missing"
-        bbplain "****** Set arch architecture based MACHINE"
-        # 根据MACHINE动态选择架构
-        if [ "${MACHINE}" = "qemuarm64" ]; then
-            target_arch="aarch64"
-        else
-            target_arch="riscv64"
-        fi
-        bbplain "****** xmake f -a ${target_arch}"
-        xmake f -a "${target_arch}"
-        bbplain "****** xmake -j8"
-        xmake -j8
-        bbplain "****** xmake smart-rootfs"
-        xmake smart-rootfs
-        bbplain "****** xmake smart-image -o ext4.img"
-        xmake smart-image -o ext4.img
-        bbplain "****** Build done! ${S}/apps/ext4.img"
-        bbplain "==================================="
+do_build_busybox() {
+    bbplain "##############################"
+    #bbplain "${PATH}"
+    bbplain "${FILE_DIRNAME}"
+    SRC=${WORKDIR}/${APP_NAME}
+    bbplain "****** Begin to build busybox..."
+    bbplain "****** Checking source directory: ${SRC}"
+    if [ -d "${SRC}" ]; then
+        cd "${SRC}"
+       #bbplain "${PATH}"
+       bbplain "****** Do patch"
+       TagFile=".patched"
+       if [ -f ${TagFile} ]; then
+           bbplain "  *** have been patched, need do nothing!"
+       else
+           touch ${TagFile}
+           patch -Np1 -i ${FILE_DIRNAME}/patches/01_*.diff
+           patch -Np1 -i ${FILE_DIRNAME}/patches/02_*.diff
+       fi
+
+       bbplain "****** Copy default config"
+       cp ${FILE_DIRNAME}/conf/def_config ${SRC}/.config
+
+       bbplain "****** Compile busybox"
+       export FILE_DIRNAME="${FILE_DIRNAME}"
+       make V=1
+       bbplain "****** install busybox"
+       make install
+       #bbplain "****** Create rootfs img"
+       #bash ${FILE_DIRNAME}/tools/creat_rootfs.sh
+       cp ${FILE_DIRNAME}/tools/creat_rootfs.sh .
+       cp ${FILE_DIRNAME}/conf/inittab .
+       bbplain "****** Build busybox done! You can go to ${SRC} generate ext4.img with creat_rootfs.sh"
     else
-        bbfatal "Error: ${S} not found!"
+        bbfatal "Error: ${SRC} not found!"
     fi
 }
 
+
 # 自定义的task需要通过addtask添加到任务队列
-# 理论上，Bitbake会在do_fetch环节获取git代码
-# 实际上，在do_fetch的下一环节do_unpack才会下载
-addtask do_build_userapps after do_unpack
+addtask do_build_busybox after do_fetch
