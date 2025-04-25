@@ -65,9 +65,12 @@ $ bitbake smart-gcc -c clean
 ### 8. 编译userapps生成ext4.img文件系统：
 ```bash
 $ cd poky/build
-$ bitbake busybox -c build_userapps  #"busybox"是配方的名称，"build_userapps"是该配方定义的任务。
+$ bitbake busybox -c build_busybox  #"busybox"是配方的名称，"build_busybox"是该配方定义的任务。
 ```
-该配方会从git仓库下载userapps源码，然后按照xmake流程进行编译，最后打包生成一个ext4.img备用。
+该配方会从指定地址下载busybox，然后解压、打patch、编译。
+编译完成后根据提示信息前往busybox源码目录，执行create_rootfs.sh脚本生成ext4.img。
+
+说明：由于sudo权限问题，无法在bitbake执行过程直接进行生成ext4.img。
 
 如果需要重新获取git代码及重新编译，可以先clean:
 ```bash
