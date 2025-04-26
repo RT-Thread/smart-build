@@ -1,5 +1,5 @@
 DESCRIPTION = "RT-Smart musl toolchain"
-LICENSE = "MIT"
+LICENSE = "GPL-3.0-with-GCC-exception & GPL-3.0-only"
 
 # 在配方开头添加以下内容，禁用默认任务链
 # 禁止继承默认的构建类（如base.bbclass)
