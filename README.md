@@ -77,6 +77,12 @@ $ bitbake busybox -c clean
 ```
 
 9. 编译kernel：
-[[Todo]]
-
+```bash
+$ cd poky/build
+$ bitbake rt-thread -c build_kernel  #"rt-thread"是配方的名称， "build_kernel"是该配方定义的任务。
+```
+该配方会从指定地址下载rt-thread，然后进行编译。
+生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64
+说明：由于bitbake不支持终端交互，所以暂无法通过bitbake方式直接进行menuconfig配置。
+可以去源码目录（如tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64）执行"scons --menuconfig"进行配置。
 
