@@ -26,28 +26,14 @@ S = "${WORKDIR}/git"
 
 export SCONS_BUILD_DIR = "${S}/bsp/${@'qemu-virt64-aarch64' if d.getVar('MACHINE') == 'qemuarm64' else 'qemu-virt64-riscv'}"
 
-do_menuconfig() {
+do_build_kernel() {
     bbplain "======= Enter menuconfig"
     bbplain "${SCONS_BUILD_DIR}"
-    #bbplain "${TERM}"
-    export TERM=xterm
-    #export RTT_CC="gcc"
-    #export RTT_CC_PREFIX="aarch64-linux-musleabi-"
-    #export RTT_EXEC_PATH="/opt/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/bin"
-    #export RTT_EXEC_PATH2="/opt/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/aarch64-linux-musleabi/bin"
-    #export PATH=$PATH:"$RTT_EXEC_PATH":"$RTT_EXEC_PATH2"
-    #export PATH="${PATH}:/opt/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/bin"
-    ##bbplain "${PATH}"
-    #oe_runall scons -C ${SCONS_BUILD_DIR} --menuconfig
-    #scons -C ${SCONS_BUILD_DIR} --menuconfig
+    export RTT_CC="gcc"
+    export RTT_CC_PREFIX="aarch64-linux-musleabi-"
+    scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
     scons -C ${SCONS_BUILD_DIR}
-    #script -qefc "scons -C /Data/poky/build/tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64-aarch64 --menuconfig" /dev/null
 }
 
 
-
-do_compile() {
-    oe_runall -C ${SCONS_BUILD_DIR} -j ${BB_NUMBER_THREADS}
-}
-
-addtask do_menuconfig after do_unpack
+addtask do_build_kernel after do_unpack
