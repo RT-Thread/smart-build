@@ -1,6 +1,5 @@
 DESCRIPTION = "RT-Thread Smart Kernel"
-LICENSE="MIT"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=b97a012949927931feb7793eee5ed924"
+LICENSE="CLOSED"
 
 #PROVIDES += "virtual/kernel"
 #inherit kernel
@@ -16,7 +15,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=b97a012949927931feb7793eee5ed924"
 # 指定Git仓库的哈希，AUTOINC表示最新提交
 #SRCREV:dev = "${AUTOINC}"
 
-SRC_URI = "git://github.com/RT-Thread/rt-thread.git;branch=master;protocol=https"
+SRC_URI = "git://gitee.com/rtthread/rt-thread.git;branch=master;protocol=https"
 #SRCREV = "${AUTOINC}"
 SRCREV = "AUTOINC"
 S = "${WORKDIR}/git"
@@ -27,8 +26,8 @@ S = "${WORKDIR}/git"
 export SCONS_BUILD_DIR = "${S}/bsp/${@'qemu-virt64-aarch64' if d.getVar('MACHINE') == 'qemuarm64' else 'qemu-virt64-riscv'}"
 
 do_build_kernel() {
-    bbplain "======= Enter menuconfig"
-    bbplain "${SCONS_BUILD_DIR}"
+    bbplain "****** Build rt-smart kernel"
+    #bbplain "${SCONS_BUILD_DIR}"
     export RTT_CC="gcc"
     export RTT_CC_PREFIX="aarch64-linux-musleabi-"
     scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
