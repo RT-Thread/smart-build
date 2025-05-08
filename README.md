@@ -47,42 +47,69 @@ $ bitbake-layers add-layer ../meta-rt-smart  #将meta-rt-smart添加到layers
 $ bitbake-layers show-layers  #查看添加的layers
 ```
 
-### 7. 获取smart-gcc工具链：
+### 7. 编译 smart-build 整个工程：
+```bash
+$ cd poky
+$ source oe-init-build-env  #会自动进入build目录
+$ bitbake rt-smart  #"rt-samrt"是配方名称
+```
+
+注意：首次编译可能需要一些时间用于安装所指定架构的基础软件包。  
+所以，建议首次先执行一遍：bitbake core-image-minimal 编译一个最小镜像构建缓存数据包。
+
+依赖关系说明：rt-smart依赖busybox，busybox依赖smart-gcc
+
+所以会依次下载smart-gcc，并解压到build/toolchain目录下；  
+然后编译busybox，编译的成果会拷贝到build/$MACHINE目录下（如build/qemuarm64）；  
+可以进入到build/$MACHINE目录执行：bash create_rootfs.sh 生成ext4.img;  
+最后编译rt-smart kernel，并将生成rtthread.bin拷贝到build/$MACHINE目录下。
+
+如果需要重新编译，可以执行：
+```bash
+$ ../../tools/clean_rt_smart.sh
+```
+
+制作ext4.img及运行qemu（以qemuarm64为例）：
+```bash
+$ cd build/qemuarm64
+$ bash create_rootfs.sh  #会生成ext4.img
+$ cp ../../../tools/run_qemuarm64.sh .
+$ ./run_qemuarm64.sh
+```
+
+### 8. 单独安装 smart-gcc 工具链：
 ```bash
 $ cd poky/build
-$ bitbake smart-gcc -c fetch  #"smart-gcc"是配方的名称， "fetch"是该配方定义的任务。
+$ bitbake smart-gcc -c cleansstate  #清除之前的编译状态
+$ rm -rf build/toolchains  #删除之前安装的toolchain
+$ bitbake smart-gcc  #"smart-gcc"是配方的名称
 ```
-该配方会先判断 build/toolchains 目录下是否存在系统默认的工具链，如果有的话不做任何操作；
+该配方会先判断 build/toolchains 目录下是否存在系统默认的工具链，如果有的话不做任何操作；  
 如果没有，会从指定的链接下载工具链压缩包，然后解压到 build/toolchains 目录。
 
-下载的tar包会存放在${DL_DIR}目录，即使执行clean操作也不会删除。
-clean操作只会删除解压的目录，所以如果需要重新解压，可以先clean:
-```bash
-$ bitbake smart-gcc -c clean
-```
-
-### 8. 编译busybox生成ext4.img文件系统：
+### 9. 单独编译 busybox 生成ext4.img文件系统：
 ```bash
 $ cd poky/build
-$ bitbake busybox -c build_busybox  #"busybox"是配方的名称，"build_busybox"是该配方定义的任务。
+$ bitbake busybox -c cleansstate  #清除之前的编译状态
+$ bitbake busybox  #"busybox"是配方的名称
 ```
-该配方会从指定地址下载busybox，然后解压、打patch、编译。
-编译完成后根据提示信息前往busybox源码目录，执行create_rootfs.sh脚本生成ext4.img。
+该配方会从指定地址下载busybox，然后解压、打patch、编译。  
+编译完成后根据提示信息前往build/$MACHINE目录，执行: bash create_rootfs.sh脚本生成ext4.img。
 
 说明：由于sudo权限问题，无法在bitbake执行过程直接进行生成ext4.img。
 
-如果需要重新获取git代码及重新编译，可以先clean:
-```bash
-$ bitbake busybox -c clean
-```
-
-9. 编译kernel：
+### 10. 单独编译 rt-samrt kernel：
 ```bash
 $ cd poky/build
-$ bitbake rt-thread -c build_kernel  #"rt-thread"是配方的名称， "build_kernel"是该配方定义的任务。
+$ bitbake rt-smart -c cleansstate  #清除之前的编译状态
+$ bitbake rt-smart  #"rt-thread"是配方的名称
 ```
-该配方会从指定地址下载rt-thread，然后进行编译。
-生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64
-说明：由于bitbake不支持终端交互，所以暂无法通过bitbake方式直接进行menuconfig配置。
+该配方会从指定地址下载rt-thread，然后进行编译。  
+生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64；  
+编译完成后会将生成的rtthread.bin拷贝到build/$MACHINE目录下；  
+说明：由于bitbake不支持终端交互，所以暂无法通过bitbake方式直接进行menuconfig配置。  
 可以去源码目录（如tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64）执行"scons --menuconfig"进行配置。
 
+### 11. 其它注意事项：
+在 Docker 容器内执行 mount 命令时出现 Operation not permitted 错误，通常是因为容器默认以非特权模式运行，缺少挂载文件系统所需的权限。  
+可以在启动容器时添加 --privileged 参数，赋予容器完整的宿主内核权限。然后就能mount操作了。
