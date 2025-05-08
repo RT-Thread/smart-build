@@ -1,12 +1,6 @@
 DESCRIPTION = "RT-Smart musl toolchain"
 LICENSE = "GPL-3.0-with-GCC-exception & GPL-3.0-only"
 
-# 在配方开头添加以下内容，禁用默认任务链
-# 禁止继承默认的构建类（如base.bbclass)
-#BBCLASSEXTEND = ""
-# 声明使用外部源码路径，避免触发自动解压/编译
-#INHERIT += "externalsrc"
-
 #关闭校验
 BB_STRICT_CHECKSUM = "0"
 
@@ -19,7 +13,6 @@ DEF_TOOLCHAIN = "${@bb.utils.contains('MACHINE', 'qemuarm64', d.getVar('TOOLCHAI
 DEF_TOOLCHAIN_pn-${PN} = "${DEF_TOOLCHAIN}"
 
 python do_fetch() {
-    #import shutil
     toolchain_url = {
         "qemuarm64": "https://download.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2",
         "qemuriscv64": "https://download.rt-thread.org/download/rt-smart/toolchains/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2"
@@ -34,7 +27,6 @@ python do_fetch() {
          bb.plain("****** Find default toolchain:")
          bb.plain(def_tc)
          bb.plain("****** Need do nothing!")
-         bb.plain("##############################")
 
     else:
          bb.plain("##############################")
@@ -50,7 +42,25 @@ python do_fetch() {
          if not os.path.exists(tpath):
              os.makedirs(tpath)
          fetcher.unpack(tpath)
-         bb.plain("****** Build smart-gcc done.")
-         bb.plain("##############################")
+         bb.plain("****** Install smart-gcc toolchain done.")
+}
+
+do_unpack() {
+  :
+}
+do_patch() {
+  :
+}
+do_configure() {
+  :
+}
+do_compile() {
+  :
+}
+do_install() {
+  :
+}
+do_build() {
+  :
 }
 
