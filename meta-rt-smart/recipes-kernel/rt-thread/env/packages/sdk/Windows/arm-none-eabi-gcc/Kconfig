@@ -1,0 +1,30 @@
+# Kconfig file for package arm-none-eabi-gcc
+menuconfig PKG_USING_ARM_NONE_EABI_GCC
+    bool "arm-none-eabi-gcc toolchain"
+    default n
+
+if PKG_USING_ARM_NONE_EABI_GCC
+
+    config PKG_ARM_NONE_EABI_GCC_PATH
+        string
+        default "sdk/Windows/arm-none-eabi-gcc"
+
+    choice
+        prompt "Version"
+        help
+            Select the package version
+
+        config PKG_USING_ARM_NONE_EABI_GCC_V132REL1
+            bool "v13.2.rel1"
+
+        config PKG_USING_ARM_NONE_EABI_GCC_V103
+            bool "v10.3"
+
+    endchoice
+
+    config PKG_ARM_NONE_EABI_GCC_VER
+       string
+       default "v13.2.rel1" if PKG_USING_ARM_NONE_EABI_GCC_V132REL1
+       default "v10.3"      if PKG_USING_ARM_NONE_EABI_GCC_V103
+
+endif

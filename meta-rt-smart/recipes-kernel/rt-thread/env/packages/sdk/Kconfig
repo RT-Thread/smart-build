@@ -1,0 +1,10 @@
+config TARGET_FILE
+    string
+    default ""
+
+config HOSTOS
+    string
+    option env="HOSTOS"
+    default "Linux"
+    
+rsource "$HOSTOS/Kconfig"

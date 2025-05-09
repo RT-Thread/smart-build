@@ -1,0 +1,26 @@
+# Kconfig file for package riscv-none-elf-gcc
+menuconfig PKG_USING_RISCV_NONE_ELF_GCC
+    bool "riscv-none-elf-gcc toolchain"
+    default n
+
+if PKG_USING_RISCV_NONE_ELF_GCC
+
+    config PKG_RISCV_NONE_ELF_GCC_PATH
+        string
+        default "sdk/Windows/riscv-none-elf-gcc"
+
+    choice
+        prompt "Version"
+        help
+            Select the package version
+
+        config PKG_USING_RISCV_NONE_ELF_GCC_V1230REL2_XPACK
+            bool "v12.3.0-2-xpack"
+
+    endchoice
+
+    config PKG_RISCV_NONE_ELF_GCC_VER
+       string
+       default "v12.3.0-2-xpack" if PKG_USING_RISCV_NONE_ELF_GCC_V1230REL2_XPACK
+
+endif

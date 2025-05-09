@@ -1,0 +1,27 @@
+{
+    "name": "riscv-none-elf-gcc",
+    "description": "RISCV GNU Toolchain",
+    "description_zh": "RISCV GNU 工具链",
+    "enable": "PKG_USING_RISCV_NONE_ELF_GCC",
+    "keywords": [
+        "riscv-none-elf-gcc"
+    ],
+    "category": "misc",
+    "author": {
+        "name": "bernard.xiong",
+        "email": "bernard.xiong@gmail.com",
+        "github": "bernard.xiong"
+    },
+    "license": "GPL-2.0",
+    "repository": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack",
+    "icon": "unknown",
+    "homepage": "https://xpack.github.io/dev-tools/riscv-none-elf-gcc",
+    "doc": "unknown",
+    "site": [
+        {
+            "version": "v12.3.0-2-xpack",
+            "URL": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-2/xpack-riscv-none-elf-gcc-12.3.0-2-linux-x64.tar.gz",
+            "filename": "xpack-riscv-none-elf-gcc-12.3.0-2-linux-x64.tar.gz"
+        }
+    ]
+}

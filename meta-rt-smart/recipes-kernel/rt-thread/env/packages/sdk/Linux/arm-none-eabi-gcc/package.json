@@ -1,0 +1,37 @@
+{
+    "name": "arm-none-eabi-gcc",
+    "description": "Arm GNU Toolchain",
+    "description_zh": "ARM GNU 工具链",
+    "enable": "PKG_USING_ARM_NONE_EABI_GCC",
+    "keywords": [
+        "arm-none-eabi-gcc"
+    ],
+    "category": "misc",
+    "author": {
+        "name": "bernard.xiong",
+        "email": "bernard.xiong@gmail.com",
+        "github": "bernard.xiong"
+    },
+    "license": "GPL-2.0",
+    "repository": "https://developer.arm.com",
+    "icon": "unknown",
+    "homepage": "https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain",
+    "doc": "unknown",
+    "site": [
+        {
+            "version": "v10.3",
+            "URL": "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.07/gcc-arm-none-eabi-10.3-2021.07-x86_64-linux.tar.bz2",
+            "filename": "gcc-arm-none-eabi-10.3-2021.07-x86_64-linux.tar.bz2"
+        },
+        {
+            "version": "v13.2.rel1",
+            "URL": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz",
+            "filename": "arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz"
+        },
+        {
+            "version": "v13.2.rel1_aarch64",
+            "URL": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-aarch64-arm-none-eabi.tar.xz",
+            "filename": "arm-gnu-toolchain-13.2.rel1-aarch64-arm-none-eabi.tar.xz"
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "ds18b20",
+  "description": "a package of digital temperature sensor ds18b20",
+  "description_zh": "数字温度传感器 ds18b20 的软件包",
+  "enable": "PKG_USING_DS18B20",
+  "keywords": [
+    "ds18b20",
+    "sensor",
+    "temperature",
+    "onewire"
+  ],
+  "category": "peripherals/sensors",
+  "author": {
+    "name": "WillianChan",
+    "email": "chentingwei@rt-thread.com",
+    "github": "WillianChan"
+  },
+  "license": "Apache-2.0",
+  "repository": "https://github.com/RT-Thread-packages/ds18b20",
+  "icon": "unknown",
+  "homepage": "https://github.com/RT-Thread-packages/ds18b20",
+  "site": [
+    {
+      "version": "latest",
+      "URL": "https://github.com/RT-Thread-packages/ds18b20.git",
+      "filename": "ds18b20-latest.zip",
+      "VER_SHA": "master"
+    }
+  ]
+}

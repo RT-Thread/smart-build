@@ -1,0 +1,37 @@
+{
+  "name": "MultiButton",
+  "description": "A compact and easy to use event-driven button driver",
+  "description_zh": "一个小巧易用的事件驱动按钮驱动模块",
+  "enable": "PKG_USING_MULTIBUTTON",
+  "keywords": [
+    "MultiButton"
+  ],
+  "category": "misc",
+  "author": {
+    "name": "0x1abin",
+    "email": "0x1abin@gmail.com",
+    "github": "0x1abin"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/RT-Thread-packages/MultiButton",
+  "homepage": "https://github.com/RT-Thread-packages/MultiButton#readme",
+  "readme": "https://github.com/RT-Thread-packages/MultiButton#readme",
+  "site": [
+    {
+      "version": "v1.2.1",
+      "URL": "https://github.com/RT-Thread-packages/MultiButton/archive/v1.2.1.zip",
+      "filename": "MultiButton-1.2.1.zip"
+    },
+    {
+      "version": "v1.2.0",
+      "URL": "https://github.com/RT-Thread-packages/MultiButton/archive/v1.2.0.zip",
+      "filename": "MultiButton-1.2.0.zip"
+    },
+    {
+      "version": "latest",
+      "URL": "https://github.com/RT-Thread-packages/MultiButton.git",
+      "filename": "MultiButton.zip",
+      "VER_SHA": "master"
+    }
+  ]
+}

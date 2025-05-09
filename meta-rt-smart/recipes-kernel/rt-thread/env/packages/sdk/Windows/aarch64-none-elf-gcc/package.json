@@ -1,0 +1,27 @@
+{
+    "name": "aarch64-none-elf-gcc",
+    "description": "AArch64 GNU Toolchain",
+    "description_zh": "AArch64 GNU 工具链",
+    "enable": "PKG_USING_AARCH64_NONE_ELF_GCC",
+    "keywords": [
+        "aarch64-none-elf-gcc"
+    ],
+    "category": "misc",
+    "author": {
+        "name": "bernard.xiong",
+        "email": "bernard.xiong@gmail.com",
+        "github": "bernard.xiong"
+    },
+    "license": "GPL-2.0",
+    "repository": "https://developer.arm.com",
+    "icon": "unknown",
+    "homepage": "https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain",
+    "doc": "unknown",
+    "site": [
+        {
+            "version": "v13.2.rel1",
+            "URL": "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-mingw-w64-i686-aarch64-none-elf.zip",
+            "filename": "arm-gnu-toolchain-13.2.rel1-mingw-w64-i686-aarch64-none-elf.zip"
+        }
+    ]
+}
