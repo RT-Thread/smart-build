@@ -72,8 +72,7 @@ $ ../../tools/clean_rt_smart.sh
 制作ext4.img及运行qemu（以qemuarm64为例）：
 ```bash
 $ cd build/qemuarm64
-$ bash create_rootfs.sh  #会生成ext4.img
-$ cp ../../../tools/run_qemuarm64.sh .
+$ bash create_rootfs.sh  #生成ext4.img
 $ ./run_qemuarm64.sh
 ```
 
@@ -91,7 +90,7 @@ $ bitbake smart-gcc  #"smart-gcc"是配方的名称
 ```bash
 $ cd poky/build
 $ bitbake busybox -c cleansstate  #清除之前的编译状态
-$ bitbake busybox  #"busybox"是配方的名称
+$ bitbake busybox
 ```
 该配方会从指定地址下载busybox，然后解压、打patch、编译。  
 编译完成后根据提示信息前往build/$MACHINE目录，执行: bash create_rootfs.sh脚本生成ext4.img。
@@ -102,7 +101,7 @@ $ bitbake busybox  #"busybox"是配方的名称
 ```bash
 $ cd poky/build
 $ bitbake rt-smart -c cleansstate  #清除之前的编译状态
-$ bitbake rt-smart  #"rt-thread"是配方的名称
+$ bitbake rt-smart
 ```
 该配方会从指定地址下载rt-thread，然后进行编译。  
 生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64；  

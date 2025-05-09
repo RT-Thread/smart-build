@@ -23,6 +23,7 @@ do_compile() {
         mkdir ${TOPDIR}/${MACHINE}
     fi
     cp ${SCONS_BUILD_DIR}/rtthread.bin ${TOPDIR}/${MACHINE}
+    cp ${TOPDIR}/../../tools/run*.sh ${TOPDIR}/${MACHINE}
 }
 
 do_patch() {
