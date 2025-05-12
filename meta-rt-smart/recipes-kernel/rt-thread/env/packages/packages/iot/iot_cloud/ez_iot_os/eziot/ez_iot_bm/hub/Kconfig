@@ -1,3 +1,0 @@
-menuconfig EZIOT_HUB_ENABLE
-    bool "Enable ez-iot hub"
-    default y

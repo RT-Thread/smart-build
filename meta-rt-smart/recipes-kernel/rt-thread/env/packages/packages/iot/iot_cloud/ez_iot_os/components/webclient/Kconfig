@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_WEBCLIENT_ENABLE
-    bool "Enable webclient"
-    default y

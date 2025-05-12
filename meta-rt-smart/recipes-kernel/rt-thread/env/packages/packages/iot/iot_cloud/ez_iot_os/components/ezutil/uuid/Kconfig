@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_EZUTIL_UUID_ENABLE
-    bool "Enable ezutil uuid"
-    default y

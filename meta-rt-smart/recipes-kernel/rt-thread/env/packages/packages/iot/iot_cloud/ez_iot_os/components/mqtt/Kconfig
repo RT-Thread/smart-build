@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_MQTT_ENABLE
-    bool "Enable mqtt client"
-    default y

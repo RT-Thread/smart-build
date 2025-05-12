@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_UTEST_ENABLE
-    bool "Enable utest"
-    default y

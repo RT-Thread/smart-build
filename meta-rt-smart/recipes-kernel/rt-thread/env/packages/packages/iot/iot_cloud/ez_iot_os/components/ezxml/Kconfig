@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_EZXML_ENABLE
-    bool "Enable ezxml"
-    default y

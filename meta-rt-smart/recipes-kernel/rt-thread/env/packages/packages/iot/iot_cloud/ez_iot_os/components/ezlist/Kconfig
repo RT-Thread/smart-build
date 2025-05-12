@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_EZLIST_ENABLE
-    bool "Enable ezlist"
-    default y

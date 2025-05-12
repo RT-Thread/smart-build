@@ -1,3 +1,0 @@
-menuconfig EZIOT_COMPONENT_EZUTIL_MISC_ENABLE
-    bool "Enable ezutil misc"
-    default y

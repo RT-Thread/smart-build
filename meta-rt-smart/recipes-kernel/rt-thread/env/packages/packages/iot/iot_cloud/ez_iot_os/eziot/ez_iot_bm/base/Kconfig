@@ -1,3 +1,0 @@
-menuconfig EZIOT_BASE_ENABLE
-    bool "Enable ez-iot base"
-    default y

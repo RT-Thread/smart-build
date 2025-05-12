@@ -1,4 +1,0 @@
-
-menuconfig EZIOT_COMPONENT_EZUTIL_S2J_ENABLE
-    bool "Enable ezutil s2j"
-    default y
