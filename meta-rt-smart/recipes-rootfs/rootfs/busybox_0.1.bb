@@ -55,7 +55,9 @@ do_compile() {
         if [ ! -d "${TOPDIR}/${MACHINE}" ]; then
             mkdir ${TOPDIR}/${MACHINE}
         fi
-        rm -rf ${TOPDIR}/${MACHINE}/*
+        if [ -d "${TOPDIR}/${MACHINE}/install" ]; then
+            rm -rf ${TOPDIR}/${MACHINE}/install
+        fi
         cp -ra install ${TOPDIR}/${MACHINE}
         cp ${FILE_DIRNAME}/tools/creat_rootfs.sh ${TOPDIR}/${MACHINE}
         cp ${FILE_DIRNAME}/conf/inittab ${TOPDIR}/${MACHINE}
