@@ -50,21 +50,39 @@ do_compile() {
         make V=1
         bbplain "****** install busybox"
         make install
-        #bbplain "****** Create rootfs img"
-        #bash ${FILE_DIRNAME}/tools/creat_rootfs.sh
+        bbplain "****** Create rootfs img"
         if [ ! -d "${TOPDIR}/${MACHINE}" ]; then
             mkdir ${TOPDIR}/${MACHINE}
         fi
-        if [ -d "${TOPDIR}/${MACHINE}/install" ]; then
-            rm -rf ${TOPDIR}/${MACHINE}/install
-        fi
-        cp -ra install ${TOPDIR}/${MACHINE}
-        cp ${FILE_DIRNAME}/tools/creat_rootfs.sh ${TOPDIR}/${MACHINE}
-        cp ${FILE_DIRNAME}/conf/inittab ${TOPDIR}/${MACHINE}
-        bbplain "****** Build busybox done! You can go to ${TOPDIR}/${MACHINE} generate ext4.img with: bash creat_rootfs.sh"
+        cp ${FILE_DIRNAME}/conf/inittab ${SRC}
+        do_create_ext4img
+        bbplain "****** Install ext4.img to: ${TOPDIR}/${MACHINE}"
     else
         bbfatal "Error: ${SRC} not found!"
     fi
+}
+
+do_create_ext4img() {
+    cd ${WORKDIR}/${APP_NAME}
+
+    bbplain "   *** create rootfs dir"
+    if [ -d rootfs ]; then
+        rm -rf rootfs
+    fi
+    mkdir rootfs
+    cp -ra install/* rootfs
+    cd rootfs
+    mkdir -p dev/shm etc lib mnt proc root run services tmp var
+    cp ../inittab etc/
+    cd var
+    ln -s ../run run
+    cd ../..
+
+    bbplain "   *** create ext4.img"
+    rm -rf ext4.img
+    dd if=/dev/zero of=ext4.img bs=1M count=256
+    mke2fs -t ext4 -d rootfs ext4.img
+    cp ext4.img ${TOPDIR}/${MACHINE}
 }
 
 do_unpack() {
