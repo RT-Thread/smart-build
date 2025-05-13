@@ -60,9 +60,8 @@ $ bitbake rt-smart  #"rt-samrt"是配方名称
 依赖关系说明：rt-smart依赖busybox，busybox依赖smart-gcc
 
 所以会依次下载smart-gcc，并解压到build/toolchain目录下；  
-然后编译busybox，编译的成果会拷贝到build/$MACHINE目录下（如build/qemuarm64）；  
-可以进入到build/$MACHINE目录执行：bash create_rootfs.sh 生成ext4.img;  
-最后编译rt-smart kernel，并将生成rtthread.bin拷贝到build/$MACHINE目录下。
+然后编译busybox，将生成的ext4.img拷贝到build/$MACHINE目录下（如build/qemuarm64）；  
+最后编译rt-smart kernel，并将生成的rtthread.bin拷贝到build/$MACHINE目录下。
 
 如果需要重新编译，可以执行：
 ```bash
@@ -72,7 +71,6 @@ $ ../../tools/clean_rt_smart.sh
 制作ext4.img及运行qemu（以qemuarm64为例）：
 ```bash
 $ cd build/qemuarm64
-$ bash create_rootfs.sh  #生成ext4.img
 $ ./run_qemuarm64.sh
 ```
 
@@ -92,10 +90,8 @@ $ cd poky/build
 $ bitbake busybox -c cleansstate  #清除之前的编译状态
 $ bitbake busybox
 ```
-该配方会从指定地址下载busybox，然后解压、打patch、编译。  
-编译完成后根据提示信息前往build/$MACHINE目录，执行: bash create_rootfs.sh脚本生成ext4.img。
-
-说明：由于sudo权限问题，无法在bitbake执行过程直接进行生成ext4.img。
+该配方会从指定地址下载busybox，然后解压、打patch、编译、以及生成ext4.img。
+最后将生成的ext4.img拷贝到build/$MACHINE目录下；  
 
 ### 10. 单独编译 rt-samrt kernel：
 ```bash
@@ -104,11 +100,12 @@ $ bitbake rt-smart -c cleansstate  #清除之前的编译状态
 $ bitbake rt-smart
 ```
 该配方会从指定地址下载rt-thread，然后进行编译。  
-生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64；  
+生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-smart/0.1/git/bsp/qemu-virt64-aarch64；  
 编译完成后会将生成的rtthread.bin拷贝到build/$MACHINE目录下；  
 说明：由于bitbake不支持终端交互，所以暂无法通过bitbake方式直接进行menuconfig配置。  
-可以去源码目录（如tmp/work/cortexa57-poky-linux/rt-thread/0.1/git/bsp/qemu-virt64）执行"scons --menuconfig"进行配置。
+可以去源码目录（如 tmp/work/cortexa57-poky-linux/rt-smart/0.1/git/bsp/qemu-virt64-aarch64 ）执行"scons --menuconfig"进行配置。
 
 ### 11. 其它注意事项：
 在 Docker 容器内执行 mount 命令时出现 Operation not permitted 错误，通常是因为容器默认以非特权模式运行，缺少挂载文件系统所需的权限。  
 可以在启动容器时添加 --privileged 参数，赋予容器完整的宿主内核权限。然后就能mount操作了。
+

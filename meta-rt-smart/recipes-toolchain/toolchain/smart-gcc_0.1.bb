@@ -30,7 +30,7 @@ python do_fetch() {
 
     else:
          bb.plain("##############################")
-         bb.plain("****** Not find default toolchain, download and unpacked to:")
+         bb.plain("****** Not find default toolchain, download and unpacked to: ${TOPDIR}/toolchains")
          #bb.plain(tc_url)
          uri = tc_url.split()
          fetcher = bb.fetch2.Fetch(uri, d)
