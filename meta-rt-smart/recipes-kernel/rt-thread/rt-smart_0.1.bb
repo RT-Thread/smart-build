@@ -5,7 +5,7 @@ SRC_URI = "git://gitee.com/rtthread/rt-thread.git;branch=master;protocol=https;n
            git://gitee.com/RT-Thread-Mirror/env.git;branch=master;protocol=https;name=env;subdir=env \
            git://gitee.com/RT-Thread-Mirror/packages.git;branch=master;protocol=https;name=packages;subdir=packages \
            git://gitee.com/RT-Thread-Mirror/sdk.git;branch=main;protocol=https;name=sdk;subdir=sdk \
-           git://github.com/RT-Thread-packages/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
+           git://gitee.com/RT-Thread-Mirror/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
 "
 #SRCREV = "${AUTOINC}"
 #SRCREV = "AUTOINC"
