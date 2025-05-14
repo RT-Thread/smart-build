@@ -105,7 +105,34 @@ $ bitbake rt-smart
 说明：由于bitbake不支持终端交互，所以暂无法通过bitbake方式直接进行menuconfig配置。  
 可以去源码目录（如 tmp/work/cortexa57-poky-linux/rt-smart/0.1/git/bsp/qemu-virt64-aarch64 ）执行"scons --menuconfig"进行配置。
 
-### 11. 其它注意事项：
-在 Docker 容器内执行 mount 命令时出现 Operation not permitted 错误，通常是因为容器默认以非特权模式运行，缺少挂载文件系统所需的权限。  
-可以在启动容器时添加 --privileged 参数，赋予容器完整的宿主内核权限。然后就能mount操作了。
+### 11. Docker操作指南：
+注意：以下操作均是在Docker内进行，以Ubuntu 22.04 Docker为例。
 
+有关Docker启动的基本操作，这里不再赘述。
+进入Docker后默认是root用户，但是Bitbake不允许使用root用户操作，所以需要创建一个普通用户，如：rtt （你可以换成自己喜欢的用户名称）
+```bash
+# adduser rtt  #设置password如: rt-smart
+# aptitude install sudo
+# usermod -aG sudo rtt  #将rtt用户添加sudo组
+# su rtt  #切换到rtt用户
+$ cd ~  #回到rtt的home目录，后面所有操作均在/home/rtt下进行
+```
+
+安装依赖环境：
+```bash
+$ sudo apt update
+$ sudo apt install vim gcc make scons git bzip2 net-tools iputils-ping libncurses-dev
+$ sudo apt install qemu-system-arm qemu-system-common qemu-utils
+$ sudo apt install python3 python3-lib2to3 python3-git python3-jinja2 python3-pexpect python3-pip python3-subunit
+$ sudo apt install build-essential chrpath cpio debianutils diffstat file gawk libacl1 liblz4-tool locales socat texinfo unzip wget xz-utils zstd bash-completion
+$ pip3 install kconfiglib
+```
+
+然后就可以参照前面的第2, 3, 4, 5, 6, 7章节进行操作了。
+
+如果本地Host系统已经有了smart-build和poky的仓库数据，则可以直接拷贝到Docker里面，避免重新git clone下载。
+注意：下面拷贝操作在Host系统里面进行。其中$Container_Name是指当前在运行docker的容器名称，可以通过"docker ps -l 查看"，用实际名称替换。
+```bash
+$ docker cp smart-build $Container_Name:/home/rtt/  
+$ docker cp poky $Container_Name:/home/rtt/smart-build/
+```
