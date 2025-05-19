@@ -25,7 +25,7 @@ export SCONS_BUILD_DIR = "${S}/bsp/${@'qemu-virt64-aarch64' if d.getVar('MACHINE
 do_build_kernel() {
     bbplain "##############################"
     export RTT_CC="gcc"
-    if [ $MACHINE == "qemuarm64" ]; then
+    if [ ${MACHINE} = "qemuarm64" ]; then
         export RTT_CC_PREFIX="aarch64-linux-musleabi-"
     else
         export RTT_CC_PREFIX="riscv64-linux-musleabi-"
