@@ -8,19 +8,19 @@ SRC_URI = "https://www.busybox.net/downloads/${APP_NAME}.tar.bz2;md5sum=${APP_MD
 
 BP = "busybox-1.35.0"
 
-DEPENDS = "smart-gcc"
 
-python do_fetch() {
+python do_build_rootfs() {
     bb.plain("##############################")
     uri = d.getVar('SRC_URI').split()
     fetcher = bb.fetch2.Fetch(uri, d)
     bb.plain("****** Begin downloading busybox...")
     fetcher.download()
-    bb.plain("****** Begin unpacking...")
+    bb.plain("****** Begin unpacking busybox...")
     fetcher.unpack(d.getVar('WORKDIR'))
-    bb.plain("****** Finish downloaded busybox.")
-    ##bb.build.exec_func('do_build_busybox', d)   
+    bb.plain("****** Finished downloading busybox.")
+    bb.build.exec_func('do_compile', d)   
 }
+do_build_rootfs[depends] = "smart-gcc:do_install_toolchain"
 
 do_compile() {
     bbplain "##############################"
@@ -32,23 +32,23 @@ do_compile() {
     if [ -d "${SRC}" ]; then
         cd "${SRC}"
         #bbplain "${PATH}"
-        bbplain "****** Do patch"
+        bbplain "****** Do patch for busybox"
         TagFile=".patched"
         if [ -f ${TagFile} ]; then
             bbplain "  *** have been patched, need do nothing!"
         else
             touch ${TagFile}
-            patch -Np1 -i ${FILE_DIRNAME}/patches/01_*.diff
+            patch -Np1 -i ${FILE_DIRNAME}/patches/01_${MACHINE}.diff
             patch -Np1 -i ${FILE_DIRNAME}/patches/02_*.diff
         fi
 
-        bbplain "****** Copy default config"
+        bbplain "****** Copy default config for busybox"
         cp ${FILE_DIRNAME}/conf/def_config ${SRC}/.config
 
         bbplain "****** Compile busybox"
         export FILE_DIRNAME="${FILE_DIRNAME}"
         make V=1
-        bbplain "****** install busybox"
+        bbplain "****** Install busybox"
         make install
         bbplain "****** Create rootfs img"
         if [ ! -d "${TOPDIR}/${MACHINE}" ]; then
@@ -65,7 +65,7 @@ do_compile() {
 do_create_ext4img() {
     cd ${WORKDIR}/${APP_NAME}
 
-    bbplain "   *** create rootfs dir"
+    bbplain "   *** Create rootfs dir"
     if [ -d rootfs ]; then
         rm -rf rootfs
     fi
@@ -78,26 +78,11 @@ do_create_ext4img() {
     ln -s ../run run
     cd ../..
 
-    bbplain "   *** create ext4.img"
+    bbplain "   *** Create ext4.img"
     rm -rf ext4.img
     dd if=/dev/zero of=ext4.img bs=1M count=256
     mke2fs -t ext4 -d rootfs ext4.img
     cp ext4.img ${TOPDIR}/${MACHINE}
 }
 
-do_unpack() {
-  :
-}
-do_patch() {
-  :
-}
-do_configure() {
-  :
-}
-do_install() {
-  :
-}
-do_build() {
-  :
-}
-
+addtask do_build_rootfs

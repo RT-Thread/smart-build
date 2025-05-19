@@ -12,7 +12,7 @@ TOOLCHAIN_PATH_riscv64 = "${TOPDIR}/toolchains/riscv64-linux-musleabi_for_x86_64
 DEF_TOOLCHAIN = "${@bb.utils.contains('MACHINE', 'qemuarm64', d.getVar('TOOLCHAIN_PATH_aarch64'), d.getVar('TOOLCHAIN_PATH_riscv64'), d)}"
 DEF_TOOLCHAIN_pn-${PN} = "${DEF_TOOLCHAIN}"
 
-python do_fetch() {
+python do_install_toolchain() {
     toolchain_url = {
         "qemuarm64": "https://download.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2",
         "qemuriscv64": "https://download.rt-thread.org/download/rt-smart/toolchains/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2"
@@ -30,14 +30,14 @@ python do_fetch() {
 
     else:
          bb.plain("##############################")
-         bb.plain("****** Not find default toolchain, download and unpacked to: ${TOPDIR}/toolchains")
+         tpath = d.getVar('TOPDIR') + "/toolchains"
+         bb.plain("****** Not find default toolchain, download and unpacked to: " + tpath)
          #bb.plain(tc_url)
          uri = tc_url.split()
          fetcher = bb.fetch2.Fetch(uri, d)
          bb.plain("****** Begin downloading...")
          fetcher.download()
          bb.plain("****** Begin unpacking...")
-         tpath = d.getVar('TOPDIR') + "/toolchains"
          #检查build/toolchains目录是否存在
          if not os.path.exists(tpath):
              os.makedirs(tpath)
@@ -45,22 +45,4 @@ python do_fetch() {
          bb.plain("****** Install smart-gcc toolchain done.")
 }
 
-do_unpack() {
-  :
-}
-do_patch() {
-  :
-}
-do_configure() {
-  :
-}
-do_compile() {
-  :
-}
-do_install() {
-  :
-}
-do_build() {
-  :
-}
-
+addtask do_install_toolchain
