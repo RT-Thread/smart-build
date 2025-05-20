@@ -19,15 +19,17 @@ SRCREV_FORMAT = "rtthread_env_packages_sdk_lwext4"
 
 S = "${WORKDIR}/git"
 
-DEPENDS = "busybox"
-
-export SCONS_BUILD_DIR = "${S}/bsp/${@'qemu-virt64-aarch64' if d.getVar('MACHINE') == 'qemuarm64' else 'qemu-virt64-riscv'}"
-
-do_compile() {
+# only build rt-smart kernel
+do_build_kernel() {
     bbplain "##############################"
     export RTT_CC="gcc"
-    export RTT_CC_PREFIX="aarch64-linux-musleabi-"
-    #bbplain $PATH
+    if [ ${MACHINE} = "qemuarm64" ]; then
+        export RTT_CC_PREFIX="aarch64-linux-musleabi-"
+        export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-aarch64"
+    else
+        export RTT_CC_PREFIX="riscv64-linux-musleabi-"
+        export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-riscv"
+    fi
     bbplain "****** Create ~/.env and copy lwext4 package"
     if [ -d ~/.env ]; then
         rm -rf ~/.env
@@ -49,7 +51,7 @@ do_compile() {
     cp ${FILE_DIRNAME}/lwext4_SConscript ${SCONS_BUILD_DIR}/packages/SConscript
     #cd ${SCONS_BUILD_DIR}
     #pkgs --update
-    bbplain "****** Copy default config"
+    bbplain "****** Copy default config for ${MACHINE}"
     cp ${FILE_DIRNAME}/${MACHINE}_defconfig ${SCONS_BUILD_DIR}/.config
     bbplain "****** Build rt-smart kernel"
     scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
@@ -59,19 +61,29 @@ do_compile() {
         mkdir ${TOPDIR}/${MACHINE}
     fi
     cp ${SCONS_BUILD_DIR}/rtthread.bin ${TOPDIR}/${MACHINE}
-    cp ${TOPDIR}/../../tools/run*.sh ${TOPDIR}/${MACHINE}
+    if [ -f ${TOPDIR}/../../tools/run_${MACHINE}.sh ]; then
+        cp ${TOPDIR}/../../tools/run_${MACHINE}.sh ${TOPDIR}/${MACHINE}
+    fi
 }
+do_build_kernel[depends] = "smart-gcc:do_install_toolchain"
 
-do_patch() {
-  :
-}
-do_configure() {
-  :
-}
-do_install() {
-  :
-}
-do_build() {
-  :
-}
 
+# build kernel and rootfs 
+do_build_all() {
+    do_build_kernel
+    bbplain "****** All build down! You can enter ${TOPDIR}/${MACHINE} to run qemu."
+}
+do_build_all[depends] = "busybox:do_build_rootfs"
+
+
+do_clean[depends] = "smart-gcc:do_clean"
+do_clean[depends] += "busybox:do_clean"
+
+do_cleansstate[depends] = "smart-gcc:do_cleansstate"
+do_cleansstate[depends] += "busybox:do_cleansstate"
+    
+do_cleanall[depends] = "smart-gcc:do_cleanall"
+do_cleanall[depends] += "busybox:do_cleanall"
+
+addtask do_build_kernel after do_unpack
+addtask do_build_all after do_unpack
