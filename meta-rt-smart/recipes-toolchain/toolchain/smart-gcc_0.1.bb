@@ -4,14 +4,6 @@ LICENSE = "GPL-3.0-with-GCC-exception & GPL-3.0-only"
 #关闭校验
 BB_STRICT_CHECKSUM = "0"
 
-#默认工具链定义
-TOOLCHAIN_PATH_aarch64 = "${TOPDIR}/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu"
-TOOLCHAIN_PATH_riscv64 = "${TOPDIR}/toolchains/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu"
-
-#设置默认工具链
-DEF_TOOLCHAIN = "${@bb.utils.contains('MACHINE', 'qemuarm64', d.getVar('TOOLCHAIN_PATH_aarch64'), d.getVar('TOOLCHAIN_PATH_riscv64'), d)}"
-DEF_TOOLCHAIN_pn-${PN} = "${DEF_TOOLCHAIN}"
-
 python do_install_toolchain() {
     toolchain_url = {
         "qemuarm64": "https://download.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2",
@@ -20,19 +12,21 @@ python do_install_toolchain() {
 
     machine = d.getVar('MACHINE')  #qemuarm64
     tc_url = toolchain_url[machine] #https://download...
-    def_tc = d.getVar('DEF_TOOLCHAIN')  #build/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu
 
-    if os.path.exists(d.getVar('DEF_TOOLCHAIN')):
+    if machine == "qemuarm64":
+        def_toolchain_path = d.getVar('TOPDIR')+"/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu"
+    else:
+        def_toolchain_path = d.getVar('TOPDIR')+"/toolchains/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu"
+
+    if os.path.exists(def_toolchain_path):
          bb.plain("##############################")
          bb.plain("****** Find default toolchain:")
-         bb.plain(def_tc)
+         bb.plain(def_toolchain_path)
          bb.plain("****** Need do nothing!")
-
     else:
          bb.plain("##############################")
          tpath = d.getVar('TOPDIR') + "/toolchains"
          bb.plain("****** Not find default toolchain, download and unpacked to: " + tpath)
-         #bb.plain(tc_url)
          uri = tc_url.split()
          fetcher = bb.fetch2.Fetch(uri, d)
          bb.plain("****** Begin downloading...")
