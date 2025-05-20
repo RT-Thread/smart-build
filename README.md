@@ -41,7 +41,6 @@ MACHINE ??= "qemuarm64"
 ```
 目前可以支持"qemuarm64"和"qemuriscv64"的编译。
 
-
 ### 6. 将meta-rt-smart添加到poky下
 ```bash
 $ cd poky
@@ -53,7 +52,7 @@ $ bitbake-layers show-layers  #查看添加的layers
 ```bash
 $ cd poky
 $ source oe-init-build-env  #会自动进入build目录
-$ bitbake rt-smart -c build_all  #"rt-samrt"是配方名称, build_all表示同时完成toolchain安装、busybox编译及生成ext4.img，以及rt-smart的kernel的编译。
+$ bitbake rt-smart -c build_all  #"rt-smart"是配方名称, build_all表示同时完成toolchain安装、busybox编译及生成ext4.img，以及rt-smart的kernel的编译。
 ```
 
 所以会依次下载smart-gcc，并解压到build/toolchain目录下；  
@@ -92,7 +91,7 @@ $ bitbake busybox -c build_rootfs
 
 编译Busybox之前会先判断Toolchain是否就绪，否则的话会先下载安装Toolchain。
 
-### 10. 单独编译 rt-samrt kernel：
+### 10. 单独编译 rt-smart kernel：
 ```bash
 $ cd poky/build
 $ bitbake rt-smart -c clean  #清除之前的编译

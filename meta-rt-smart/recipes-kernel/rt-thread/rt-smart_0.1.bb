@@ -19,18 +19,17 @@ SRCREV_FORMAT = "rtthread_env_packages_sdk_lwext4"
 
 S = "${WORKDIR}/git"
 
-export SCONS_BUILD_DIR = "${S}/bsp/${@'qemu-virt64-aarch64' if d.getVar('MACHINE') == 'qemuarm64' else 'qemu-virt64-riscv'}"
-
 # only build rt-smart kernel
 do_build_kernel() {
     bbplain "##############################"
     export RTT_CC="gcc"
     if [ ${MACHINE} = "qemuarm64" ]; then
         export RTT_CC_PREFIX="aarch64-linux-musleabi-"
+        export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-aarch64"
     else
         export RTT_CC_PREFIX="riscv64-linux-musleabi-"
+        export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-riscv"
     fi
-    #bbplain $PATH
     bbplain "****** Create ~/.env and copy lwext4 package"
     if [ -d ~/.env ]; then
         rm -rf ~/.env
@@ -62,7 +61,9 @@ do_build_kernel() {
         mkdir ${TOPDIR}/${MACHINE}
     fi
     cp ${SCONS_BUILD_DIR}/rtthread.bin ${TOPDIR}/${MACHINE}
-    cp ${TOPDIR}/../../tools/run_${MACHINE}.sh ${TOPDIR}/${MACHINE}
+    if [ -f ${TOPDIR}/../../tools/run_${MACHINE}.sh ]; then
+        cp ${TOPDIR}/../../tools/run_${MACHINE}.sh ${TOPDIR}/${MACHINE}
+    fi
 }
 do_build_kernel[depends] = "smart-gcc:do_install_toolchain"
 
