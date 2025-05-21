@@ -31,9 +31,7 @@ do_build_kernel() {
         export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-riscv"
     fi
     bbplain "****** Create ~/.env and copy lwext4 package"
-    if [ -d ~/.env ]; then
-        rm -rf ~/.env
-    fi
+
     mkdir -p ~/.env/local_pkgs ~/.env/packages ~/.env/tools
 
     cp -r ${WORKDIR}/sources-unpack/env ~/.env/tools/scripts
