@@ -1,12 +1,37 @@
 DESCRIPTION = "RT-Thread Smart Kernel"
 LICENSE = "CLOSED"
 
-SRC_URI = "git://gitee.com/rtthread/rt-thread.git;branch=master;protocol=https;name=rtthread \
-           git://gitee.com/RT-Thread-Mirror/env.git;branch=master;protocol=https;name=env;subdir=env \
-           git://gitee.com/RT-Thread-Mirror/packages.git;branch=master;protocol=https;name=packages;subdir=packages \
-           git://gitee.com/RT-Thread-Mirror/sdk.git;branch=main;protocol=https;name=sdk;subdir=sdk \
-           git://gitee.com/RT-Thread-Mirror/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
+SRC_URI_GITEE = "git://gitee.com/rtthread/rt-thread.git;branch=master;protocol=https;name=rtthread \
+                 git://gitee.com/RT-Thread-Mirror/env.git;branch=master;protocol=https;name=env;subdir=env \
+                 git://gitee.com/RT-Thread-Mirror/packages.git;branch=master;protocol=https;name=packages;subdir=packages \
+                 git://gitee.com/RT-Thread-Mirror/sdk.git;branch=main;protocol=https;name=sdk;subdir=sdk \
+                 git://gitee.com/RT-Thread-Mirror/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
 "
+
+SRC_URI_GITHUB = "git://github.com/RT-Thread/rt-thread.git;branch=master;protocol=https;name=rtthread \
+                  git://github.com/RT-Thread/env.git;branch=master;protocol=https;name=env;subdir=env \
+                  git://github.com/RT-Thread/packages.git;branch=master;protocol=https;name=packages;subdir=packages \
+                  git://github.com/RT-Thread/sdk.git;branch=main;protocol=https;name=sdk;subdir=sdk \
+                  git://github.com/RT-Thread/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
+"
+
+python () {
+    import socket, requests
+    try:
+        ip = requests.get('https://icanhazip.com').text.strip()
+        cstr = "http://ip-api.com/json/" + ip + "?fields=countryCode"
+        response = requests.get(cstr).text.strip()
+        if len(response.split('"CN"')) > 1:
+            bb.plain("****** Using gitee source")
+            d.setVar('SRC_URI', d.getVar('SRC_URI_GITEE'))
+        else:
+            bb.plain("****** Using github source")
+            d.setVar('SRC_URI', d.getVar('SRC_URI_GITHUB'))
+    except:
+        bb.plain("****** Default: using github source")
+        d.setVar('SRC_URI', d.getVar('SRC_URI_GITHUB'))
+}
+
 #SRCREV = "${AUTOINC}"
 #SRCREV = "AUTOINC"
 SRCREV_rtthread = "AUTOINC"
