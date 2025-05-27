@@ -12,7 +12,7 @@ SRC_URI_GITHUB = "git://github.com/RT-Thread/rt-thread.git;branch=master;protoco
                   git://github.com/RT-Thread/env.git;branch=master;protocol=https;name=env;subdir=env \
                   git://github.com/RT-Thread/packages.git;branch=master;protocol=https;name=packages;subdir=packages \
                   git://github.com/RT-Thread/sdk.git;branch=main;protocol=https;name=sdk;subdir=sdk \
-                  git://github.com/RT-Thread-packages/lwext4;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
+                  git://github.com/RT-Thread-packages/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
 "
 
 python () {
