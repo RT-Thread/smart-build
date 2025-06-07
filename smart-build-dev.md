@@ -26,7 +26,7 @@ Bitbake运行的是一套独立的隔离环境，自定义的Task里面需要用
 PATH := "${PATH}:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${TOPDIR}/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/bin:${TOPDIR}/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu/aarch64-linux-musleabi/bin"
 ```
 
-## 五、工具链配方 smart-gcc 定义 (recipes-toolchain/toolchain/smart-gcc_0.1.bb)
+## 五、工具链配方 smart-gcc 定义 (recipes-devtools/toolchain/smart-gcc_0.1.bb)
 
 该配方的内容：根据指定的平台架构（在 poky/build/conf/local.conf 里面定义的，可根据实际需求自行修改，如：MACHINE ??= "qemuarm64" ）下载对应的toolchain压缩包，然后解压到build/toolchains目录下。
 
@@ -45,7 +45,7 @@ BB_STRICT_CHECKSUM = "0"
 3. 主要实现了下载与解压操作。
 
 
-## 六、文件系统配方 busybox 定义 (recipes-rootfs/rootfs/busybox_0.1.bb)
+## 六、文件系统配方 busybox 定义 (recipes-core/busybox/busybox_0.1.bb)
 
 该配方的内容：从指定地址下载busybox源码包，然后解压，打patch, 编译，并将生成 ext4.img 文件系统镜像安装到指定位置备用。
 
