@@ -1,9 +1,9 @@
 # smart-build
-build kernel/rootfs/bootloader for rt-smart
+build kernel/rootfs/bootloader for smart
 
-This README file contains information on the contents of the meta-rt-smart layer.
+This README file contains information on the contents of the meta-smart layer.
 
-meta-rt-smart 依赖 openembedded poky，作为poly的一个layer存在。
+meta-smart 依赖 openembedded poky，作为poly的一个layer存在。
 
 以下是基于Ubuntu22.04的编译流程：
 ### 1. Host环境准备：
@@ -41,10 +41,10 @@ MACHINE ??= "qemuarm64"
 ```
 目前可以支持"qemuarm64"和"qemuriscv64"的编译。
 
-### 6. 将meta-rt-smart添加到poky下
+### 6. 将meta-smart添加到poky下
 ```bash
 $ cd poky
-$ bitbake-layers add-layer ../meta-rt-smart  #将meta-rt-smart添加到layers
+$ bitbake-layers add-layer ../meta-smart  #将meta-smart添加到layers
 $ bitbake-layers show-layers  #查看添加的layers
 ```
 
@@ -52,16 +52,16 @@ $ bitbake-layers show-layers  #查看添加的layers
 ```bash
 $ cd poky
 $ source oe-init-build-env  #会自动进入build目录
-$ bitbake rt-smart -c build_all  #"rt-smart"是配方名称, build_all表示同时完成toolchain安装、busybox编译及生成ext4.img，以及rt-smart的kernel的编译。
+$ bitbake smart -c build_all  #"smart"是配方名称, build_all表示同时完成toolchain安装、busybox编译及生成ext4.img，以及smart的kernel的编译。
 ```
 
 所以会依次下载smart-gcc，并解压到build/toolchain目录下；  
 然后编译busybox，将生成的ext4.img拷贝到build/$MACHINE目录下（如build/qemuarm64）；  
-最后编译rt-smart kernel，并将生成的rtthread.bin拷贝到build/$MACHINE目录下。
+最后编译smart kernel，并将生成的rtthread.bin拷贝到build/$MACHINE目录下。
 
 如果需要重新编译，可以执行清除处理：
 ```bash
-$ bitbake rt-smart -c clean  #同时清除toolchain，busybox， rt-smart的编译文件
+$ bitbake smart -c clean  #同时清除toolchain，busybox， smart的编译文件
 ```
 
 然后可以进去到build/$MACHINE目录运行qemu（以qemuarm64为例）：
@@ -91,20 +91,20 @@ $ bitbake busybox -c build_rootfs
 
 编译Busybox之前会先判断Toolchain是否就绪，否则的话会先下载安装Toolchain。
 
-### 10. 单独编译 rt-smart kernel：
+### 10. 单独编译 smart kernel：
 ```bash
 $ cd poky/build
-$ bitbake rt-smart -c clean  #清除之前的编译
-$ bitbake rt-smart -c build_kernel
+$ bitbake smart -c clean  #清除之前的编译
+$ bitbake smart -c build_kernel
 ```
 该配方会从指定地址下载rt-thread，然后进行编译。  
-生成的kernel地址如：tmp/work/cortexa57-poky-linux/rt-smart/0.1/git/bsp/qemu-virt64-aarch64；  
+生成的kernel地址如：tmp/work/cortexa57-poky-linux/smart/0.1/git/bsp/qemu-virt64-aarch64；  
 编译完成后会将生成的rtthread.bin拷贝到build/$MACHINE目录下；  
 
-编译rt-smart之前会先判断Toolchain是否就绪，否则的话会先下载安装Toolchain。
+编译smart之前会先判断Toolchain是否就绪，否则的话会先下载安装Toolchain。
 
 说明：由于bitbake不支持终端交互，所以暂无法通过bitbake方式直接进行menuconfig配置。  
-可以去源码目录（如 tmp/work/cortexa57-poky-linux/rt-smart/0.1/git/bsp/qemu-virt64-aarch64 ）执行"scons --menuconfig"进行配置。
+可以去源码目录（如 tmp/work/cortexa57-poky-linux/smart/0.1/git/bsp/qemu-virt64-aarch64 ）执行"scons --menuconfig"进行配置。
 然后将生成的.config文件去替换对应架构的默认配置文件，如recipes-kernel/rt-thread/qemuarm64_defconfig，下次再编译就会使用用户自己的默认配置了。
 
 ### 11. smart-build常用的操作指令：
@@ -116,17 +116,17 @@ $ bitbake smart-gcc -c install_toolchain
 ```bash
 $ bitbake busybox -c build_rootfs
 ```
-3. 编译rt-smart内核  (会先判断toolchain是否安装，否则会先安装)
+3. 编译smart内核  (会先判断toolchain是否安装，否则会先安装)
 ```bash
-$ bitbake rt-smart -c build_kernel 
+$ bitbake smart -c build_kernel 
 ```
-4. 编译busybox及rt-smart内核
+4. 编译busybox及smart内核
 ```bash
-$ bitbake rt-smart -c build_all
+$ bitbake smart -c build_all
 ```
-5. 同时清除toolchain, busybox, rt-smart的编译数据
+5. 同时清除toolchain, busybox, smart的编译数据
 ```bash
-$ bitbake rt-smart -c clean/cleansstate/cleanall
+$ bitbake smart -c clean/cleansstate/cleanall
 ```
 参数说明：
   * clean - 清除掉tmp下的编译目录；
