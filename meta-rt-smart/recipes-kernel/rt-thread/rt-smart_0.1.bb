@@ -1,3 +1,5 @@
+inherit region-source
+
 DESCRIPTION = "RT-Thread Smart Kernel"
 LICENSE = "CLOSED"
 
@@ -10,20 +12,7 @@ SRC_URI_GITHUB = "git://github.com/RT-Thread/rt-thread.git;branch=master;protoco
 "
 
 python () {
-    import socket, requests
-    try:
-        ip = requests.get('https://icanhazip.com').text.strip()
-        cstr = "http://ip-api.com/json/" + ip + "?fields=countryCode"
-        response = requests.get(cstr).text.strip()
-        if len(response.split('"CN"')) > 1:
-            bb.plain("****** Using gitee source")
-            d.setVar('SRC_URI', d.getVar('SRC_URI_GITEE'))
-        else:
-            bb.plain("****** Using github source")
-            d.setVar('SRC_URI', d.getVar('SRC_URI_GITHUB'))
-    except:
-        bb.plain("****** Default: using github source")
-        d.setVar('SRC_URI', d.getVar('SRC_URI_GITHUB'))
+    set_preferred_source(d)
 }
 
 SRCREV_rtthread = "AUTOINC"
