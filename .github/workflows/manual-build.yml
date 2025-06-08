@@ -27,7 +27,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sudo locales language-pack-en-base build-essential \
             chrpath cpio diffstat gawk lz4 wget zstd bash curl python3 pip bison flex file
-          pip install requests scons kconfiglib tqdm --break-system-packages
+          pip install requests scons kconfiglib tqdm
 
           git clone https://github.com/openembedded/bitbake
           git clone https://github.com/openembedded/openembedded-core oe-core
