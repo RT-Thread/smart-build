@@ -29,17 +29,13 @@ jobs:
             chrpath cpio diffstat gawk lz4 wget zstd bash curl python3 pip bison flex file
           pip install requests scons kconfiglib tqdm --break-system-packages
 
-      - name: Setup build environment
-        run: |
-          echo "Setting up build environment..."
-          source ./smart-env
-          echo "MACHINE=${{ github.event.inputs.machine }}" >> conf/local.conf
-
-      - name: Build RT-Smart
-        run: |
           git clone https://github.com/openembedded/bitbake
           git clone https://github.com/openembedded/openembedded-core oe-core
+
+      - name: Setup env & Build RT-Smart
+        run: |
           source ./smart-env
+          echo "MACHINE=${{ github.event.inputs.machine }}" >> conf/local.conf
           bitbake smart -c build_all
 
       - name: Archive build artifacts
@@ -47,6 +43,5 @@ jobs:
         with:
           name: ${{ github.event.inputs.machine }}-build
           path: |
+            ls build
             build/${{ github.event.inputs.machine }}
-            build/tmp/work/*/smart/*/temp/log.*
-            build/tmp/log/cooker/* 
