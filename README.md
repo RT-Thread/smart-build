@@ -1,3 +1,7 @@
+# Smart Build
+
+[![Manual Build Status](https://github.com/RT-Thread/smart-build/actions/workflows/manual-build.yml/badge.svg)](https://github.com/RT-Thread/smart-build/actions/workflows/manual-build.yml)
+
 # smart-build
 build kernel/rootfs/bootloader for smart
 
