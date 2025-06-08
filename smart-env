@@ -1,0 +1,130 @@
+#!/bin/sh
+
+# Smart Build Environment Setup Script
+#
+# Copyright (C) 2024 RT-Thread
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/smart-env"
+    if [ ! -e "$THIS_SCRIPT" ]; then
+        echo "Error: $THIS_SCRIPT doesn't exist!" >&2
+        echo "Please run this script in smart-env's directory." >&2
+        exit 1
+    fi
+fi
+
+if [ -n "$BBSERVER" ]; then
+    unset BBSERVER
+fi
+
+if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
+    echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'" >&2
+    exit 1
+fi
+
+# 设置 SMARTROOT 为项目根目录
+if [ -z "$SMARTROOT" ]; then
+    SMARTROOT=$(dirname "$THIS_SCRIPT")
+    SMARTROOT=$(readlink -f "$SMARTROOT")
+fi
+unset THIS_SCRIPT
+
+# 设置 OEROOT 为 oe-core 目录
+OEROOT="$SMARTROOT/oe-core"
+if [ ! -d "$OEROOT" ]; then
+    echo "Error: OpenEmbedded Core directory ($OEROOT) not found!" >&2
+    unset SMARTROOT OEROOT
+    return 1
+fi
+
+# 设置 BITBAKE 为 bitbake 目录
+if [ ! -d "$SMARTROOT/bitbake" ]; then
+    echo "Error: BitBake directory not found!" >&2
+    unset SMARTROOT OEROOT
+    return 1
+fi
+
+# 设置构建目录
+if [ -z "$1" ]; then
+    BUILDDIR="$SMARTROOT/build"
+else
+    BUILDDIR="$SMARTROOT/$1"
+fi
+
+# 设置环境变量
+export SMARTROOT OEROOT BUILDDIR
+export PATH="$SMARTROOT/bitbake/bin:$PATH"
+export PYTHONPATH="$SMARTROOT/bitbake/lib:$OEROOT/meta/lib:$PYTHONPATH"
+
+# 创建构建目录
+if [ ! -d "$BUILDDIR/conf" ]; then
+    mkdir -p "$BUILDDIR/conf"
+    
+    # 创建 local.conf
+    cat > "$BUILDDIR/conf/local.conf" << EOF
+# 机器配置，支持 qemuarm64 和 qemuriscv64
+MACHINE ??= "qemuarm64"
+
+# 编译器配置
+SDKMACHINE ?= "x86_64"
+
+# 构建配置
+BB_NUMBER_THREADS ?= "\${@oe.utils.cpu_count()}"
+PARALLEL_MAKE ?= "-j \${@oe.utils.cpu_count()}"
+
+# 下载和缓存目录
+DL_DIR ?= "\${TOPDIR}/downloads"
+SSTATE_DIR ?= "\${TOPDIR}/sstate-cache"
+
+# 临时目录
+TMPDIR = "\${TOPDIR}/tmp"
+EOF
+
+    # 创建 bblayers.conf，使用绝对路径
+    cat > "$BUILDDIR/conf/bblayers.conf" << EOF
+# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+POKY_BBLAYERS_CONF_VERSION = "2"
+
+BBPATH = "\${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS ?= " \\
+  $SMARTROOT/oe-core/meta \\
+  $SMARTROOT/meta-smart \\
+  "
+EOF
+fi
+
+cd "$BUILDDIR" || return 1
+
+# 不再清理 SMARTROOT，因为它在 bitbake 过程中可能会被用到
+unset OEROOT
+
+echo
+echo "=== Smart Build Environment Initialized ==="
+echo "Build directory: $BUILDDIR"
+echo "Current machine: $(grep '^MACHINE' conf/local.conf | cut -d'"' -f2)"
+echo
+echo "Common build commands:"
+echo "  1. Build everything (recommended for first time):"
+echo "     $ bitbake smart -c build_all"
+echo
+echo "  2. Individual build steps:"
+echo "     Install toolchain:        $ bitbake smart-gcc -c install_toolchain"
+echo "     Build filesystem:         $ bitbake busybox -c build_rootfs"
+echo "     Build kernel:            $ bitbake smart -c build_kernel"
+echo
+echo "  3. Clean build:"
+echo "     Clean all:               $ bitbake smart -c clean"
+echo "     Clean state:             $ bitbake smart -c cleansstate"
+echo "     Clean everything:        $ bitbake smart -c cleanall"
+echo
+echo "Ready to build. Happy hacking!"
+echo "===================================" 

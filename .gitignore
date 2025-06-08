@@ -1,0 +1,32 @@
+# Build directory
+/build*
+
+# Temporary files
+*.swp
+*.orig
+*~
+
+# Python bytecode
+*.pyc
+*.pyo
+__pycache__/
+
+# BitBake specific
+/tmp/
+/sstate-cache/
+/downloads/
+*.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 

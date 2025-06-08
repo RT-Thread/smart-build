@@ -3,7 +3,7 @@ build kernel/rootfs/bootloader for smart
 
 This README file contains information on the contents of the meta-smart layer.
 
-meta-smart 依赖 openembedded poky，作为poly的一个layer存在。
+meta-smart 依赖 openembedded-core，作为openembedded的一个layer存在。
 
 以下是基于Ubuntu22.04的编译流程：
 ### 1. Host环境准备：
@@ -17,41 +17,38 @@ $ git clone https://github.com/RT-Thread/smart-build.git
 $ git checkout -t origin/openembedded -b openembedded
 ```
 
-### 3. 进入smart-build目录，然后下载poky：
+### 3. 进入smart-build目录，然后下载openembedded-core和bitbake：
 ```bash
 $ cd smart-build/
-$ git clone git://git.yoctoproject.org/poky
+$ git clone git://git.openembedded.org/openembedded-core oe-core
+$ git clone git://git.openembedded.org/bitbake
 ```
 
-### 4. 切换到最新的styhead分支：
+### 4. 切换到最新的master分支：
 ```bash
-$ cd poky
+$ cd oe-core
 $ git branch -a
-$ git checkout -t origin/styhead -b my-styhead
+$ git checkout -t origin/master -b my-master
 $ git pull
+$ cd ..
 ```
 
 ### 5. 设置bitbake编译环境：
 ```bash
-$ source oe-init-build-env  #会自动进入build目录
+$ source smart-env  #会自动进入build目录
 ```
-然后修改conf/local.conf:
+或者指定自定义的构建目录名称：
 ```bash
-MACHINE ??= "qemuarm64"
-```
-目前可以支持"qemuarm64"和"qemuriscv64"的编译。
-
-### 6. 将meta-smart添加到poky下
-```bash
-$ cd poky
-$ bitbake-layers add-layer ../meta-smart  #将meta-smart添加到layers
-$ bitbake-layers show-layers  #查看添加的layers
+$ source smart-env custom-build  #会自动进入custom-build目录
 ```
 
-### 7. 编译 smart-build 整个工程：
+默认配置为：
 ```bash
-$ cd poky
-$ source oe-init-build-env  #会自动进入build目录
+MACHINE ??= "qemuarm64"  #支持 qemuarm64 和 qemuriscv64
+```
+
+### 6. 编译 smart-build 整个工程：
+```bash
 $ bitbake smart -c build_all  #"smart"是配方名称, build_all表示同时完成toolchain安装、busybox编译及生成ext4.img，以及smart的kernel的编译。
 ```
 
@@ -70,9 +67,9 @@ $ cd build/qemuarm64
 $ ./run_qemuarm64.sh
 ```
 
-### 8. 单独安装 smart-gcc 工具链：
+### 7. 单独安装 smart-gcc 工具链：
 ```bash
-$ cd poky/build
+$ cd openembedded-core/build
 $ bitbake smart-gcc -c clean  #清除之前的编译
 $ rm -rf build/toolchains  #删除之前安装的toolchain
 $ bitbake smart-gcc -c install_toolchain  #"smart-gcc"是配方的名称, install_toolchain是自定义的Task。
@@ -80,9 +77,9 @@ $ bitbake smart-gcc -c install_toolchain  #"smart-gcc"是配方的名称, instal
 该配方会先判断 build/toolchains 目录下是否存在系统默认的工具链，如果有的话不做任何操作；  
 如果没有，会从指定的链接下载工具链压缩包，然后解压到 build/toolchains 目录。
 
-### 9. 单独编译 busybox 生成ext4.img文件系统：
+### 8. 单独编译 busybox 生成ext4.img文件系统：
 ```bash
-$ cd poky/build
+$ cd openembedded-core/build
 $ bitbake busybox -c clean  #清除之前的编译
 $ bitbake busybox -c build_rootfs
 ```
@@ -91,12 +88,13 @@ $ bitbake busybox -c build_rootfs
 
 编译Busybox之前会先判断Toolchain是否就绪，否则的话会先下载安装Toolchain。
 
-### 10. 单独编译 smart kernel：
+### 9. 单独编译 smart kernel：
 ```bash
-$ cd poky/build
+$ cd openembedded-core/build
 $ bitbake smart -c clean  #清除之前的编译
 $ bitbake smart -c build_kernel
 ```
+
 该配方会从指定地址下载rt-thread，然后进行编译。  
 生成的kernel地址如：tmp/work/cortexa57-poky-linux/smart/0.1/git/bsp/qemu-virt64-aarch64；  
 编译完成后会将生成的rtthread.bin拷贝到build/$MACHINE目录下；  
@@ -107,7 +105,7 @@ $ bitbake smart -c build_kernel
 可以去源码目录（如 tmp/work/cortexa57-poky-linux/smart/0.1/git/bsp/qemu-virt64-aarch64 ）执行"scons --menuconfig"进行配置。
 然后将生成的.config文件去替换对应架构的默认配置文件，如recipes-kernel/rt-thread/qemuarm64_defconfig，下次再编译就会使用用户自己的默认配置了。
 
-### 11. smart-build常用的操作指令：
+### 10. smart-build常用的操作指令：
 1. 安装toolchain:
 ```bash
 $ bitbake smart-gcc -c install_toolchain
@@ -133,34 +131,30 @@ $ bitbake smart -c clean/cleansstate/cleanall
   * cleansstate - 清除掉编译状态；
   * cleanall - 同时会清除掉下载的源文件；（慎用，否则又得下半天）
 
-### 12. Docker操作指南：
-注意：以下操作均是在Docker内进行，以Ubuntu 22.04 Docker为例。
+### 11. Docker操作指南：
+本项目提供了开箱即用的Docker环境，位于 `tools/docker` 目录下。使用Docker可以避免环境配置问题，推荐使用此方式进行开发。
 
-有关Docker启动的基本操作，这里不再赘述。
-进入Docker后默认是root用户，但是Bitbake不允许使用root用户操作，所以需要创建一个普通用户，如：rtt （你可以换成自己喜欢的用户名称）
+1. 构建Docker镜像：
 ```bash
-# adduser rtt  #设置password如: rt-smart
-# aptitude install sudo
-# usermod -aG sudo rtt  #将rtt用户添加sudo组
-# su rtt  #切换到rtt用户
-$ cd ~  #回到rtt的home目录，后面所有操作均在/home/rtt下进行
+$ cd tools/docker
+$ ./docker_build.sh
+```
+这将创建一个名为 `smart-build` 的Docker镜像，基于Ubuntu 24.04，已预装所有必要的开发工具和依赖。
+
+2. 运行Docker容器：
+```bash
+$ ./docker_run.sh
 ```
 
-安装依赖环境：
-```bash
-$ sudo apt update
-$ sudo apt install vim gcc make scons git bzip2 net-tools iputils-ping libncurses-dev
-$ sudo apt install qemu-system-arm qemu-system-common qemu-utils qemu-system-misc
-$ sudo apt install python3 python3-lib2to3 python3-git python3-jinja2 python3-pexpect python3-pip python3-subunit
-$ sudo apt install build-essential chrpath cpio debianutils diffstat file gawk libacl1 liblz4-tool locales socat texinfo unzip wget xz-utils zstd bash-completion
-$ pip3 install kconfiglib
-```
+该脚本会：
+- 以当前用户身份启动容器（避免权限问题）
+- 挂载当前用户的工作目录到容器中
+- 挂载用户配置文件（.bashrc, .profile等）
+- 设置合适的工作目录
 
-然后就可以参照前面的第2, 3, 4, 5, 6, 7章节进行操作了。
+进入容器后，您可以按照上述第2步骤开始进行开发。所有在容器内的操作都会直接反映到主机的工作目录中。
 
-如果本地Host系统已经有了smart-build和poky的仓库数据，则可以直接拷贝到Docker里面，避免重新git clone下载。
-注意：下面拷贝操作在Host系统里面进行。其中$Container_Name是指当前在运行docker的容器名称，可以通过"docker ps -l 查看"，用实际名称替换。
-```bash
-$ docker cp smart-build $Container_Name:/home/rtt/  
-$ docker cp poky $Container_Name:/home/rtt/smart-build/
-```
+注意：
+- Docker环境已预配置了中国时区和国内镜像源，可加快开发效率
+- 容器是临时性的，退出后会自动删除，但您的工作目录数据会保留在主机上
+- 如需自定义Docker环境，可以修改 `tools/docker` 目录下的配置文件
