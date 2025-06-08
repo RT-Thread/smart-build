@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get apt-get update && apt-get install -y sudo locales language-pack-en-base \
+          sudo apt-get install -y sudo locales language-pack-en-base build-essential \
             chrpath cpio diffstat gawk lz4 wget zstd bash curl python3 pip bison flex file
           pip install requests scons kconfiglib tqdm --break-system-packages
 
