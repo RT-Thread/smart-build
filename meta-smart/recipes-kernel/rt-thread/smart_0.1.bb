@@ -12,7 +12,20 @@ SRC_URI_GITHUB = "git://github.com/RT-Thread/rt-thread.git;branch=master;protoco
 "
 
 python () {
-    set_preferred_source(d)
+    import os
+    
+    # 检查是否存在本地 rt-thread 目录
+    local_rtt = os.path.join(d.getVar('SMARTROOT', True), 'rt-thread')
+    if os.path.exists(local_rtt):
+        # 如果存在本地目录，清空 SRC_URI
+        d.setVar('SRC_URI', '')
+        # 设置 S 为本地目录
+        d.setVar('S', local_rtt)
+        bb.plain("Using local rt-thread directory: %s" % local_rtt)
+    else:
+        # 如果不存在本地目录，使用远程仓库
+        set_preferred_source(d)
+        bb.plain("Local rt-thread not found, using remote repository")
 }
 
 SRCREV_rtthread = "AUTOINC"
@@ -20,7 +33,7 @@ SRCREV_lwext4 = "AUTOINC"
 
 SRCREV_FORMAT = "rtthread_lwext4"
 
-S = "${WORKDIR}/git"
+S ?= "${WORKDIR}/git"
 
 # 使用 LAYERDIR 来定位 meta-smart 层的位置
 LAYERDIR_smart = "${@os.path.dirname(os.path.dirname(os.path.dirname(d.getVar('FILE', True))))}"
@@ -39,18 +52,26 @@ do_build_kernel() {
         export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-riscv"
     fi
     
-    if [ -d ${SCONS_BUILD_DIR}/packages ]; then
-        rm -rf ${SCONS_BUILD_DIR}/packages/lwext4*
+    # 检查是否存在本地 rt-thread 目录
+    if [ -d "${SMARTROOT}/rt-thread" ]; then
+        bbplain "****** Using local rt-thread directory"
     else
-        mkdir -p ${SCONS_BUILD_DIR}/packages
+        bbplain "****** Using downloaded rt-thread source"
+
+        if [ -d ${SCONS_BUILD_DIR}/packages ]; then
+            rm -rf ${SCONS_BUILD_DIR}/packages/lwext4*
+        else
+            mkdir -p ${SCONS_BUILD_DIR}/packages
+        fi
+        cp -r ${WORKDIR}/sources-unpack/lwext4 ${SCONS_BUILD_DIR}/packages/lwext4-latest
+        cp ${FILE_DIRNAME}/lwext4_SConscript ${SCONS_BUILD_DIR}/packages/SConscript
+
+        bbplain "****** Copy default config for ${MACHINE}"
+        cp ${FILE_DIRNAME}/${MACHINE}_defconfig ${SCONS_BUILD_DIR}/.config
+        scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
     fi
-    cp -r ${WORKDIR}/sources-unpack/lwext4 ${SCONS_BUILD_DIR}/packages/lwext4-latest
-    cp ${FILE_DIRNAME}/lwext4_SConscript ${SCONS_BUILD_DIR}/packages/SConscript
-    
-    bbplain "****** Copy default config for ${MACHINE}"
-    cp ${FILE_DIRNAME}/${MACHINE}_defconfig ${SCONS_BUILD_DIR}/.config
+
     bbplain "****** Build rt-smart kernel"
-    scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
     scons -C ${SCONS_BUILD_DIR}
     bbplain "****** Install rt-smart kernel to: ${TOPDIR}/${MACHINE}"
     if [ ! -d "${TOPDIR}/${MACHINE}" ]; then
@@ -58,7 +79,7 @@ do_build_kernel() {
     fi
     cp ${SCONS_BUILD_DIR}/rtthread.bin ${TOPDIR}/${MACHINE}
     
-    # 修正 QEMU 启动脚本的复制
+    # copy the run_qemu script
     bbplain "****** Copy QEMU script for ${MACHINE}"
     bbplain "****** Looking in: ${SMARTROOT}/tools/run_${MACHINE}.sh"
     if [ -f "${SMARTROOT}/tools/run_${MACHINE}.sh" ]; then
