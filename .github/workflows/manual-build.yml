@@ -41,6 +41,8 @@ jobs:
 
       - name: Build RT-Smart
         run: |
+          git clone https://github.com/openembedded/bitbake
+          git clone https://github.com/openembedded/openembedded-core oe-core
           source ./smart-env
           bitbake smart -c build_all
 
