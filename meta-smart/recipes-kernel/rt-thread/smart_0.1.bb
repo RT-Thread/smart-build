@@ -25,6 +25,8 @@ python () {
     else:
         # 如果不存在本地目录，使用远程仓库
         set_preferred_source(d)
+        rtthread_src = os.path.join(d.getVar('WORKDIR', True), 'git')
+        d.setVar('S', rtthread_src)
         bb.plain("Local rt-thread not found, using remote repository")
 }
 
@@ -32,8 +34,6 @@ SRCREV_rtthread = "AUTOINC"
 SRCREV_lwext4 = "AUTOINC"
 
 SRCREV_FORMAT = "rtthread_lwext4"
-
-S ?= "${WORKDIR}/git"
 
 # 使用 LAYERDIR 来定位 meta-smart 层的位置
 LAYERDIR_smart = "${@os.path.dirname(os.path.dirname(os.path.dirname(d.getVar('FILE', True))))}"
