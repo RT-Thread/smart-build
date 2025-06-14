@@ -1,0 +1,19 @@
+--- busybox-1.35.0/Makefile.orig	2025-04-24 16:03:42.740308861 +0800
++++ busybox-1.35.0/Makefile	2025-04-24 16:04:59.479156833 +0800
+@@ -4,6 +4,16 @@
+ EXTRAVERSION =
+ NAME = Unnamed
+ 
++CROSS_COMPILE= aarch64-linux-musleabi-
++PWD := $(shell pwd)
++# userapp dir
++SDK_DIR := $(FILE_DIRNAME)
++RT_DIR=$(SDK_DIR)/sdk/rt-thread
++INC_DIR=${SDK_DIR}/sdk/include
++LIB_DIR=${SDK_DIR}/sdk/lib/aarch64/cortex-a
++CFLAGS = -march=armv8-a -fvisibility=hidden -O3 -I. -I$(RT_DIR)/include -I$(RT_DIR)/components/dfs -I$(RT_DIR)/components/drivers -I$(RT_DIR)/components/finsh -I$(RT_DIR)/components/net -I${INC_DIR}
++LDFLAGS = -L. -L${LIB_DIR} -L$(RT_DIR)/lib/aarch64/cortex-a -Wl,--start-group -Wl,-whole-archive -lrtthread -Wl,-no-whole-archive -Wl,--end-group
++
+ # *DOCUMENTATION*
+ # To see a list of typical targets execute "make help"
+ # More info can be located in ./README
