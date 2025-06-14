@@ -1,3 +1,5 @@
+inherit machine
+
 DESCRIPTION = "RT-Smart musl toolchain"
 LICENSE = "GPL-3.0-with-GCC-exception & GPL-3.0-only"
 
@@ -8,25 +10,9 @@ python do_install_toolchain() {
     import os
     import shutil
 
-    toolchain_url = {
-        "qemuarm64": "https://download.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2",
-        "qemuriscv64": "https://download.rt-thread.org/download/rt-smart/toolchains/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2"
-    }
-
-    local_toolchain = {
-        "qemuarm64": "aarch64-linux-musleabi-gcc-latest",
-        "qemuriscv64": "riscv64-linux-musleabi-gcc-latest"
-    }
-
-    target_toolchain = {
-        "qemuarm64": "aarch64-linux-musleabi_for_x86_64-pc-linux-gnu",
-        "qemuriscv64": "riscv64-linux-musleabi_for_x86_64-pc-linux-gnu"
-    }
-
-    machine = d.getVar('MACHINE')
-    tc_url = toolchain_url[machine]
-    local_tc_path = os.path.expanduser("~/.env/tools/scripts/packages/" + local_toolchain[machine])
-    def_toolchain_path = d.getVar('TOPDIR') + "/toolchains/" + target_toolchain[machine]
+    tc_url = toolchain_for_machine(d)
+    local_tc_path = os.path.expanduser("~/.env/tools/scripts/packages/" + d.getVar("LOCAL_TC"))
+    def_toolchain_path = d.getVar('TOPDIR') + "/toolchains/" + d.getVar("TARGET_TC")
 
     # 首先检查目标目录是否已存在
     if os.path.exists(def_toolchain_path):
