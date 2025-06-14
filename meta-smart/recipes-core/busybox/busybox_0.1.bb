@@ -1,3 +1,5 @@
+inherit machine
+
 DESCRIPTION = "RT-Smart User Applications"
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=de10de48642ab74318e893a61105afbb"
@@ -8,6 +10,9 @@ SRC_URI = "https://www.busybox.net/downloads/${APP_NAME}.tar.bz2;md5sum=${APP_MD
 
 BP = "busybox-1.35.0"
 
+python () {
+    handle_machine(d)
+}
 
 python do_build_rootfs() {
     bb.plain("##############################")
@@ -37,9 +42,9 @@ do_compile() {
         if [ -f ${TagFile} ]; then
             bbplain "  *** have been patched, need do nothing!"
         else
-            touch ${TagFile}
-            patch -Np1 -i ${FILE_DIRNAME}/patches/01_${MACHINE}.diff
+            patch -Np1 -i ${FILE_DIRNAME}/patches/01_${ARCH}.diff
             patch -Np1 -i ${FILE_DIRNAME}/patches/02_*.diff
+            touch ${TagFile}
         fi
 
         bbplain "****** Copy default config for busybox"

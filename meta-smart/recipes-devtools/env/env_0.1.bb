@@ -1,4 +1,5 @@
 inherit region-source
+inherit machine
 
 DESCRIPTION = "RT-Thread Smart Environment Setup"
 LICENSE = "CLOSED"
@@ -14,7 +15,14 @@ SRC_URI_GITHUB = "git://github.com/RT-Thread/env.git;branch=master;protocol=http
 "
 
 python () {
+    import os
+
+    handle_machine(d)
     set_preferred_source(d)
+
+    os.environ['ARCH'] = d.getVar('ARCH')
+    os.environ['RTT_CC_PREFIX'] = d.getVar('RTT_CC_PREFIX')
+    os.environ['BSP'] = d.getVar('BSP')
 }
 
 SRCREV_env = "AUTOINC"

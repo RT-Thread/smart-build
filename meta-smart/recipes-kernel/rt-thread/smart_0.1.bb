@@ -1,4 +1,5 @@
 inherit region-source
+inherit machine
 
 DESCRIPTION = "RT-Thread Smart Kernel"
 LICENSE = "CLOSED"
@@ -21,13 +22,15 @@ python () {
         d.setVar('SRC_URI', '')
         # 设置 S 为本地目录
         d.setVar('S', local_rtt)
-        bb.plain("Using local rt-thread directory: %s" % local_rtt)
+        # bb.plain("Using local rt-thread directory: %s" % local_rtt)
     else:
         # 如果不存在本地目录，使用远程仓库
         set_preferred_source(d)
         rtthread_src = os.path.join(d.getVar('WORKDIR', True), 'git')
         d.setVar('S', rtthread_src)
-        bb.plain("Local rt-thread not found, using remote repository")
+        # bb.plain("Local rt-thread not found, using remote repository")
+
+    handle_machine(d)
 }
 
 SRCREV_rtthread = "AUTOINC"
@@ -40,18 +43,11 @@ LAYERDIR_smart = "${@os.path.dirname(os.path.dirname(os.path.dirname(d.getVar('F
 # 通过 LAYERDIR 向上一级找到项目根目录
 SMARTROOT = "${@os.path.dirname(d.getVar('LAYERDIR_smart', True))}"
 
-# only build rt-smart kernel
 do_build_kernel() {
     bbplain "##############################"
     export RTT_CC="gcc"
-    if [ ${MACHINE} = "qemuarm64" ]; then
-        export RTT_CC_PREFIX="aarch64-linux-musleabi-"
-        export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-aarch64"
-    else
-        export RTT_CC_PREFIX="riscv64-linux-musleabi-"
-        export SCONS_BUILD_DIR="${S}/bsp/qemu-virt64-riscv"
-    fi
-    
+    export SCONS_BUILD_DIR="${S}/${BSP}"
+
     # 检查是否存在本地 rt-thread 目录
     if [ -d "${SMARTROOT}/rt-thread" ]; then
         bbplain "****** Using local rt-thread directory"
@@ -78,18 +74,13 @@ do_build_kernel() {
         mkdir ${TOPDIR}/${MACHINE}
     fi
     cp ${SCONS_BUILD_DIR}/rtthread.bin ${TOPDIR}/${MACHINE}
-    
+
     # copy the run_qemu script
-    bbplain "****** Copy QEMU script for ${MACHINE}"
-    bbplain "****** Looking in: ${SMARTROOT}/tools/run_${MACHINE}.sh"
     if [ -f "${SMARTROOT}/tools/run_${MACHINE}.sh" ]; then
+        bbplain "****** Copy QEMU script for ${MACHINE}"
         cp "${SMARTROOT}/tools/run_${MACHINE}.sh" "${TOPDIR}/${MACHINE}/"
         chmod +x "${TOPDIR}/${MACHINE}/run_${MACHINE}.sh"
         bbplain "****** Successfully copied QEMU script"
-    else
-        bbwarn "QEMU script not found at ${SMARTROOT}/tools/run_${MACHINE}.sh"
-        bbwarn "Current directory structure:"
-        ls -la "${SMARTROOT}/tools/" || true
     fi
 }
 do_build_kernel[depends] = "smart-gcc:do_install_toolchain env:do_install_env"

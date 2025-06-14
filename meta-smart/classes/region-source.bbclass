@@ -17,13 +17,9 @@ def determine_region(d):
         # Update REGION variable with the detected value
         d.setVar('REGION', detected_region)
         
-        if detected_region == "CN":
-            bb.plain("****** Using gitee source (auto-detected)")
-        else:
-            bb.plain("****** Using github source (auto-detected)")
         return detected_region
     except:
-        bb.plain("****** Default: using github source (detection failed)")
+        # bb.plain("****** Default: using github source (detection failed)")
         d.setVar('REGION', "GLOBAL")
         return "GLOBAL"
 
