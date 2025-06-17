@@ -39,7 +39,7 @@ $ source smart-env  #会自动进入build目录
 $ source smart-env build-custom  #会自动进入build-custom目录
 ```
 
-默认配置为：
+默认配置为 (参见 `build/conf/local.conf`)：
 ```bash
 MACHINE ??= "qemuarm64"
 ```
