@@ -12,10 +12,14 @@
 __pycache__/
 
 # BitBake specific
+bitbake/
 /tmp/
 /sstate-cache/
 /downloads/
 *.lock
+
+# Openembedded-core
+oe-core/
 
 # IDE and editor files
 .vscode/
