@@ -86,6 +86,7 @@ def toolchain_for_machine(d):
     handle_machine(d)
 
     prefix = d.getVar('RTT_CC_PREFIX')
+    url = toolchains[prefix]["URL"]
 
     # get 'GITHUB_CI'
     if d.getVar('GITHUB_CI'):
@@ -93,9 +94,11 @@ def toolchain_for_machine(d):
         d.setVar('URL_TC', toolchains_ci[prefix]["URL"])
         d.setVar('LOCAL_TC', toolchains_ci[prefix]["LOCAL_TC"])
         d.setVar('TARGET_TC', toolchains_ci[prefix]["TARGET_TC"])
+
+        url = toolchains_ci[prefix]["URL"]
     else:
         d.setVar('URL_TC', toolchains[prefix]["URL"])
         d.setVar('LOCAL_TC', toolchains[prefix]["LOCAL_TC"])
         d.setVar('TARGET_TC', toolchains[prefix]["TARGET_TC"])
 
-    return toolchains[prefix]["URL"]
+    return url
