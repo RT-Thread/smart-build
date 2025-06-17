@@ -36,6 +36,7 @@ jobs:
         run: |
           source ./smart-env
           echo "MACHINE = \"${{ github.event.inputs.machine }}\"" >> conf/local.conf
+          export GITHUB_CI="true"
           bitbake smart -c build_all
 
       - name: Archive build artifacts

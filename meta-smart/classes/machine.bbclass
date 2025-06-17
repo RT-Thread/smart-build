@@ -44,6 +44,8 @@ def handle_machine(d):
         d.setVarFlag('ARCH', 'export', '1')
 
 def toolchain_for_machine(d):
+    import os
+
     toolchains = {
         "aarch64-linux-musleabi-": {
             "URL": "https://download.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2",
@@ -62,13 +64,37 @@ def toolchain_for_machine(d):
         }
     }
 
+    toolchains_ci = {
+        "aarch64-linux-musleabi-": {
+            "URL": "https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2",
+            "LOCAL_TC": "aarch64-linux-musleabi-gcc-latest",
+            "TARGET_TC": "aarch64-linux-musleabi_for_x86_64-pc-linux-gnu"
+        }, 
+        "riscv64-linux-musleabi-": {
+            "URL": "https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/riscv64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2",
+            "LOCAL_TC": "riscv64-linux-musleabi-gcc-latest",
+            "TARGET_TC": "riscv64-linux-musleabi_for_x86_64-pc-linux-gnu"
+        },
+        "arm-linux-musleabi-": {
+            "URL": "https://github.com/RT-Thread/toolchains-ci/releases/download/v1.7/arm-linux-musleabi_for_x86_64-pc-linux-gnu_stable.tar.bz2",
+            "LOCAL_TC": "arm-linux-musleabi-gcc-latest",
+            "TARGET_TC": "arm-linux-musleabi_for_x86_64-pc-linux-gnu"
+        }
+    }
+
     # handle machine firstly
     handle_machine(d)
 
     prefix = d.getVar('RTT_CC_PREFIX')
 
-    d.setVar('URL_TC', toolchains[prefix]["URL"])
-    d.setVar('LOCAL_TC', toolchains[prefix]["LOCAL_TC"])
-    d.setVar('TARGET_TC', toolchains[prefix]["TARGET_TC"])
+    # get 'GITHUB_CI' from os.env
+    if 'GITHUB_CI' in os.environ:
+        d.setVar('URL_TC', toolchains_ci[prefix]["URL"])
+        d.setVar('LOCAL_TC', toolchains_ci[prefix]["LOCAL_TC"])
+        d.setVar('TARGET_TC', toolchains_ci[prefix]["TARGET_TC"])
+    else:
+        d.setVar('URL_TC', toolchains[prefix]["URL"])
+        d.setVar('LOCAL_TC', toolchains[prefix]["LOCAL_TC"])
+        d.setVar('TARGET_TC', toolchains[prefix]["TARGET_TC"])
 
     return toolchains[prefix]["URL"]
