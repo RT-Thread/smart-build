@@ -87,8 +87,9 @@ def toolchain_for_machine(d):
 
     prefix = d.getVar('RTT_CC_PREFIX')
 
-    # get 'GITHUB_CI' from os.env
-    if 'GITHUB_CI' in os.environ:
+    # get 'GITHUB_CI'
+    if d.getVar('GITHUB_CI'):
+        bb.plain("****** Using github toolchain")
         d.setVar('URL_TC', toolchains_ci[prefix]["URL"])
         d.setVar('LOCAL_TC', toolchains_ci[prefix]["LOCAL_TC"])
         d.setVar('TARGET_TC', toolchains_ci[prefix]["TARGET_TC"])
