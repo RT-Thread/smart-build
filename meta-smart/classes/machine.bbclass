@@ -70,5 +70,6 @@ def toolchain_for_machine(d):
     d.setVar('URL_TC', toolchains[prefix]["URL"])
     d.setVar('LOCAL_TC', toolchains[prefix]["LOCAL_TC"])
     d.setVar('TARGET_TC', toolchains[prefix]["TARGET_TC"])
+    d.setVarFlag('TARGET_TC', 'export', '1')
 
     return toolchains[prefix]["URL"]
