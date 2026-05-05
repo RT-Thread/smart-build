@@ -1,3 +1,4 @@
+inherit region-source
 inherit machine
 
 DESCRIPTION = "RT-Smart User Applications"
@@ -6,24 +7,19 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=de10de48642ab74318e893a61105afbb"
 
 APP_NAME = "busybox-1.35.0"
 APP_MD5SUM = "585949b1dd4292b604b7d199866e9913"
-SRC_URI = "https://www.busybox.net/downloads/${APP_NAME}.tar.bz2;md5sum=${APP_MD5SUM}"
+SRC_URI_CN = "https://mirror.nju.edu.cn/buildroot/busybox/${APP_NAME}.tar.bz2;md5sum=${APP_MD5SUM}"
+SRC_URI_GITHUB = "https://www.busybox.net/downloads/${APP_NAME}.tar.bz2;md5sum=${APP_MD5SUM}"
 
 BP = "busybox-1.35.0"
 
 python () {
     handle_machine(d)
+    set_preferred_source(d)
 }
 
-python do_build_rootfs() {
-    bb.plain("##############################")
-    uri = d.getVar('SRC_URI').split()
-    fetcher = bb.fetch2.Fetch(uri, d)
-    bb.plain("****** Begin downloading busybox...")
-    fetcher.download()
-    bb.plain("****** Begin unpacking busybox...")
-    fetcher.unpack(d.getVar('WORKDIR'))
-    bb.plain("****** Finished downloading busybox.")
-    bb.build.exec_func('do_compile', d)   
+do_build_rootfs() {
+    bbplain "##############################"
+    do_compile
 }
 do_build_rootfs[depends] = "smart-gcc:do_install_toolchain"
 
@@ -52,9 +48,11 @@ do_compile() {
 
         bbplain "****** Compile busybox"
         export FILE_DIRNAME="${FILE_DIRNAME}"
+        export CROSS_COMPILE="${RTT_CC_PREFIX}"
+        unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
         make V=1
         bbplain "****** Install busybox"
-        make install
+        make install CROSS_COMPILE="${RTT_CC_PREFIX}"
         bbplain "****** Create rootfs img"
         if [ ! -d "${TOPDIR}/${MACHINE}" ]; then
             mkdir ${TOPDIR}/${MACHINE}
@@ -90,4 +88,4 @@ do_create_ext4img() {
     cp ext4.img ${TOPDIR}/${MACHINE}
 }
 
-addtask do_build_rootfs
+addtask do_build_rootfs after do_unpack

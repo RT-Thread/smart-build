@@ -68,7 +68,7 @@ if [ ! -d "$BUILDDIR/conf" ]; then
     
     # 创建 local.conf
     cat > "$BUILDDIR/conf/local.conf" << EOF
-# 机器配置，支持 qemuarm64 和 qemuriscv64
+# 机器配置，支持 qemuarm64、qemuriscv64、k230、rk3500、raspi4-64
 MACHINE ??= "qemuarm64"
 
 # 编译器配置

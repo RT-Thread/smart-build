@@ -33,16 +33,19 @@ jobs:
             zstd liblz4-tool file locales
           sudo locale-gen en_US.UTF-8
 
+      - name: Fetch OpenEmbedded dependencies
+        run: |
+          git clone --branch walnascar https://github.com/openembedded/openembedded-core oe-core
+          git clone --branch 2.12 https://github.com/openembedded/bitbake bitbake
+
       - name: Setup build environment
         run: |
           echo "Setting up build environment..."
           source ./smart-env
-          echo "MACHINE=${{ github.event.inputs.machine }}" >> conf/local.conf
+          echo 'MACHINE = "${{ github.event.inputs.machine }}"' >> conf/local.conf
 
       - name: Build RT-Smart
         run: |
-          git clone https://github.com/openembedded/bitbake
-          git clone https://github.com/openembedded/openembedded-core oe-core
           source ./smart-env
           bitbake smart -c build_all
 

@@ -173,10 +173,10 @@ smart-build 对源码获取有智能化处理：
 2. **检查本地缓存**：`~/.env/tools/scripts/packages/` 中存在则创建符号链接
 3. **远程下载**：以上均不存在则从 `download.rt-thread.org` 下载
 
-### 地理区域检测
+### 源码区域配置
 
-`region-source.bbclass` 会通过 IP 地理定位自动判断用户所在区域：
-- **中国大陆**：使用 Gitee 镜像，加速下载
-- **其他地区**：使用 GitHub 官方仓库
+`region-source.bbclass` 根据 `REGION` 选择源码地址：
+- `REGION = "CN"`：使用 Gitee / 中国大陆镜像，加速下载
+- `REGION = "GLOBAL"`：使用 GitHub / 官方源
 
-也可以在 `local.conf` 中手动指定 `REGION = "CN"` 或 `REGION = "GLOBAL"` 来跳过自动检测。
+默认值为 `CN`，可以在 `local.conf` 中手动指定 `REGION = "GLOBAL"`。

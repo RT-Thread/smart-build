@@ -1,31 +1,17 @@
-# Set default value for REGION if not defined
-REGION ?= "AUTO"
-
-def determine_region(d):
-    region = d.getVar('REGION')
-    if region != "AUTO":
-        return region
-
-    # Auto detect
-    import socket, requests
-    try:
-        ip = requests.get('https://icanhazip.com').text.strip()
-        cstr = "http://ip-api.com/json/" + ip + "?fields=countryCode"
-        response = requests.get(cstr).text.strip()
-        detected_region = "CN" if len(response.split('"CN"')) > 1 else "GLOBAL"
-        
-        # Update REGION variable with the detected value
-        d.setVar('REGION', detected_region)
-        
-        return detected_region
-    except:
-        # bb.plain("****** Default: using github source (detection failed)")
-        d.setVar('REGION', "GLOBAL")
-        return "GLOBAL"
+# Source mirror policy. Set REGION = "GLOBAL" in local.conf to use upstream
+# GitHub/official sources instead of China mirrors.
+REGION ?= "CN"
 
 def set_preferred_source(d):
-    region = determine_region(d)
+    region = d.getVar('REGION') or "CN"
     if region == "CN":
-        d.setVar('SRC_URI', d.getVar('SRC_URI_GITEE'))
+        src_uri = d.getVar('SRC_URI_CN') or d.getVar('SRC_URI_GITEE') or d.getVar('SRC_URI_GITHUB')
+    elif region == "GLOBAL":
+        src_uri = d.getVar('SRC_URI_GITHUB') or d.getVar('SRC_URI_GITEE') or d.getVar('SRC_URI_CN')
     else:
-        d.setVar('SRC_URI', d.getVar('SRC_URI_GITHUB'))
+        bb.fatal('Unsupported REGION "%s"; use "CN" or "GLOBAL".' % region)
+
+    if not src_uri:
+        bb.fatal("No source URI is defined for REGION=%s" % region)
+
+    d.setVar('SRC_URI', src_uri)

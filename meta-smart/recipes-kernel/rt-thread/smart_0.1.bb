@@ -12,25 +12,29 @@ SRC_URI_GITHUB = "git://github.com/RT-Thread/rt-thread.git;branch=master;protoco
                   git://github.com/RT-Thread-packages/lwext4.git;branch=master;protocol=https;name=lwext4;subdir=lwext4 \
 "
 
+BB_GIT_SHALLOW = "1"
+BB_GIT_SHALLOW_DEPTH = "1"
+
 python () {
     import os
-    
-    # 检查是否存在本地 rt-thread 目录
-    local_rtt = os.path.join(d.getVar('SMARTROOT', True), 'rt-thread')
-    if os.path.exists(local_rtt):
-        # 如果存在本地目录，清空 SRC_URI
-        d.setVar('SRC_URI', '')
-        # 设置 S 为本地目录
+
+    set_preferred_source(d)
+
+    local_rtt = os.path.join(d.getVar('SMARTROOT'), 'rt-thread')
+
+    if os.path.lexists(local_rtt):
+        if not os.path.isdir(os.path.join(local_rtt, 'bsp')):
+            bb.fatal("Local rt-thread path exists but does not look like an rt-thread source tree: %s" % local_rtt)
+
         d.setVar('S', local_rtt)
-        # bb.plain("Using local rt-thread directory: %s" % local_rtt)
+        uris = (d.getVar('SRC_URI') or '').split()
+        d.setVar('SRC_URI', ' '.join(uri for uri in uris if 'name=rtthread' not in uri))
+        d.setVar('SRCREV_FORMAT', 'lwext4')
     else:
-        # 如果不存在本地目录，使用远程仓库
-        set_preferred_source(d)
         rtthread_src = os.path.join(d.getVar('WORKDIR', True), 'git')
         d.setVar('S', rtthread_src)
-        # bb.plain("Local rt-thread not found, using remote repository")
 
-    handle_machine(d)
+    toolchain_for_machine(d)
 }
 
 SRCREV_rtthread = "AUTOINC"
@@ -46,26 +50,47 @@ SMARTROOT = "${@os.path.dirname(d.getVar('LAYERDIR_smart', True))}"
 do_build_kernel() {
     bbplain "##############################"
     export RTT_CC="gcc"
+    export RTT_EXEC_PATH="${TOPDIR}/toolchains/${TARGET_TC}/bin"
     export SCONS_BUILD_DIR="${S}/${BSP}"
+    bbplain "****** rt-thread source: ${S}"
+    bbplain "****** BSP build dir: ${SCONS_BUILD_DIR}"
+    bbplain "****** toolchain path: ${RTT_EXEC_PATH}"
 
-    # 检查是否存在本地 rt-thread 目录
-    if [ -d "${SMARTROOT}/rt-thread" ]; then
+    # Clear OE-core compiler flags that inject unsupported -fcanon-prefix-map
+    unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
+
+    if [ "${S}" = "${SMARTROOT}/rt-thread" ]; then
         bbplain "****** Using local rt-thread directory"
     else
         bbplain "****** Using downloaded rt-thread source"
-
-        if [ -d ${SCONS_BUILD_DIR}/packages ]; then
-            rm -rf ${SCONS_BUILD_DIR}/packages/lwext4*
-        else
-            mkdir -p ${SCONS_BUILD_DIR}/packages
-        fi
-        cp -r ${WORKDIR}/sources-unpack/lwext4 ${SCONS_BUILD_DIR}/packages/lwext4-latest
-        cp ${FILE_DIRNAME}/lwext4_SConscript ${SCONS_BUILD_DIR}/packages/SConscript
-
-        bbplain "****** Copy default config for ${MACHINE}"
-        cp ${FILE_DIRNAME}/${MACHINE}_defconfig ${SCONS_BUILD_DIR}/.config
-        scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
     fi
+
+    if [ ! -d "${SCONS_BUILD_DIR}" ]; then
+        bbfatal "BSP directory not found: ${SCONS_BUILD_DIR}"
+    fi
+
+    if [ -d ${SCONS_BUILD_DIR}/packages ]; then
+        rm -rf ${SCONS_BUILD_DIR}/packages/lwext4*
+    else
+        mkdir -p ${SCONS_BUILD_DIR}/packages
+    fi
+
+    if [ ! -d "${WORKDIR}/sources-unpack/lwext4" ]; then
+        bbfatal "lwext4 source not found in ${WORKDIR}/sources-unpack/lwext4"
+    fi
+    cp -r ${WORKDIR}/sources-unpack/lwext4 ${SCONS_BUILD_DIR}/packages/lwext4-latest
+    cp ${FILE_DIRNAME}/lwext4_SConscript ${SCONS_BUILD_DIR}/packages/SConscript
+
+    bbplain "****** Copy default config for ${MACHINE}"
+    cp ${FILE_DIRNAME}/${MACHINE}_defconfig ${SCONS_BUILD_DIR}/.config
+
+    # Fix rtconfig.py for k230: musl toolchain is soft-float (lp64),
+    # but k230 defaults to hard-float (lp64d). Override ABI to match toolchain.
+    if [ "${MACHINE}" = "k230" ]; then
+        sed -i 's/-mabi=lp64d/-mabi=lp64/' ${SCONS_BUILD_DIR}/rtconfig.py
+    fi
+
+    scons --pyconfig-silent -C ${SCONS_BUILD_DIR}
 
     bbplain "****** Build rt-smart kernel"
     scons -C ${SCONS_BUILD_DIR}

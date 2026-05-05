@@ -22,12 +22,12 @@ $ sudo pip install requests scons kconfiglib tqdm
 $ git clone https://github.com/RT-Thread/smart-build.git
 ```
 
-### 3. 进入smart-build目录，然后下载openembedded-core和bitbake仓库：
+### 3. 进入smart-build目录，然后下载openembedded-core和bitbake仓库（需checkout到指定分支）：
 
 ```bash
 $ cd smart-build/
-$ git clone git://git.openembedded.org/openembedded-core oe-core
-$ git clone git://git.openembedded.org/bitbake
+$ git clone --branch walnascar https://github.com/openembedded/openembedded-core oe-core
+$ git clone --branch 2.12 https://github.com/openembedded/bitbake bitbake
 ```
 
 ### 4. 设置bitbake编译环境：
@@ -44,7 +44,15 @@ $ source smart-env build-custom  #会自动进入build-custom目录
 MACHINE ??= "qemuarm64"
 ```
 
-也可以根据需要自行更改成 `qemuriscv64`
+也可以根据需要自行更改成 `qemuriscv64`、`k230`、`rk3500` 或 `raspi4-64`
+
+如果需要使用本地 `rt-thread` 源码，可以在 `smart-build` 根目录创建符号链接：
+
+```bash
+$ ln -s /path/to/rt-thread rt-thread
+```
+
+构建时会优先使用 `smart-build/rt-thread` 作为内核源码目录；如果该目录或符号链接不存在，则由 BitBake 按 `SRC_URI` 下载 `rt-thread` 源码。使用本地源码时，BitBake 仍会按配方下载 `lwext4` 等配套源码。
 
 ### 5. 编译 smart-build 整个工程：
 
