@@ -190,10 +190,10 @@ sh ./docker_run.sh
 
 ### Q: 下载工具链 / 源码速度很慢
 
-系统会自动检测地理位置，中国大陆用户会优先使用 Gitee 镜像。如果自动检测失败，可以在 `build/conf/local.conf` 中手动设置：
+默认使用中国大陆镜像源。如果需要切换到 GitHub / 官方源，可以在 `build/conf/local.conf` 中设置：
 
 ```bash
-REGION = "CN"
+REGION = "GLOBAL"
 ```
 
 ### Q: 编译报错找不到交叉编译器

@@ -94,7 +94,7 @@ smart-build 中的类：
 | 类 | 文件 | 作用 |
 | --- | --- | --- |
 | `machine` | `classes/machine.bbclass` | 根据 `MACHINE` 变量解析目标架构、BSP 路径、工具链前缀 |
-| `region-source` | `classes/region-source.bbclass` | 自动检测地理区域，选择最优的代码源（Gitee / GitHub） |
+| `region-source` | `classes/region-source.bbclass` | 根据 `REGION` 配置选择代码源（Gitee / GitHub） |
 
 ### 2.1.7 配置文件
 
