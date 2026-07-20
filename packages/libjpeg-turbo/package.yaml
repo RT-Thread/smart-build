@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: libjpeg-turbo
+version: 3.1.4.1
+versions:
+  - 3.1.4.1
+default_version: 3.1.4.1
+type: library
+description: SIMD-accelerated JPEG codec library
+provides:
+  - libjpeg
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.1.4.1/libjpeg-turbo-3.1.4.1.tar.gz
+  archive: libjpeg-turbo-3.1.4.1.tar.gz
+  sha256: ecae8008e2cc9ade2f2c1bb9d5e6d4fb73e7c433866a056bd82980741571a022
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - src/jpeglib.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/jpeglib.h
+      - /usr/lib/libjpeg.a
+    upstream_markers:
+      - CMakeLists.txt
+      - src/jpeglib.h
+install:
+  headers:
+    - usr/include/jpeglib.h
+  libraries:
+    - usr/lib/libjpeg.a

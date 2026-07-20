@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: quickjs
+version: "2026-06-04"
+versions:
+  - "2026-06-04"
+default_version: "2026-06-04"
+type: executable
+description: QuickJS JavaScript engine and command-line interpreter
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz
+  archive: quickjs-2026-06-04.tar.xz
+  sha256: b376e839b322978313d929fd20663b11ba58b75df5a46c126dd19ea2fa70ad2a
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - Makefile
+    - quickjs.c
+    - qjs.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/qjs
+      - /usr/lib/libquickjs.a
+    upstream_markers:
+      - Makefile
+      - quickjs.c
+      - qjs.c
+install:
+  path: /usr/bin/qjs
+smoke:
+  command:
+    - qjs
+    - -h

@@ -1,0 +1,44 @@
+schema_version: 1
+kind: package
+name: wget
+version: 1.25.0
+versions:
+  - 1.25.0
+default_version: 1.25.0
+type: executable
+description: GNU Wget network file retriever
+depends:
+  - openssl
+  - libz
+selects:
+  - openssl
+  - zlib
+requires_toolchain:
+  - c
+source:
+  type: archive
+  url: https://ftp.gnu.org/gnu/wget/wget-1.25.0.tar.gz
+  archive: wget-1.25.0.tar.gz
+  sha256: 766e48423e79359ea31e41db9e5c289675947a7fcf2efdcedb726ac9d0da3784
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - src/main.c
+    - lib/connect.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/wget
+    upstream_markers:
+      - configure
+      - src/main.c
+      - lib/connect.c
+install:
+  path: /usr/bin/wget
+smoke:
+  command:
+    - wget
+    - --version

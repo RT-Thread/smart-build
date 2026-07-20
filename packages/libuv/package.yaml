@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: libuv
+version: 1.52.1
+versions:
+  - 1.52.1
+default_version: 1.52.1
+type: library
+description: Cross-platform asynchronous I/O library
+provides:
+  - libuv
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://dist.libuv.org/dist/v1.52.1/libuv-v1.52.1-dist.tar.gz
+  archive: libuv-v1.52.1-dist.tar.gz
+  sha256: c5f14915e2fa7b83b6111c3bc477920559499e10d95f852707420c8725b82d6a
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - include/uv.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/uv.h
+      - /usr/lib/libuv.a
+    upstream_markers:
+      - configure
+      - include/uv.h
+install:
+  headers:
+    - usr/include/uv.h
+  libraries:
+    - usr/lib/libuv.a

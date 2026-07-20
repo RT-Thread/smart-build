@@ -1,0 +1,44 @@
+schema_version: 1
+kind: package
+name: openssl
+version: 3.5.7
+versions:
+  - 3.5.7
+default_version: 3.5.7
+type: library
+description: OpenSSL TLS and cryptography library
+provides:
+  - libssl
+  - libcrypto
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/openssl/openssl/releases/download/openssl-3.5.7/openssl-3.5.7.tar.gz
+  archive: openssl-3.5.7.tar.gz
+  sha256: a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - Configure
+    - include/openssl/ssl.h.in
+    - crypto/cryptlib.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/openssl
+      - /usr/lib/libssl.a
+      - /usr/lib/libcrypto.a
+    upstream_markers:
+      - Configure
+      - include/openssl/ssl.h.in
+      - crypto/cryptlib.c
+install:
+  headers:
+    - /usr/include/openssl
+  libraries:
+    - /usr/lib/libssl.a
+    - /usr/lib/libcrypto.a

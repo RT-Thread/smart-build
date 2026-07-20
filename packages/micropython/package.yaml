@@ -1,0 +1,59 @@
+schema_version: 1
+kind: package
+name: micropython
+version: 1.13.0
+versions:
+  - 1.13.0
+default_version: 1.13.0
+type: executable
+description: MicroPython runtime for RT-Thread Smart
+depends: libc
+selects:
+  - zlib
+requires_toolchain:
+  - c
+options:
+  frozen_modules:
+    type: bool
+    prompt: Enable frozen modules
+    default: false
+  heap_size:
+    type: string
+    prompt: Heap size
+    default: 64k
+source:
+  type: archive
+  url: https://github.com/RT-Thread-packages/micropython/archive/1.13.0.zip
+  archive: rtthread-micropython-1.13.0.zip
+  sha256: 44a3d2a772801a7ccdbeba4f91c4d1456fa4b790df4e48b8aadec8fbaee42b2d
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - SConscript
+    - py/mpstate.h
+    - py/runtime.c
+    - port/mpy_main.c
+    - port/mpconfigport.h
+    - port/genhdr/qstrdefs.generated.h
+    - port/genhdr/mpversion.h
+build:
+  python:
+    script: sbuild.py
+    output: micropython
+    upstream_markers:
+      - SConscript
+      - py/mpstate.h
+      - py/runtime.c
+      - port/mpy_main.c
+      - port/mpconfigport.h
+      - port/genhdr/qstrdefs.generated.h
+      - port/genhdr/mpversion.h
+install:
+  path: /bin/micropython
+smoke:
+  command:
+    - micropython
+    - -c
+    - print(1+2)
+  expected_stdout: "3\n"
