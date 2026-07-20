@@ -1,0 +1,43 @@
+schema_version: 1
+kind: package
+name: readline
+version: "8.3"
+versions:
+  - "8.3"
+default_version: "8.3"
+type: library
+description: GNU command line editing library
+depends:
+  - ncurses
+selects:
+  - ncurses
+provides:
+  - libreadline
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz
+  archive: readline-8.3.tar.gz
+  sha256: fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - readline.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/readline/readline.h
+      - /usr/lib/libreadline.a
+    upstream_markers:
+      - configure
+      - readline.h
+install:
+  headers:
+    - usr/include/readline/readline.h
+  libraries:
+    - usr/lib/libreadline.a

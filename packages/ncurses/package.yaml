@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: ncurses
+version: "6.6"
+versions:
+  - "6.6"
+default_version: "6.6"
+type: library
+description: Terminal handling library
+provides:
+  - libncurses
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://invisible-island.net/archives/ncurses/ncurses-6.6.tar.gz
+  archive: ncurses-6.6.tar.gz
+  sha256: 355b4cbbed880b0381a04c46617b7656e362585d52e9cf84a67e2009b749ff11
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - include/curses.h.in
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/ncurses/curses.h
+      - /usr/lib/libncurses.a
+    upstream_markers:
+      - configure
+      - include/curses.h.in
+install:
+  headers:
+    - usr/include/ncurses/curses.h
+  libraries:
+    - usr/lib/libncurses.a

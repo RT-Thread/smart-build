@@ -1,0 +1,17 @@
+schema_version: 1
+kind: rootfs
+name: minimal
+version: 0.1.0
+default_profile: mixed
+profiles:
+  static:
+    packages:
+      - hello
+  dynamic:
+    packages:
+      - hello
+  mixed:
+    packages:
+      - hello
+filesystem:
+  type: ext4

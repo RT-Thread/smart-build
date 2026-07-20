@@ -1,0 +1,16 @@
+schema_version: 1
+kind: board
+name: qemu-vexpress-a9
+version: 0.1.0
+arch: arm
+bsp: qemu-vexpress-a9
+kernel_defconfig: kernel_defconfig
+toolchain:
+  package: arm-linux-musleabi-gcc-stable
+  target: arm-linux-musleabi
+  prefix: arm-linux-musleabi-
+  loader: ld-musl-arm.so.1
+qemu:
+  binary: qemu-system-arm
+  profile: vexpress-a9
+  machine: vexpress-a9

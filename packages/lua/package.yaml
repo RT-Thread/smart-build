@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: lua
+version: 5.5.0
+versions:
+  - 5.5.0
+default_version: 5.5.0
+type: executable
+description: Lua programming language interpreter
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://www.lua.org/ftp/lua-5.5.0.tar.gz
+  archive: lua-5.5.0.tar.gz
+  sha256: 57ccc32bbbd005cab75bcc52444052535af691789dba2b9016d5c50640d68b3d
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - Makefile
+    - src/lua.c
+    - src/lapi.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/lua
+      - /usr/lib/liblua.a
+    upstream_markers:
+      - Makefile
+      - src/lua.c
+      - src/lapi.c
+install:
+  path: /usr/bin/lua
+smoke:
+  command:
+    - lua
+    - -v

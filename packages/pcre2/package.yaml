@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: pcre2
+version: "10.47"
+versions:
+  - "10.47"
+default_version: "10.47"
+type: library
+description: Perl-compatible regular expression library
+provides:
+  - libpcre2
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.47/pcre2-10.47.tar.bz2
+  archive: pcre2-10.47.tar.bz2
+  sha256: 47fe8c99461250d42f89e6e8fdaeba9da057855d06eb7fc08d9ca03fd08d7bc7
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - src/pcre2.h.in
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/pcre2.h
+      - /usr/lib/libpcre2-8.a
+    upstream_markers:
+      - configure
+      - src/pcre2.h.in
+install:
+  headers:
+    - usr/include/pcre2.h
+  libraries:
+    - usr/lib/libpcre2-8.a

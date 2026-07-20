@@ -1,0 +1,9 @@
+MACHINE=qemu-virt-aarch64
+ARCH=aarch64
+BSP=qemu-virt64-aarch64
+ROOTFS=basic
+ROOTFS_BUILD_MODE=static
+ROOTFS_IMAGE_FORMAT=ext4
+ROOTFS_IMAGE_SIZE_MB=16
+ROOTFS_IMAGE_SIZE_MODE=expandable
+TOOLCHAIN=aarch64-linux-musleabi-gcc-latest

@@ -1,0 +1,9 @@
+MACHINE=qemu-virt-riscv64
+ARCH=riscv64
+BSP=qemu-virt64-riscv
+ROOTFS=basic
+ROOTFS_BUILD_MODE=static
+ROOTFS_IMAGE_FORMAT=ext4
+ROOTFS_IMAGE_SIZE_MB=16
+ROOTFS_IMAGE_SIZE_MODE=expandable
+TOOLCHAIN=riscv64-linux-musleabi-gcc-latest

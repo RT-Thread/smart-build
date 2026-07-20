@@ -1,0 +1,9 @@
+choice
+    prompt "Machine"
+    default MACHINE_QEMU_VIRT_AARCH64
+
+source "boards/qemu-virt-aarch64/Kconfig"
+source "boards/qemu-virt-riscv64/Kconfig"
+source "boards/qemu-vexpress-a9/Kconfig"
+
+endchoice

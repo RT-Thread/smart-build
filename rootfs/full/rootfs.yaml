@@ -1,0 +1,34 @@
+schema_version: 1
+kind: rootfs
+name: full
+version: 0.1.0
+default_profile: full
+profiles:
+  base:
+    packages:
+      - hello
+      - zlib
+  devel:
+    packages:
+      - hello
+      - zlib
+      - micropython
+  full:
+    packages:
+      - curl
+      - hello
+      - libffi
+      - libjpeg-turbo
+      - libpng
+      - libuv
+      - lua
+      - micropython
+      - ncurses
+      - openssl
+      - pcre2
+      - quickjs
+      - readline
+      - wget
+      - zlib
+filesystem:
+  type: ext4

@@ -1,0 +1,76 @@
+schema_version: 1
+kind: package
+name: zlib
+version: 1.3.2
+versions:
+  - 1.3.2
+default_version: 1.3.2
+type: library
+description: zlib compression library
+provides:
+  - libz
+requires_toolchain:
+  - c
+  - static-library
+  - shared-library
+options:
+  shared:
+    type: bool
+    prompt: Build shared library
+    default: true
+  compression_level:
+    type: choice
+    prompt: Default compression level
+    choices:
+      - fast
+      - balanced
+      - best
+    default: balanced
+source:
+  type: archive
+  url: https://zlib.net/zlib-1.3.2.tar.xz
+  archive: zlib-1.3.2.tar.xz
+  sha256: d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3
+  strip_root: true
+  files:
+    - adler32.c
+    - compress.c
+    - crc32.c
+    - deflate.c
+    - gzclose.c
+    - gzlib.c
+    - gzread.c
+    - gzwrite.c
+    - infback.c
+    - inffast.c
+    - inflate.c
+    - inftrees.c
+    - trees.c
+    - uncompr.c
+    - zutil.c
+build:
+  objects:
+    - adler32.c
+    - compress.c
+    - crc32.c
+    - deflate.c
+    - gzclose.c
+    - gzlib.c
+    - gzread.c
+    - gzwrite.c
+    - infback.c
+    - inffast.c
+    - inflate.c
+    - inftrees.c
+    - trees.c
+    - uncompr.c
+    - zutil.c
+  static_library: libz.a
+  shared_library: libz.so
+install:
+  headers:
+    - zlib.h
+    - zconf.h
+  libraries:
+    - libz.a
+    - libz.so

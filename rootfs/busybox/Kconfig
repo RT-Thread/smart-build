@@ -1,0 +1,99 @@
+config ROOTFS_BASIC
+    bool "Basic rootfs (BusyBox)"
+
+if ROOTFS_BASIC
+
+config ROOTFS_BUILD_MODE
+    string
+    default "static"
+
+choice
+    prompt "Rootfs image format"
+    default ROOTFS_BASIC_IMAGE_FORMAT_EXT4
+
+config ROOTFS_BASIC_IMAGE_FORMAT_EXT4
+    bool "ext4"
+
+config ROOTFS_BASIC_IMAGE_FORMAT_FAT
+    bool "FAT"
+
+config ROOTFS_BASIC_IMAGE_FORMAT_ROMFS
+    bool "romfs"
+
+endchoice
+
+config ROOTFS_IMAGE_FORMAT
+    string
+    default "ext4" if ROOTFS_BASIC_IMAGE_FORMAT_EXT4
+    default "fat" if ROOTFS_BASIC_IMAGE_FORMAT_FAT
+    default "romfs" if ROOTFS_BASIC_IMAGE_FORMAT_ROMFS
+
+choice
+    prompt "Rootfs image size"
+    depends on !ROOTFS_BASIC_IMAGE_FORMAT_ROMFS
+    default ROOTFS_BASIC_IMAGE_SIZE_MB_16
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_1
+    bool "1 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_4
+    bool "4 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_8
+    bool "8 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_16
+    bool "16 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_32
+    bool "32 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_64
+    bool "64 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_128
+    bool "128 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_256
+    bool "256 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_512
+    bool "512 MB"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MB_1024
+    bool "1024 MB"
+
+endchoice
+
+config ROOTFS_IMAGE_SIZE_MB
+    string
+    default "1" if ROOTFS_BASIC_IMAGE_SIZE_MB_1
+    default "4" if ROOTFS_BASIC_IMAGE_SIZE_MB_4
+    default "8" if ROOTFS_BASIC_IMAGE_SIZE_MB_8
+    default "16" if ROOTFS_BASIC_IMAGE_SIZE_MB_16
+    default "32" if ROOTFS_BASIC_IMAGE_SIZE_MB_32
+    default "64" if ROOTFS_BASIC_IMAGE_SIZE_MB_64
+    default "128" if ROOTFS_BASIC_IMAGE_SIZE_MB_128
+    default "256" if ROOTFS_BASIC_IMAGE_SIZE_MB_256
+    default "512" if ROOTFS_BASIC_IMAGE_SIZE_MB_512
+    default "1024" if ROOTFS_BASIC_IMAGE_SIZE_MB_1024
+
+choice
+    prompt "Rootfs image size mode"
+    depends on ROOTFS_BASIC_IMAGE_FORMAT_EXT4
+    default ROOTFS_BASIC_IMAGE_SIZE_MODE_EXPANDABLE
+
+config ROOTFS_BASIC_IMAGE_SIZE_MODE_FIXED
+    bool "Fixed image"
+
+config ROOTFS_BASIC_IMAGE_SIZE_MODE_EXPANDABLE
+    bool "Expandable image"
+
+endchoice
+
+config ROOTFS_IMAGE_SIZE_MODE
+    string
+    default "fixed" if ROOTFS_BASIC_IMAGE_SIZE_MODE_FIXED
+    default "expandable" if ROOTFS_BASIC_IMAGE_SIZE_MODE_EXPANDABLE
+
+endif

@@ -1,0 +1,22 @@
+config MACHINE_QEMU_VIRT_AARCH64
+    bool "QEMU virt AArch64"
+
+if MACHINE_QEMU_VIRT_AARCH64
+
+config MACHINE
+    string
+    default "qemu-virt-aarch64"
+
+config ARCH
+    string
+    default "aarch64"
+
+config BSP
+    string
+    default "qemu-virt64-aarch64"
+
+config TOOLCHAIN
+    string
+    default "aarch64-linux-musleabi-gcc-latest"
+
+endif

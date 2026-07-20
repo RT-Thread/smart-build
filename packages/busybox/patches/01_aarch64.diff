@@ -1,0 +1,20 @@
+--- busybox-1.35.0/Makefile.orig	2025-04-24 16:03:42.740308861 +0800
++++ busybox-1.35.0/Makefile	2025-04-24 16:04:59.479156833 +0800
+@@ -4,6 +4,17 @@
+ EXTRAVERSION =
+ NAME = Unnamed
+ 
++CROSS_COMPILE ?= $(SMART_BUSYBOX_CROSS_COMPILE)
++PWD := $(shell pwd)
++# userapp dir
++SDK_DIR := $(SMART_SDK_DIR)
++RT_DIR=$(SDK_DIR)/rt-thread
++INC_DIR=$(RT_DIR)/include
++LIB_DIR ?= $(SMART_SDK_LIB_DIR)
++RT_LIB_DIR ?= $(SMART_SDK_RT_LIB_DIR)
++CFLAGS = $(SMART_BUSYBOX_CFLAGS)
++LDFLAGS = $(SMART_BUSYBOX_LDFLAGS)
++
+ # *DOCUMENTATION*
+ # To see a list of typical targets execute "make help"
+ # More info can be located in ./README

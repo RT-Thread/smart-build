@@ -1,0 +1,34 @@
+schema_version: 1
+kind: package
+name: hello
+version: 0.1.0
+type: executable
+description: CMake hello-world example for RT-Thread Smart
+requires_toolchain:
+  - c
+  - static-library
+source:
+  directory: apps/hello
+  files:
+    - CMakeLists.txt
+    - hello.c
+build:
+  cmake:
+    outputs:
+      static:
+        - /bin/hello-static
+      dynamic:
+        - /bin/hello-dynamic
+      mixed:
+        - /bin/hello-static
+        - /bin/hello-dynamic
+    options:
+      - -DCMAKE_BUILD_TYPE=Release
+install:
+  path: /bin/hello-static
+smoke:
+  command:
+    - sh
+    - -c
+    - if [ -x /bin/hello-static ]; then /bin/hello-static; else /bin/hello-dynamic; fi
+  expected_stdout: "hello world\n"

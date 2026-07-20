@@ -1,0 +1,22 @@
+config MACHINE_QEMU_VIRT_RISCV64
+    bool "QEMU virt RISC-V 64"
+
+if MACHINE_QEMU_VIRT_RISCV64
+
+config MACHINE
+    string
+    default "qemu-virt-riscv64"
+
+config ARCH
+    string
+    default "riscv64"
+
+config BSP
+    string
+    default "qemu-virt64-riscv"
+
+config TOOLCHAIN
+    string
+    default "riscv64-linux-musleabi-gcc-latest"
+
+endif

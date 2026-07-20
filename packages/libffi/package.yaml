@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: libffi
+version: 3.5.2
+versions:
+  - 3.5.2
+default_version: 3.5.2
+type: library
+description: Portable foreign function interface library
+provides:
+  - libffi
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz
+  archive: libffi-3.5.2.tar.gz
+  sha256: f3a3082a23b37c293a4fcd1053147b371f2ff91fa7ea1b2a52e335676bac82dc
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - include/ffi.h.in
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/ffi.h
+      - /usr/lib/libffi.a
+    upstream_markers:
+      - configure
+      - include/ffi.h.in
+install:
+  headers:
+    - usr/include/ffi.h
+  libraries:
+    - usr/lib/libffi.a

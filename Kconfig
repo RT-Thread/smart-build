@@ -1,0 +1,4 @@
+mainmenu "RT-Thread Smart Build Configuration"
+
+source "boards/Kconfig"
+source "rootfs/Kconfig"

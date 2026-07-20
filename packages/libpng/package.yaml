@@ -1,0 +1,43 @@
+schema_version: 1
+kind: package
+name: libpng
+version: 1.6.58
+versions:
+  - 1.6.58
+default_version: 1.6.58
+type: library
+description: PNG image format library
+depends:
+  - libz
+selects:
+  - zlib
+provides:
+  - libpng
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://downloads.sourceforge.net/project/libpng/libpng16/1.6.58/libpng-1.6.58.tar.xz
+  archive: libpng-1.6.58.tar.xz
+  sha256: 28eb403f51f0f7405249132cecfe82ea5c0ef97f1b32c5a65828814ae0d34775
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - png.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/png.h
+      - /usr/lib/libpng16.a
+    upstream_markers:
+      - configure
+      - png.h
+install:
+  headers:
+    - usr/include/png.h
+  libraries:
+    - usr/lib/libpng16.a
