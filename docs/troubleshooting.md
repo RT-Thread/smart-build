@@ -13,6 +13,22 @@ Check that the repository-root `rt-thread` path exists and contains
 `bsp/<board.yaml bsp value>`. A symbolic link to a local RT-Thread checkout is
 supported.
 
+## Kernel package update fails
+
+Run `./smart-build doctor --machine <machine>` and confirm both `env-pkgs` and
+`env-package-index` pass. Kernel packages are selected by
+`boards/<machine>/kernel_defconfig` and installed by:
+
+```sh
+cd rt-thread/bsp/<bsp>
+~/.env/tools/scripts/pkgs --update
+```
+
+Review `build/<machine>/logs/kernel-packages.log`, the BSP
+`packages/pkgs_error.json`, network access, and whether the selected version
+exists in the installed Env package index. Use `smart-build configure kernel`
+to choose another package version.
+
 ## Package download fails
 
 Downloaded archives are cached under `downloads/`. Check network and proxy

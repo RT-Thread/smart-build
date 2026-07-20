@@ -65,3 +65,21 @@ configuration mapping:
 
 Not every board or package supplies every configure target. Unsupported targets
 fail with a `CONFIG` error.
+
+## Configure kernel packages
+
+RT-Thread kernel packages are selected in the kernel menuconfig rather than the
+smart-build rootfs Packages menu:
+
+```sh
+./smart-build configure kernel
+```
+
+For ext4 kernel support, enable lwext4 and choose its version in the RT-Thread
+package menu. The three included QEMU boards default to `v2.0.0-dfsv2`; the Env
+index currently also exposes `v1.1.0` and `latest`. The next kernel build runs
+Env `pkgs --update` using the saved selection.
+
+These packages are separate from userspace packages under the repository's
+`packages/` directory. smart-build does not download or copy kernel package
+sources itself.

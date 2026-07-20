@@ -57,9 +57,17 @@ strings, then source it from `boards/Kconfig`. Keep the directory name,
 toolchain selection. `kernel_defconfig` is copied into the selected RT-Thread
 BSP configuration during kernel preparation.
 
+Select RT-Thread kernel packages and their versions in `kernel_defconfig` using
+the symbols provided by the installed Env package index. For example, ext4
+support is enabled through `PKG_USING_LWEXT4` and its version choice. During a
+kernel build, smart-build runs Env `pkgs --update` and does not maintain a
+separate package source copy.
+
 An optional `kernel-overlay/` mirrors paths relative to the RT-Thread BSP and
 is applied during kernel source preparation. Keep overlay contents limited to
-files required by this machine.
+files required by this machine. An overlay must not write below `packages/`;
+changes to Env-managed packages belong in the package upstream or package
+version selected by the board.
 
 ## Implement QEMU support
 

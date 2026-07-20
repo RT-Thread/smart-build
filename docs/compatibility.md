@@ -44,9 +44,14 @@ absolute paths and can be large when task inputs contain directories.
 
 ## Source revisions
 
-Package release archives normally use SHA256. BusyBox currently uses MD5, and
-the automatic RT-Thread/lwext4 source paths can use moving branch or `latest`
-references. Preserve local source revisions when reproducing an older build.
+Userspace package release archives normally use SHA256. BusyBox currently uses
+MD5, and automatic RT-Thread source checkout uses a moving branch. Preserve
+local source revisions when reproducing an older build.
+
+RT-Thread kernel package versions come from the board kernel defconfig and the
+installed Env package index. Stable versions are reproducible only while their
+index entry and upstream archive remain available. Selecting `latest` follows
+the package index's moving source and can access the network on every update.
 
 ## QEMU smoke scope
 

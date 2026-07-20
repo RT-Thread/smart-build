@@ -23,6 +23,10 @@ shown by a profile.
 ext4 is the only implemented image creation backend. FAT and romfs are visible
 in Kconfig but fail during a real image build. Use ext4 for all current boards.
 
+Image creation and kernel filesystem support are separate. smart-build creates
+the rootfs image with host tools, while the RT-Thread kernel gets ext4 support
+from the lwext4 package selected in kernel menuconfig and installed by Env.
+
 An expandable ext4 image grows beyond its configured minimum when the staged
 rootfs needs more space. A fixed image fails when its configured size cannot
 contain the staged files.

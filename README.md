@@ -24,6 +24,8 @@ appear in the configuration interface but are not yet buildable.
 - Python 3.10 or newer.
 - An env sdk toolchain under `~/.env/tools/scripts/packages` matching the
   selected machine's `board.yaml`.
+- RT-Thread Env package scripts under `~/.env/tools/scripts` and a package
+  index under `~/.env/packages/packages`.
 - An RT-Thread source tree available as the repository-root `rt-thread` path,
   usually as a symbolic link.
 - Host build tools reported by `smart-build doctor`.
@@ -53,6 +55,11 @@ To select a machine without changing the workspace configuration:
 
 Build results are written below `build/<machine>/`. Downloaded source archives
 are stored below `downloads/`.
+
+Before compiling the kernel, smart-build synchronizes its defconfig to the
+RT-Thread BSP and runs `~/.env/tools/scripts/pkgs --update`. Kernel packages
+and their versions are selected by the RT-Thread kernel configuration, not by
+smart-build package metadata.
 
 ## Common commands
 

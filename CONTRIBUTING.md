@@ -20,6 +20,10 @@ as a standalone RT-Thread Smart build system.
 - Package metadata is stored in `packages/<name>/package.yaml`.
 - Generated package Kconfig files must match package metadata and must not be
   edited by hand.
+- RT-Thread kernel packages and versions belong to the board kernel defconfig
+  and Env package index. Do not add package download or source-copy logic to
+  smart-build kernel tasks.
+- Board kernel overlays must not modify the BSP `packages/` directory.
 - Build tasks write only through paths owned by `BuildPaths`.
 - Public documentation describes implemented behavior, including current
   limitations; it does not contain requirements, internal design documents,

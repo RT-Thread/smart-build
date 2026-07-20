@@ -42,7 +42,7 @@ Common targets are:
 | Target | Result |
 | --- | --- |
 | `all` | Selected kernel, packages, rootfs, image aggregation, and QEMU script |
-| `kernel` | RT-Thread Smart kernel |
+| `kernel` | Env kernel packages followed by the RT-Thread Smart kernel |
 | `rootfs` | Rootfs selected by the current configuration |
 | `minirootfs` | Minimal rootfs image |
 | `busybox-rootfs` | BusyBox rootfs image |
@@ -53,6 +53,10 @@ Common targets are:
 `--verbose` mirrors task logs to the terminal. `--jobs` is currently honored
 by only part of the build pipeline. `--dry-run` uses placeholder tasks and must
 not be treated as an exact representation of a real task graph.
+
+Kernel builds include a `kernel:packages:update` task. It runs
+`~/.env/tools/scripts/pkgs --update` from the selected BSP before
+`kernel:build` and records the installed package versions in the manifest.
 
 ## Task graph
 

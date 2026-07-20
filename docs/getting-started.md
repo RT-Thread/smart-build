@@ -36,6 +36,20 @@ The required package name, target triple, compiler prefix, and dynamic loader
 are declared in `boards/<machine>/board.yaml`. smart-build does not download or
 install the cross toolchain.
 
+## Provide RT-Thread Env packages
+
+Kernel packages use the RT-Thread Env installation at:
+
+```text
+~/.env/tools/scripts/pkgs
+~/.env/packages/packages
+```
+
+smart-build invokes the first path with `--update` from the selected BSP. The
+command installs the package versions selected in the BSP `.config`. The Env
+package index must already be installed and up to date; smart-build does not
+upgrade that index.
+
 ## Check the environment
 
 ```sh
@@ -70,6 +84,11 @@ Build a smaller target while working on one domain:
 ./smart-build build package:zlib
 ./smart-build build rootfs
 ```
+
+`build kernel` first copies the board's `kernel_defconfig` to the RT-Thread BSP,
+normalizes it with `scons --pyconfig-silent`, runs Env `pkgs --update`, and then
+compiles the kernel. This update can access the network when a selected kernel
+package is not already installed.
 
 Outputs are placed below `build/<machine>/`. Task logs are placed below that
 machine's `logs/` directory. A completed build also writes `manifest.yaml`; the
