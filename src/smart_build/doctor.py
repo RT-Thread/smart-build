@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .config import DEFAULT_MACHINE
 from .domains.toolchain import resolve_toolchain
+from .env_packages import EnvPackages
 from .errors import SmartBuildError
 from .machines import Machine, load_machine
 from .paths import project_root
@@ -20,6 +21,7 @@ class DoctorCheck:
 
 def run_doctor(paths, machine=None):
     metadata = _resolve_machine_metadata(paths, machine)
+    env_packages = EnvPackages.discover().validate()
     checks = [
         _check_python(),
         _check_host_tool(metadata.qemu_binary),
@@ -27,6 +29,8 @@ def run_doctor(paths, machine=None):
         _check_host_tool("make"),
         _check_host_tool("cmake"),
         _check_host_tool("mke2fs"),
+        DoctorCheck("env-pkgs", str(env_packages.command), str(env_packages.command)),
+        DoctorCheck("env-package-index", str(env_packages.index), str(env_packages.index)),
     ]
     toolchain = resolve_toolchain(machine=metadata)
     checks.append(DoctorCheck("toolchain", str(toolchain.root)))
@@ -41,6 +45,7 @@ def toolchain_manifest_record(machine=None):
 
 def host_tools_record(machine=None):
     metadata = _resolve_machine_metadata(None, machine)
+    env_packages = EnvPackages.discover().validate()
     checks = [
         _check_python(),
         _check_host_tool(metadata.qemu_binary),
@@ -48,6 +53,8 @@ def host_tools_record(machine=None):
         _check_host_tool("make"),
         _check_host_tool("cmake"),
         _check_host_tool("mke2fs"),
+        DoctorCheck("env-pkgs", str(env_packages.command), str(env_packages.command)),
+        DoctorCheck("env-package-index", str(env_packages.index), str(env_packages.index)),
     ]
     return host_tools_from_checks(checks)
 

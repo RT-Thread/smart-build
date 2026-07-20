@@ -100,4 +100,6 @@ def test_dry_run_plan_fetches_rt_thread_before_kernel(tmp_path):
     by_id = {task.id: task for task in plan}
 
     assert "source:rt-thread" in by_id
-    assert "source:rt-thread" in by_id["kernel:build"].deps
+    assert "source:lwext4" not in by_id
+    assert by_id["kernel:packages:update"].deps == ("toolchain:check", "source:rt-thread")
+    assert by_id["kernel:build"].deps == ("kernel:packages:update",)

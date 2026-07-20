@@ -199,13 +199,7 @@ def create_default_plan(
         from .domains.sources import rt_thread_source_task
 
         rt_thread_task = rt_thread_source_task(paths)
-        kernel_task = kernel_tasks(paths, toolchain=toolchain)[0]
-        if "source:lwext4" in kernel_task.deps:
-            from .domains.sources import lwext4_source_task
-
-            source_task = lwext4_source_task(paths)
-        else:
-            source_task = None
+        kernel_plan_tasks = kernel_tasks(paths, toolchain=toolchain)
     else:
         rt_thread_task = _placeholder_task(
             "source:rt-thread",
@@ -217,17 +211,27 @@ def create_default_plan(
             paths,
             run_class="fetch",
         )
-        source_task = None
+        kernel_package_task = _placeholder_task(
+            "kernel:packages:update",
+            "kernel",
+            "packages-update",
+            [],
+            [paths.stamps_dir / "kernel-packages.ok"],
+            ["toolchain:check", "source:rt-thread"],
+            paths,
+            run_class="serial",
+        )
         kernel_task = _placeholder_task(
             "kernel:build",
             "kernel",
             "build",
             [],
             [paths.images_dir / "rtthread.bin"],
-            ["toolchain:check", "source:rt-thread"],
+            ["kernel:packages:update"],
             paths,
             run_class="build",
         )
+        kernel_plan_tasks = [kernel_package_task, kernel_task]
 
     minirootfs_tasks = (
         _minirootfs_tasks(paths, toolchain, selection=rootfs_selection, force_minirootfs=force_minirootfs_image)
@@ -309,8 +313,7 @@ def create_default_plan(
         config_task,
         toolchain_task,
         rt_thread_task,
-        *([source_task] if source_task is not None else []),
-        kernel_task,
+        *kernel_plan_tasks,
         *minirootfs_tasks[:-2],
         *([rootfs_task] if rootfs_task is not None else []),
         *([package_rootfs_task] if package_rootfs_task is not None else []),

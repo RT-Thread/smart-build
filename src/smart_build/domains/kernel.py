@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -11,67 +12,101 @@ from ..configure import (
     execute_configuration,
     toolchain_configuration_env,
 )
+from ..env_packages import EnvPackages
 from ..errors import SmartBuildError
 from ..machines import load_machine
 from ..paths import board_defconfig_path, board_kernel_overlay_dir
 from ..tasks import Task
-from .sources import RT_THREAD_TASK_ID, prepare_lwext4_bsp_package
+from .sources import RT_THREAD_TASK_ID
 from .toolchain import toolchain_task_fields
 
 
+KERNEL_PACKAGE_TASK_ID = "kernel:packages:update"
 KERNEL_TASK_ID = "kernel:build"
-LWEXT4_CONFIG_KEYS = (
-    "CONFIG_PKG_USING_LWEXT4=y",
-    "CONFIG_RT_USING_DFS_LWEXT4=y",
-)
 
 
-def kernel_tasks(paths, toolchain=None, command_runner=None):
+def kernel_tasks(paths, toolchain=None, command_runner=None, env_packages=None):
     context = _resolve_kernel_context(paths)
+    packages = (env_packages or EnvPackages.discover()).validate()
     fields = toolchain_task_fields(toolchain)
-    commands = _scons_commands(context["bsp"])
-    deps = ["toolchain:check", RT_THREAD_TASK_ID]
-    if context["lwext4_enabled"]:
-        deps.append("source:lwext4")
-    manifest_fields = {
+    package_commands = _package_commands(context["bsp"], packages)
+    build_commands = _build_commands(context["bsp"])
+    package_manifest = {
+        **packages.manifest_record(),
+        "config": str(context["bsp"] / ".config"),
+        "state": str(context["bsp"] / "packages" / "pkgs.json"),
+        "packages": [],
+    }
+    common_env = {"MACHINE": paths.machine, **fields["env"]}
+    package_task = Task(
+        id=KERNEL_PACKAGE_TASK_ID,
+        domain="kernel",
+        action="packages-update",
+        inputs=[
+            context["defconfig"],
+            context["bsp"] / "SConstruct",
+            packages.command,
+            packages.index / "Kconfig",
+        ],
+        outputs=[paths.stamps_dir / "kernel-packages.ok"],
+        deps=["toolchain:check", RT_THREAD_TASK_ID],
+        workdir=paths.work_dir / "kernel-packages",
+        env=common_env,
+        run_class="serial",
+        cache_policy="never",
+        log_path=paths.logs_dir / "kernel-packages.log",
+        executor=_make_package_executor(context, packages, package_commands, command_runner),
+        cache_extra={
+            **fields["cache_extra"],
+            "defconfig": path_record(context["defconfig"]),
+            "commands": [list(command) for command in package_commands],
+            "env_packages": packages.manifest_record(),
+        },
+        manifest_fields={
+            **fields["manifest_fields"],
+            "kernel_packages": package_manifest,
+        },
+    )
+    kernel_manifest = {
         **fields["manifest_fields"],
         "source": _source_record(context["source"]),
         "bsp": str(context["bsp"]),
         "defconfig": str(context["defconfig"]),
-        "commands": [list(command) for command in commands],
-        "lwext4": _lwext4_manifest(context),
+        "commands": [list(command) for command in build_commands],
         "overlays": _overlay_manifest(context),
     }
-    cache_extra = {
-        **fields["cache_extra"],
-        "source": manifest_fields["source"],
-        "bsp": str(context["bsp"]),
-        "defconfig": path_record(context["defconfig"]),
-        "commands": manifest_fields["commands"],
-    }
-    executor = _make_kernel_executor(paths, context, commands, command_runner)
-    return [
-        Task(
-            id=KERNEL_TASK_ID,
-            domain="kernel",
-            action="build",
-            inputs=[context["defconfig"], context["bsp"] / "SConstruct"],
-            outputs=[paths.images_dir / "rtthread.bin"],
-            deps=deps,
-            workdir=paths.work_dir / "kernel-build",
-            env={"MACHINE": paths.machine, **fields["env"]},
-            run_class="build",
-            cache_policy="never",
-            log_path=paths.logs_dir / "kernel-build.log",
-            executor=executor,
-            cache_extra=cache_extra,
-            manifest_fields=manifest_fields,
-        )
-    ]
+    kernel_task = Task(
+        id=KERNEL_TASK_ID,
+        domain="kernel",
+        action="build",
+        inputs=[
+            context["defconfig"],
+            context["bsp"] / "SConstruct",
+            *_overlay_inputs(context),
+        ],
+        outputs=[paths.images_dir / "rtthread.bin"],
+        deps=[KERNEL_PACKAGE_TASK_ID],
+        workdir=paths.work_dir / "kernel-build",
+        env=common_env,
+        run_class="build",
+        cache_policy="never",
+        log_path=paths.logs_dir / "kernel-build.log",
+        executor=_make_kernel_executor(context, build_commands, command_runner),
+        cache_extra={
+            **fields["cache_extra"],
+            "source": kernel_manifest["source"],
+            "bsp": str(context["bsp"]),
+            "defconfig": path_record(context["defconfig"]),
+            "commands": kernel_manifest["commands"],
+        },
+        manifest_fields=kernel_manifest,
+    )
+    return [package_task, kernel_task]
 
 
 def kernel_configuration(paths, toolchain=None, command_runner=None):
     context = _resolve_kernel_context(paths)
+    packages = EnvPackages.discover().validate()
     _validate_kernel_context(context)
     resolved_toolchain = toolchain
     if resolved_toolchain is None:
@@ -90,7 +125,7 @@ def kernel_configuration(paths, toolchain=None, command_runner=None):
         target="kernel",
         command=("scons", "--menuconfig"),
         workdir=context["bsp"],
-        env=env,
+        env=packages.environment(env),
         sync=(
             ConfigurationSync(
                 source=context["bsp"] / ".config",
@@ -101,21 +136,41 @@ def kernel_configuration(paths, toolchain=None, command_runner=None):
     return execute_configuration(spec, command_runner=command_runner)
 
 
-def _make_kernel_executor(paths, context, commands, command_runner):
+def _make_package_executor(context, packages, commands, command_runner):
     runner = command_runner or _run_command
 
     def executor(task, log):
         _validate_kernel_context(context)
+        packages.validate()
         _copy_defconfig(context["defconfig"], context["bsp"] / ".config", log)
-        lwext4_state = _prepare_lwext4(paths, context, log)
-        overlay_manifest = _apply_machine_overlays(context, log)
-        env = _kernel_env(task.env)
+        env = packages.environment(_kernel_env(task.env))
+        env["BSP_DIR"] = str(context["bsp"])
+        completed = _run_commands(task, commands, context["bsp"], env, runner, log)
+        _validate_package_update_output(completed[-1])
+        package_state = _read_package_state(context["bsp"])
+        record = {
+            **packages.manifest_record(),
+            "config": str(context["bsp"] / ".config"),
+            "state": str(context["bsp"] / "packages" / "pkgs.json"),
+            "packages": package_state,
+        }
+        task.manifest_fields["kernel_packages"] = record
+        marker = task.outputs[0]
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        log.write(f"wrote kernel package state: {marker}\n")
+        return 0
 
-        for command in commands:
-            completed = runner(list(command), cwd=context["bsp"], env=env)
-            _write_completed_command(log, command, context["bsp"], completed)
-            if completed.returncode != 0:
-                _raise_kernel_command_error(task, command, completed, lwext4_state)
+    return executor
+
+
+def _make_kernel_executor(context, commands, command_runner):
+    runner = command_runner or _run_command
+
+    def executor(task, log):
+        _validate_kernel_context(context)
+        overlay_manifest = _apply_machine_overlays(context, log)
+        _run_commands(task, commands, context["bsp"], _kernel_env(task.env), runner, log)
 
         source_bin = context["bsp"] / "rtthread.bin"
         if not source_bin.is_file():
@@ -129,7 +184,6 @@ def _make_kernel_executor(paths, context, commands, command_runner):
             "path": str(output),
             "sha256": path_record(output).get("sha256"),
         }
-        task.manifest_fields["lwext4"] = lwext4_state["manifest"]
         task.manifest_fields["overlays"] = overlay_manifest
         return 0
 
@@ -140,19 +194,13 @@ def _resolve_kernel_context(paths):
     source = paths.root / "rt-thread"
     machine = load_machine(paths.root, paths.machine)
     config_values = load_defconfig(board_defconfig_path(paths.root, paths.machine))
-    package_dir = paths.root / "packages" / "rt-thread"
     defconfig = machine.kernel_defconfig
-    bsp_name = _kernel_bsp(paths, config_values, machine)
-    bsp = source / "bsp" / bsp_name
-    overlay_dir = board_kernel_overlay_dir(paths.root, paths.machine)
+    bsp = source / "bsp" / _kernel_bsp(paths, config_values, machine)
     return {
         "source": source,
         "bsp": bsp,
         "defconfig": defconfig,
-        "lwext4_enabled": kernel_defconfig_enables_lwext4(defconfig),
-        "lwext4_package_dir": bsp / "packages" / "lwext4-latest",
-        "lwext4_package_sconscript": package_dir / "lwext4_SConscript",
-        "overlay_dir": overlay_dir,
+        "overlay_dir": board_kernel_overlay_dir(paths.root, paths.machine),
     }
 
 
@@ -160,13 +208,9 @@ def _validate_kernel_context(context):
     source = context["source"]
     bsp = context["bsp"]
     defconfig = context["defconfig"]
-    if not source.is_dir():
-        raise SmartBuildError("SOURCE", f"RT-Thread source not found: {source}")
-    if not (source / "bsp").is_dir():
+    if not source.is_dir() or not (source / "bsp").is_dir():
         raise SmartBuildError("SOURCE", f"RT-Thread source missing bsp directory: {source}")
-    if not bsp.is_dir():
-        raise SmartBuildError("SOURCE", f"RT-Thread BSP path not found: {bsp}")
-    if not (bsp / "SConstruct").is_file():
+    if not bsp.is_dir() or not (bsp / "SConstruct").is_file():
         raise SmartBuildError("SOURCE", f"RT-Thread BSP missing SConstruct: {bsp}")
     if not defconfig.is_file():
         raise SmartBuildError("SOURCE", f"kernel defconfig not found: {defconfig}")
@@ -187,36 +231,12 @@ def _kernel_bsp(paths, config_values, machine):
             ),
         )
     return machine.bsp
+
+
 def _copy_defconfig(source, destination, log):
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
     log.write(f"copied defconfig: {source} -> {destination}\n")
-
-
-def _prepare_lwext4(paths, context, log):
-    package_dir = context["lwext4_package_dir"]
-    enabled = context["lwext4_enabled"]
-    manifest = _lwext4_manifest(context)
-    manifest["enabled_in_defconfig"] = enabled
-    if not enabled:
-        return {"available": False, "manifest": manifest}
-    try:
-        package_manifest = prepare_lwext4_bsp_package(
-            paths,
-            package_dir,
-            log,
-            package_sconscript_source=context["lwext4_package_sconscript"],
-        )
-    except SmartBuildError as exc:
-        if exc.code == "SOURCE":
-            raise SmartBuildError(
-                "SOURCE",
-                "lwext4 source not found; required by kernel defconfig; "
-                f"expected BSP package {package_dir}: {exc}",
-            ) from exc
-        raise
-    manifest.update(package_manifest)
-    return {"available": True, "manifest": manifest}
 
 
 def _apply_machine_overlays(context, log):
@@ -225,52 +245,162 @@ def _apply_machine_overlays(context, log):
     if not overlay_dir.is_dir():
         return manifest
 
-    for source in sorted(path for path in overlay_dir.rglob("*") if path.is_file()):
+    sources = sorted(path for path in overlay_dir.rglob("*") if path.is_file())
+    for source in sources:
+        relative = source.relative_to(overlay_dir)
+        if relative.parts and relative.parts[0] == "packages":
+            raise SmartBuildError(
+                "CONFIG",
+                f"kernel overlay must not modify Env-managed packages: {source}",
+            )
+    for source in sources:
         relative = source.relative_to(overlay_dir)
         destination = context["bsp"] / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
-        record = {
-            "source": str(source),
-            "destination": str(destination),
-            "sha256": path_record(destination).get("sha256"),
-        }
-        manifest["files"].append(record)
+        manifest["files"].append(
+            {
+                "source": str(source),
+                "destination": str(destination),
+                "sha256": path_record(destination).get("sha256"),
+            }
+        )
         log.write(f"applied kernel overlay: {source} -> {destination}\n")
     return manifest
 
 
+def _overlay_inputs(context):
+    overlay_dir = context["overlay_dir"]
+    if not overlay_dir.is_dir():
+        return []
+    return sorted(path for path in overlay_dir.rglob("*") if path.is_file())
+
+
 def _overlay_manifest(context):
-    return {
-        "source_dir": str(context["overlay_dir"]),
-        "files": [],
-    }
+    return {"source_dir": str(context["overlay_dir"]), "files": []}
 
 
-def _lwext4_manifest(context):
-    return {
-        "enabled_in_defconfig": None,
-        "package_dir": str(context["lwext4_package_dir"]),
-        "package_sconscript_source": str(context["lwext4_package_sconscript"]),
-        "prepared": False,
-        "prepared_source": None,
-        "already_present": context["lwext4_package_dir"].is_dir(),
-    }
-
-
-def kernel_defconfig_enables_lwext4(defconfig):
-    try:
-        text = Path(defconfig).read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return False
-    return any(key in text for key in LWEXT4_CONFIG_KEYS)
-
-
-def _scons_commands(bsp):
+def _package_commands(bsp, packages):
     return (
         ("scons", "--pyconfig-silent", "-C", str(bsp)),
-        ("scons", "-C", str(bsp)),
+        (str(packages.command), "--update"),
     )
+
+
+def _build_commands(bsp):
+    return (("scons", "-C", str(bsp)),)
+
+
+def _read_package_state(bsp):
+    packages_dir = Path(bsp) / "packages"
+    config_path = Path(bsp) / ".config"
+    state_path = packages_dir / "pkgs.json"
+    error_path = packages_dir / "pkgs_error.json"
+    state = _read_json_list(state_path, "kernel package state")
+    errors = _read_json_list(error_path, "kernel package errors")
+    if errors:
+        names = ", ".join(str(item.get("name", item)) if isinstance(item, dict) else str(item) for item in errors)
+        raise SmartBuildError("BUILD", f"RT-Thread Env package update reported errors: {names}")
+    if not (packages_dir / "SConscript").is_file():
+        raise SmartBuildError("BUILD", f"RT-Thread Env package update did not create {packages_dir / 'SConscript'}")
+
+    result = []
+    actual = []
+    for item in state:
+        if not isinstance(item, dict):
+            raise SmartBuildError("BUILD", f"invalid kernel package state entry in {state_path}: {item!r}")
+        name = item.get("name")
+        version = item.get("ver")
+        index_path = item.get("path")
+        if not all(isinstance(value, str) and value for value in (name, version, index_path)):
+            raise SmartBuildError("BUILD", f"incomplete kernel package state entry in {state_path}: {item!r}")
+        actual.append((name, index_path, version))
+        package_name = Path(index_path.replace("\\", "/").lstrip("/")).name
+        managed_path = packages_dir / f"{package_name}-{version}"
+        if not managed_path.is_dir():
+            raise SmartBuildError(
+                "BUILD",
+                "RT-Thread Env package is not installed at its managed path: "
+                f"{name} version={version} path={managed_path}",
+            )
+        result.append(
+            {
+                "name": name,
+                "version": version,
+                "index_path": index_path,
+                "installed_path": str(managed_path),
+                "managed_by_env": True,
+            }
+        )
+
+    expected = _configured_packages(config_path)
+    if sorted(actual) != expected:
+        raise SmartBuildError(
+            "BUILD",
+            "RT-Thread Env package state does not match the BSP .config: "
+            f"expected={expected!r} actual={sorted(actual)!r}",
+        )
+    return sorted(result, key=lambda item: item["name"])
+
+
+def _configured_packages(config_path):
+    values = load_defconfig(config_path)
+    prefix = "CONFIG_PKG_"
+    suffix = "_PATH"
+    result = []
+    for key, index_path in values.items():
+        if not key.startswith(prefix) or not key.endswith(suffix) or index_path == "n":
+            continue
+        name = key[len(prefix) : -len(suffix)]
+        version = values.get(f"{prefix}{name}_VER")
+        if not name or not version or version == "n":
+            raise SmartBuildError(
+                "CONFIG",
+                f"kernel package {name or key} has a path but no version in {config_path}",
+            )
+        result.append((name, index_path, version))
+    return sorted(result)
+
+
+def _read_json_list(path, label):
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SmartBuildError("BUILD", f"failed to read {label} {path}: {exc}") from exc
+    if not isinstance(value, list):
+        raise SmartBuildError("BUILD", f"{label} must be a list: {path}")
+    return value
+
+
+def _run_commands(task, commands, cwd, env, runner, log):
+    results = []
+    for command in commands:
+        completed = runner(list(command), cwd=cwd, env=env)
+        _write_completed_command(log, command, cwd, completed)
+        if completed.returncode != 0:
+            raise SmartBuildError(
+                "BUILD",
+                "task {task_id} command failed: command={command} workdir={workdir} "
+                "exit code {exit_code} log={log_path}".format(
+                    task_id=task.id,
+                    command=" ".join(str(part) for part in command),
+                    workdir=cwd,
+                    exit_code=completed.returncode,
+                    log_path=task.log_path,
+                ),
+            )
+        results.append(completed)
+    return results
+
+
+def _validate_package_update_output(completed):
+    output = completed.stdout or ""
+    if "Operation completed successfully." not in output:
+        raise SmartBuildError(
+            "BUILD",
+            "RT-Thread Env package update did not report success; "
+            "review the kernel package log and packages/pkgs_error.json",
+        )
 
 
 def _kernel_env(task_env):
@@ -297,7 +427,7 @@ def _run_command(command, cwd, env):
 
 
 def _write_completed_command(log, command, cwd, completed):
-    log.write(f"command: {' '.join(command)}\n")
+    log.write(f"command: {' '.join(str(part) for part in command)}\n")
     log.write(f"workdir: {cwd}\n")
     log.write("summary: command started\n")
     if completed.stdout:
@@ -308,40 +438,8 @@ def _write_completed_command(log, command, cwd, completed):
     log.write(f"exit: {completed.returncode}\n")
 
 
-def _raise_kernel_command_error(task, command, completed, lwext4_state):
-    output = completed.stdout or ""
-    manifest = lwext4_state["manifest"]
-    if (
-        manifest["enabled_in_defconfig"]
-        and not lwext4_state["available"]
-        and ("lwext4" in output or "packages/" in output or "SConscript" in output)
-    ):
-        searched = ", ".join(manifest["source_candidates"])
-        raise SmartBuildError(
-            "SOURCE",
-            "lwext4 source not found for enabled kernel config; "
-            f"expected BSP package {manifest['package_dir']}; searched: {searched}",
-        )
-    raise SmartBuildError(
-        "BUILD",
-        "task {task_id} command failed: command={command} workdir={workdir} "
-        "exit code {exit_code} log={log_path}".format(
-            task_id=task.id,
-            command=" ".join(command),
-            workdir=task.workdir,
-            exit_code=completed.returncode,
-            log_path=task.log_path,
-        ),
-    )
-
-
 def _source_record(source):
-    record = {
-        "path": str(source),
-        "dirty": None,
-        "revision": None,
-        "git_root": None,
-    }
+    record = {"path": str(source), "dirty": None, "revision": None, "git_root": None}
     if not source.exists():
         return record
     git_root = _git_output(source, "rev-parse", "--show-toplevel")
