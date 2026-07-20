@@ -1,3 +1,5 @@
+**English** | [中文](getting-started_zh.md)
+
 # Getting started
 
 smart-build is run from the repository root. The launcher adds `src/` to the

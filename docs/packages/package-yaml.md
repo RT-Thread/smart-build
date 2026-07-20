@@ -1,3 +1,5 @@
+**English** | [中文](package-yaml_zh.md)
+
 # Package description reference
 
 Package descriptions use YAML schema version 1 and live at

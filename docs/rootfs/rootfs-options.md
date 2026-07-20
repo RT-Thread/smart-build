@@ -1,3 +1,5 @@
+**English** | [中文](rootfs-options_zh.md)
+
 # Root filesystem support
 
 smart-build currently defines four rootfs selections.

@@ -1,3 +1,5 @@
+**English** | [中文](troubleshooting_zh.md)
+
 # Troubleshooting
 
 ## Toolchain is not found

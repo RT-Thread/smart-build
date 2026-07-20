@@ -1,3 +1,5 @@
+**English** | [中文](using-packages_zh.md)
+
 # Using packages
 
 Packages are selected through the configured rootfs or built directly by name.

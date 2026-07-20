@@ -1,3 +1,5 @@
+**English** | [中文](commands_zh.md)
+
 # Command reference
 
 All commands are run from the repository root. Use `./smart-build <command>

@@ -1,3 +1,5 @@
+**English** | [中文](README_zh.md)
+
 # smart-build
 
 smart-build is a standalone build system for RT-Thread Smart. It provides one

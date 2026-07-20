@@ -1,3 +1,5 @@
+**English** | [中文](creating-package_zh.md)
+
 # Adding a package
 
 Each package owns a lowercase, hyphenated directory:

@@ -1,3 +1,5 @@
+**English** | [中文](configuration_zh.md)
+
 # Configuration
 
 smart-build combines board defaults with the repository-root `.config` written

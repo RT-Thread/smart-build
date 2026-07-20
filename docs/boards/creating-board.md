@@ -1,3 +1,5 @@
+**English** | [中文](creating-board_zh.md)
+
 # Adding board support
 
 A machine owns a lowercase, hyphenated directory whose name must equal the

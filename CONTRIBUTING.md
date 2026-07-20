@@ -1,3 +1,5 @@
+**English** | [中文](CONTRIBUTING_zh.md)
+
 # Contributing to smart-build
 
 Contributions should describe and preserve the current behavior of smart-build
@@ -59,7 +61,8 @@ errors rather than relying only on the command exit status.
 
 When a command, configuration field, package contract, board contract, rootfs
 contract, or user-visible limitation changes, update `README.md`,
-`docs/README.md`, and the relevant user guide in the same contribution.
+`README_zh.md`, `docs/README.md`, `docs/README_zh.md`, and both language
+versions of the relevant user guide in the same contribution.
 
 ## Commits and pull requests
 

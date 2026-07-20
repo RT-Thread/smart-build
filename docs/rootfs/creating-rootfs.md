@@ -1,3 +1,5 @@
+**English** | [中文](creating-rootfs_zh.md)
+
 # Adding a root filesystem type
 
 A rootfs type owns a lowercase, hyphenated directory:

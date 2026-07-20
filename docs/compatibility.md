@@ -1,3 +1,5 @@
+**English** | [中文](compatibility_zh.md)
+
 # Compatibility and current limitations
 
 This page records user-visible limits in the current source tree.

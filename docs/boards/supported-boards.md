@@ -1,3 +1,5 @@
+**English** | [中文](supported-boards_zh.md)
+
 # Supported boards
 
 The current source tree contains three QEMU boards.

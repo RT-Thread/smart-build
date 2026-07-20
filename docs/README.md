@@ -1,7 +1,12 @@
+**English** | [中文](README_zh.md)
+
 # smart-build documentation
 
 This directory contains public documentation for users and extension authors.
 It describes the behavior available in the current source tree.
+
+English files without a language suffix are the default. Chinese translations
+use the `_zh.md` suffix, and each page links to its counterpart.
 
 ## Use smart-build
 
