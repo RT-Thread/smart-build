@@ -1,0 +1,16 @@
+schema_version: 1
+kind: board
+name: qemu-virt-riscv64
+version: 0.1.0
+arch: riscv64
+bsp: qemu-virt64-riscv
+kernel_defconfig: kernel_defconfig
+toolchain:
+  package: riscv64-linux-musleabi-gcc-latest
+  target: riscv64-linux-musleabi
+  prefix: riscv64-linux-musleabi-
+  loader: ld-musl-riscv64-sf.so.1
+qemu:
+  binary: qemu-system-riscv64
+  profile: virt-riscv64
+  machine: virt

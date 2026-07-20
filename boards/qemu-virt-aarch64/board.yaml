@@ -1,0 +1,17 @@
+schema_version: 1
+kind: board
+name: qemu-virt-aarch64
+version: 0.1.0
+arch: aarch64
+bsp: qemu-virt64-aarch64
+kernel_defconfig: kernel_defconfig
+toolchain:
+  package: aarch64-linux-musleabi-gcc-latest
+  target: aarch64-linux-musleabi
+  prefix: aarch64-linux-musleabi-
+  loader: ld-musl-aarch64.so.1
+qemu:
+  binary: qemu-system-aarch64
+  profile: virt-aarch64
+  machine: virt
+  cpu: max

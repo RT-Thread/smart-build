@@ -1,0 +1,9 @@
+schema_version: 1
+kind: rootfs
+name: busybox
+version: 0.1.0
+packages:
+  - busybox
+  - hello
+filesystem:
+  type: ext4

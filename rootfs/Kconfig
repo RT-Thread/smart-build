@@ -1,0 +1,23 @@
+menu "Root filesystem"
+
+choice
+    prompt "Root filesystem"
+    default ROOTFS_MINIMAL
+
+source "rootfs/minimal/Kconfig"
+source "rootfs/busybox/Kconfig"
+source "rootfs/full/Kconfig"
+
+config ROOTFS_NONE
+    bool "Disable Smart rootfs"
+
+endchoice
+
+config ROOTFS
+    string
+    default "minimal" if ROOTFS_MINIMAL
+    default "basic" if ROOTFS_BASIC
+    default "full" if ROOTFS_FULL
+    default "none" if ROOTFS_NONE
+
+endmenu

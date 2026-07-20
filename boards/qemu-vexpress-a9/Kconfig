@@ -1,0 +1,22 @@
+config MACHINE_QEMU_VEXPRESS_A9
+    bool "QEMU vexpress A9"
+
+if MACHINE_QEMU_VEXPRESS_A9
+
+config MACHINE
+    string
+    default "qemu-vexpress-a9"
+
+config ARCH
+    string
+    default "arm"
+
+config BSP
+    string
+    default "qemu-vexpress-a9"
+
+config TOOLCHAIN
+    string
+    default "arm-linux-musleabi-gcc-stable"
+
+endif
