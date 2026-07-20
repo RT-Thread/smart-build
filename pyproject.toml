@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-build"
+version = "2.0.0"
+description = "Build system for RT-Thread Smart"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0", "kconfiglib>=14.1.0"]
+
+[project.scripts]
+smart-build = "smart_build.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["smart_build", "smart_build.domains"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
