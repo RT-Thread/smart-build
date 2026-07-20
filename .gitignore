@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+/.config
+/AGENTS.md
+/.internal/
+
+/build/
+/downloads/
+/rt-thread
+/.worktrees/
