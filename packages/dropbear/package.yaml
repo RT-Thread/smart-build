@@ -1,0 +1,49 @@
+schema_version: 1
+kind: package
+name: dropbear
+version: "2022.83"
+versions:
+  - "2022.83"
+default_version: "2022.83"
+type: executable
+description: Lightweight SSH server and client suite
+depends:
+  - libz
+selects:
+  - zlib
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://matt.ucc.asn.au/dropbear/releases/dropbear-2022.83.tar.bz2
+  archive: dropbear-2022.83.tar.bz2
+  sha256: bc5a121ffbc94b5171ad5ebe01be42746d50aa797c9549a4639894a16749443b
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - patches/01_adapt_smart.diff
+    - patches/03_fix_memory.diff
+  files:
+    - configure
+    - svr-main.c
+    - cli-main.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/dropbear
+      - /usr/bin/dbclient
+      - /usr/bin/dropbearkey
+      - /usr/bin/dropbearconvert
+      - /usr/bin/scp
+    upstream_markers:
+      - configure
+      - svr-main.c
+      - cli-main.c
+install:
+  path: /usr/bin/dropbear
+smoke:
+  command:
+    - dropbear
+    - -V

@@ -1,0 +1,13 @@
+diff --git a/modules/core/src/system.cpp b/modules/core/src/system.cpp
+index d2231fe952..6b6c3eab56 100644
+--- a/modules/core/src/system.cpp
++++ b/modules/core/src/system.cpp
+@@ -140,7 +140,7 @@ void* allocSingletonNewBuffer(size_t size) { return malloc(size); }
+ #  include <elf.h>
+ #endif
+ #if defined __ANDROID__ || defined __linux__
+-#  include <linux/auxvec.h>
++// #  include <linux/auxvec.h>
+ #endif
+ #endif
+ 

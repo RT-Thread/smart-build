@@ -1,0 +1,43 @@
+schema_version: 1
+kind: package
+name: freetype
+version: 2.13.2
+versions:
+  - 2.13.2
+default_version: 2.13.2
+type: library
+description: FreeType font rendering library
+depends:
+  - libz
+selects:
+  - zlib
+provides:
+  - freetype2
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://downloads.sourceforge.net/project/freetype/freetype2/2.13.2/freetype-2.13.2.tar.gz
+  archive: freetype-2.13.2.tar.gz
+  sha256: 1ac27e16c134a7f2ccea177faba19801131116fd682efc1f5737037c5db224b5
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - include/ft2build.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/freetype2
+      - /usr/lib/libfreetype.a
+    upstream_markers:
+      - configure
+      - include/ft2build.h
+install:
+  headers:
+    - usr/include/freetype2
+  libraries:
+    - usr/lib/libfreetype.a

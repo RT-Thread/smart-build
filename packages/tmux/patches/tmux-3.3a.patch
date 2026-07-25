@@ -1,0 +1,63 @@
+diff -ru tmux-3.3a/compat/imsg.c ../tmp/tmux/compat/imsg.c
+--- tmux-3.3a/compat/imsg.c	2022-04-25 16:25:13.000000000 +0800
++++ source/compat/imsg.c	2024-05-29 09:30:25.897678091 +0800
+@@ -71,6 +71,7 @@
+ 		return (-1);
+ 
+ again:
++	#if 0
+ 	if (getdtablecount() + imsg_fd_overhead +
+ 	    (int)((CMSG_SPACE(sizeof(int))-CMSG_SPACE(0))/sizeof(int))
+ 	    >= getdtablesize()) {
+@@ -78,6 +79,7 @@
+ 		free(ifd);
+ 		return (-1);
+ 	}
++	#endif
+ 
+ 	if ((n = recvmsg(ibuf->fd, &msg, 0)) == -1) {
+ 		if (errno == EINTR)
+diff -ru tmux-3.3a/compat.h ../tmp/tmux/compat.h
+--- tmux-3.3a/compat.h	2022-04-25 16:25:13.000000000 +0800
++++ source/compat.h	2024-05-29 09:30:25.897678091 +0800
+@@ -376,7 +376,7 @@
+ 
+ #ifndef HAVE_FORKPTY
+ /* forkpty.c */
+-pid_t		 forkpty(int *, char *, struct termios *, struct winsize *);
++//pid_t		 forkpty(int *, char *, struct termios *, struct winsize *);
+ #endif
+ 
+ #ifndef HAVE_ASPRINTF
+diff -ru tmux-3.3a/server.c ../tmp/tmux/server.c
+--- tmux-3.3a/server.c	2022-04-25 16:25:14.000000000 +0800
++++ source/server.c	2024-05-29 09:30:26.177698018 +0800
+@@ -389,10 +389,12 @@
+ 		return;
+ 	}
+ 	c = server_client_create(newfd);
++	#if 0
+ 	if (!server_acl_join(c)) {
+ 		c->exit_message = xstrdup("access not allowed");
+ 		c->flags |= CLIENT_EXIT;
+ 	}
++	#endif
+ }
+ 
+ /*
+diff -ru tmux-3.3a/tmux.c ../tmp/tmux/tmux.c
+--- tmux-3.3a/tmux.c	2022-04-25 16:25:14.000000000 +0800
++++ source/tmux.c	2024-05-29 09:30:26.181698303 +0800
+@@ -222,10 +222,12 @@
+ 		xasprintf(cause, "%s is not a directory", base);
+ 		goto fail;
+ 	}
++	#if 0
+ 	if (sb.st_uid != uid || (sb.st_mode & S_IRWXO) != 0) {
+ 		xasprintf(cause, "directory %s has unsafe permissions", base);
+ 		goto fail;
+ 	}
++	#endif
+ 	xasprintf(&path, "%s/%s", base, label);
+ 	free(base);
+ 	return (path);

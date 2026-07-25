@@ -1,0 +1,50 @@
+schema_version: 1
+kind: package
+name: sdl2-image
+version: 2.0.5
+versions:
+  - 2.0.5
+default_version: 2.0.5
+type: library
+description: BMP, JPEG, and PNG image loading for SDL2
+depends:
+  - sdl2
+  - libjpeg
+  - libpng
+  - libz
+selects:
+  - sdl2
+  - libjpeg
+  - libpng
+  - zlib
+provides:
+  - sdl2_image
+  - SDL2_image
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: git
+  url: https://github.com/libsdl-org/SDL_image.git
+  commit: ab2a9c602623193d61827ccd395302d92d90fc38
+  local_files:
+    - sbuild.py
+    - conf/pngconf.h
+    - conf/pnglibconf.h
+  files:
+    - configure
+    - SDL_image.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/SDL2/SDL_image.h
+      - /usr/lib/libSDL2_image.a
+    upstream_markers:
+      - configure
+      - SDL_image.h
+install:
+  headers:
+    - usr/include/SDL2/SDL_image.h
+  libraries:
+    - usr/lib/libSDL2_image.a

@@ -1,0 +1,41 @@
+schema_version: 1
+kind: package
+name: libexpat
+version: 2.6.0
+versions:
+  - 2.6.0
+default_version: 2.6.0
+type: library
+description: Expat XML parser library
+provides:
+  - expat
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/libexpat/libexpat/releases/download/R_2_6_0/expat-2.6.0.tar.bz2
+  archive: expat-2.6.0.tar.bz2
+  sha256: ff60e6a6b6ce570ae012dc7b73169c7fdf4b6bf08c12ed0ec6f55736b78d85ba
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - lib/expat.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/expat.h
+      - /usr/include/expat_external.h
+      - /usr/lib/libexpat.a
+    upstream_markers:
+      - configure
+      - lib/expat.h
+install:
+  headers:
+    - usr/include/expat.h
+    - usr/include/expat_external.h
+  libraries:
+    - usr/lib/libexpat.a

@@ -1,0 +1,45 @@
+schema_version: 1
+kind: package
+name: uhttpd
+version: "21"
+versions:
+  - "21"
+default_version: "21"
+type: executable
+description: Lightweight HTTP, CGI, and Lua server
+depends:
+  - lua
+selects:
+  - lua
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/xqyjlj/uhttpd/archive/refs/tags/v21.tar.gz
+  archive: uhttpd-v21.tar.gz
+  sha256: 171ee5a9188480ea6c70d52d7226e33c9c1fa942e9d1d8a31a75b86a0262e096
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - patches/02_uhttpd.diff
+    - patches/03_lua_5_5.diff
+    - conf/uhttpd-lua-compat.h
+  files:
+    - Makefile
+    - uhttpd.c
+    - uhttpd-lua.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/uhttpd
+    upstream_markers:
+      - Makefile
+      - uhttpd.c
+install:
+  path: /usr/bin/uhttpd
+smoke:
+  command:
+    - uhttpd
+    - -h

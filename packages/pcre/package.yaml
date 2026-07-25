@@ -1,0 +1,44 @@
+schema_version: 1
+kind: package
+name: pcre
+version: "8.45"
+versions:
+  - "8.45"
+default_version: "8.45"
+type: library
+description: PCRE 8 compatible regular expression library
+provides:
+  - libpcre
+requires_toolchain:
+  - c
+  - cxx
+  - static-library
+source:
+  type: archive
+  url: https://github.com/xmake-mirror/pcre/releases/download/8.45/pcre-8.45.tar.bz2
+  archive: pcre-8.45.tar.bz2
+  sha256: 4dae6fdcd2bb0bb6c37b5f97c33c2be954da743985369cddac3546e3218bffb8
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - pcre.h.generic
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/pcre.h
+      - /usr/include/pcreposix.h
+      - /usr/lib/libpcre.a
+      - /usr/lib/libpcreposix.a
+    upstream_markers:
+      - CMakeLists.txt
+      - pcre.h.generic
+install:
+  headers:
+    - usr/include/pcre.h
+    - usr/include/pcreposix.h
+  libraries:
+    - usr/lib/libpcre.a
+    - usr/lib/libpcreposix.a

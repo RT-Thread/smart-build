@@ -1,0 +1,42 @@
+schema_version: 1
+kind: package
+name: vim
+version: 9.0.2160
+versions:
+  - 9.0.2160
+default_version: 9.0.2160
+type: executable
+description: Vim terminal text editor
+depends:
+  - libncurses
+selects:
+  - ncurses
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/vim/vim/archive/refs/tags/v9.0.2160.tar.gz
+  archive: vim-v9.0.2160.tar.gz
+  sha256: 40e733ac119818a35c2b072d34d3343c9239175e3b3b3402fe90757f909751f5
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - src/main.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/vim
+      - /usr/share/vim
+    upstream_markers:
+      - configure
+      - src/main.c
+install:
+  path: /usr/bin/vim
+smoke:
+  command:
+    - vim
+    - --version

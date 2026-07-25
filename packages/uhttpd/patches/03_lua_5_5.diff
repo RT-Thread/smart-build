@@ -1,0 +1,139 @@
+diff --git a/Makefile b/Makefile
+index 6dcc355..83dc00d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,13 +28,9 @@ ifeq ($(CGI_SUPPORT),1)
+ endif
+ 
+ ifeq ($(LUA_SUPPORT),1)
++  OBJ += uhttpd-lua.o
+   CFLAGS += -DHAVE_LUA
+-  LUALIB = uhttpd_lua.so
+-
+-  $(LUALIB): uhttpd-lua.c
+-		$(CC) $(CFLAGS) $(LDFLAGS) $(FPIC) \
+-			-shared -lm -llua -ldl \
+-			-o $(LUALIB) uhttpd-lua.c
++  LIB += -llua -lm
+ endif
+ 
+ ifeq ($(TLS_SUPPORT),1)
+@@ -50,9 +46,8 @@ endif
+ %.o: %.c
+ 	$(CC) $(CFLAGS) -c -o $@ $<
+ 
+-compile: $(OBJ) $(TLSLIB) $(LUALIB)
+-	$(CC) -o uhttpd $(LDFLAGS) $(LIB) $(OBJ)
++compile: $(OBJ) $(TLSLIB)
++	$(CC) -o uhttpd $(LDFLAGS) $(OBJ) $(LIB)
+ 
+ clean:
+ 	rm -f *.o *.so uhttpd
+-
+diff --git a/uhttpd-lua.c b/uhttpd-lua.c
+index c2efe33..cd809b9 100644
+--- a/uhttpd-lua.c
++++ b/uhttpd-lua.c
+@@ -124,7 +124,7 @@ static int uh_lua_urldecode(lua_State *L)
+ 
+ lua_State * uh_lua_init(const char *handler)
+ {
+-	lua_State *L = lua_open();
++	lua_State *L = luaL_newstate();
+ 	const char *err_str = NULL;
+ 
+ 	/* Load standard libaries */
+@@ -147,7 +147,7 @@ lua_State * uh_lua_init(const char *handler)
+ 	lua_setfield(L, -2, "urldecode");
+ 
+ 	/* _G.uhttpd = { ... } */
+-	lua_setfield(L, LUA_GLOBALSINDEX, "uhttpd");
++	lua_setglobal(L, "uhttpd");
+ 
+ 
+ 	/* load Lua handler */
+diff --git a/uhttpd-lua.h b/uhttpd-lua.h
+index 7304665..9ed9395 100644
+--- a/uhttpd-lua.h
++++ b/uhttpd-lua.h
+@@ -21,9 +21,7 @@
+ #include <math.h>  /* floor() */
+ #include <errno.h>
+ 
+-#include <lua.h>
+-#include <lauxlib.h>
+-#include <lualib.h>
++#include "uhttpd-lua-compat.h"
+ 
+ #define UH_LUA_CALLBACK		"handle_request"
+ 
+diff --git a/uhttpd.c b/uhttpd.c
+index 7364226..f4e3646 100644
+--- a/uhttpd.c
++++ b/uhttpd.c
+@@ -1016,38 +1016,17 @@ int main (int argc, char **argv)
+ #endif
+ 
+ #ifdef HAVE_LUA
+-	/* load Lua plugin */
+-	/*if( ! (lib = dlopen("uhttpd_lua.so", RTLD_LAZY | RTLD_GLOBAL)) )
++	conf.lua_init = uh_lua_init;
++	conf.lua_close = uh_lua_close;
++	conf.lua_request = uh_lua_request;
++
++	if( conf.lua_handler )
+ 	{
+-		fprintf(stderr,
+-			"Notice: Unable to load Lua plugin - disabling Lua support! "
+-			"(Reason: %s)\n", dlerror()
+-		);
++		if( ! conf.lua_prefix )
++			conf.lua_prefix = "/lua";
++
++		conf.lua_state = conf.lua_init(conf.lua_handler);
+ 	}
+-	else
+-	{
+-	*/	/* resolve functions */
+-/*		if( !(conf.lua_init    = dlsym(lib, "uh_lua_init"))    ||
+-		    !(conf.lua_close   = dlsym(lib, "uh_lua_close"))   ||
+-		    !(conf.lua_request = dlsym(lib, "uh_lua_request"))
+-		) {
+-			fprintf(stderr,
+-				"Error: Failed to lookup required symbols "
+-				"in Lua plugin: %s\n", dlerror()
+-			);
+-			exit(1);
+-		}
+-*/
+-		/* init Lua runtime if handler is specified */
+-//		if( conf.lua_handler )
+-//		{
+-			/* default lua prefix */
+-/*			if( ! conf.lua_prefix )
+-				conf.lua_prefix = "/lua";
+-
+-			conf.lua_state = conf.lua_init(conf.lua_handler);
+-		}
+-*/	//}
+ #endif
+ 
+ 	/* fork (if not disabled) */
+diff --git a/uhttpd.h b/uhttpd.h
+index b376d75..f05388b 100644
+--- a/uhttpd.h
++++ b/uhttpd.h
+@@ -38,7 +38,7 @@
+ 
+ 
+ #ifdef HAVE_LUA
+-#include <lua.h>
++#include "uhttpd-lua-compat.h"
+ #endif
+ 
+ #ifdef HAVE_TLS
+@@ -159,4 +159,3 @@ struct interpreter {
+ #endif
+ 
+ #endif
+-
