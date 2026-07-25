@@ -1,0 +1,17 @@
+diff --git a/src/xz/hardware.c b/src/xz/hardware.c
+index ccdc3b9..03a9ce4 100644
+--- a/src/xz/hardware.c
++++ b/src/xz/hardware.c
+@@ -26,10 +26,10 @@ static bool threads_are_automatic = false;
+ static bool use_mt_mode_with_one_thread = false;
+ 
+ /// Memory usage limit for compression
+-static uint64_t memlimit_compress = 0;
++static uint64_t memlimit_compress = 13 * 1024 * 1024;
+ 
+ /// Memory usage limit for decompression
+-static uint64_t memlimit_decompress = 0;
++static uint64_t memlimit_decompress = 13 * 1024 * 1024;
+ 
+ /// Default memory usage for multithreaded modes:
+ ///

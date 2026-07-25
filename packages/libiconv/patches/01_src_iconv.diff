@@ -1,0 +1,13 @@
+diff --git a/src/iconv.c b/src/iconv.c
+index e3932e5..ce4f9fe 100644
+--- a/src/iconv.c
++++ b/src/iconv.c
+@@ -676,7 +676,7 @@ static void conversion_error_other (int errnum, const char* infilename)
+ 
+ static int convert (iconv_t cd, int infile, const char* infilename)
+ {
+-  char inbuf[4096+4096];
++  static char inbuf[4096+4096];
+   size_t inbufrest = 0;
+   int infile_error = 0;
+   char initial_outbuf[4096];

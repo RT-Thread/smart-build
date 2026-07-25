@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: lzo
+version: "2.10"
+versions:
+  - "2.10"
+default_version: "2.10"
+type: library
+description: LZO lossless compression library
+provides:
+  - liblzo2
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz
+  archive: lzo-2.10.tar.gz
+  sha256: c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - include/lzo/lzo1x.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/lzo
+      - /usr/lib/liblzo2.a
+    upstream_markers:
+      - CMakeLists.txt
+      - include/lzo/lzo1x.h
+install:
+  headers:
+    - usr/include/lzo
+  libraries:
+    - usr/lib/liblzo2.a

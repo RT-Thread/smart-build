@@ -1,0 +1,43 @@
+schema_version: 1
+kind: package
+name: libjpeg
+version: 9e
+versions:
+  - 9e
+default_version: 9e
+type: library
+description: Independent JPEG Group codec library
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://www.ijg.org/files/jpegsrc.v9e.tar.gz
+  archive: jpegsrc.v9e.tar.gz
+  sha256: 4077d6a6a75aeb01884f708919d25934c93305e49f7e3f36db9129320e6f4f3d
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - configure
+    - jpeglib.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/jconfig.h
+      - /usr/include/jerror.h
+      - /usr/include/jmorecfg.h
+      - /usr/include/jpeglib.h
+      - /usr/lib/libjpeg.a
+    upstream_markers:
+      - configure
+      - jpeglib.h
+install:
+  headers:
+    - usr/include/jconfig.h
+    - usr/include/jerror.h
+    - usr/include/jmorecfg.h
+    - usr/include/jpeglib.h
+  libraries:
+    - usr/lib/libjpeg.a

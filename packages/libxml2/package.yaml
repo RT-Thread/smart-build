@@ -1,0 +1,41 @@
+schema_version: 1
+kind: package
+name: libxml2
+version: 2.10.3
+versions:
+  - 2.10.3
+default_version: 2.10.3
+type: library
+description: GNOME XML parser and toolkit
+depends:
+  - libiconv
+selects:
+  - libiconv
+provides:
+  - xml2
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: git
+  url: https://gitlab.gnome.org/GNOME/libxml2.git
+  commit: f507d167f1755b7eaea09fb1a44d29aab828b6d1
+  local_files:
+    - sbuild.py
+  files:
+    - configure.ac
+    - include/libxml/parser.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/libxml2
+      - /usr/lib/libxml2.a
+    upstream_markers:
+      - configure.ac
+      - include/libxml/parser.h
+install:
+  headers:
+    - usr/include/libxml2
+  libraries:
+    - usr/lib/libxml2.a

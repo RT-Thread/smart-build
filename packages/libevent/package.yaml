@@ -1,0 +1,43 @@
+schema_version: 1
+kind: package
+name: libevent
+version: 2.1.12
+versions:
+  - 2.1.12
+default_version: 2.1.12
+type: library
+description: Event notification library
+provides:
+  - event
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+  archive: libevent-2.1.12-stable.tar.gz
+  sha256: 92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - include/event2/event.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/event2
+      - /usr/lib/libevent.a
+      - /usr/lib/libevent_core.a
+      - /usr/lib/libevent_extra.a
+    upstream_markers:
+      - CMakeLists.txt
+      - include/event2/event.h
+install:
+  headers:
+    - usr/include/event2
+  libraries:
+    - usr/lib/libevent.a
+    - usr/lib/libevent_core.a
+    - usr/lib/libevent_extra.a

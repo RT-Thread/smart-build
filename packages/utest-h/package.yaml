@@ -1,0 +1,34 @@
+schema_version: 1
+kind: package
+name: utest-h
+version: "2023.10.08"
+versions:
+  - "2023.10.08"
+default_version: "2023.10.08"
+type: library
+description: Single-header C and C++ unit testing framework
+provides:
+  - utest.h
+requires_toolchain:
+  - c
+source:
+  type: archive
+  url: https://github.com/xqyjlj/utest.h/archive/refs/tags/2023.10.08.tar.gz
+  archive: utest.h-2023.10.08.tar.gz
+  sha256: d06aa2ddf5d3c5693e6aa410b6498a9139d520809da30fc170b9342529fbf691
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - utest.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/utest.h
+    upstream_markers:
+      - utest.h
+install:
+  headers:
+    - usr/include/utest.h
+  libraries: []

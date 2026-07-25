@@ -1,0 +1,42 @@
+schema_version: 1
+kind: package
+name: libiconv
+version: "1.17"
+versions:
+  - "1.17"
+default_version: "1.17"
+type: library
+description: GNU character set conversion library
+provides:
+  - iconv
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://ftpmirror.gnu.org/libiconv/libiconv-1.17.tar.gz
+  archive: libiconv-1.17.tar.gz
+  sha256: 8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - patches/01_src_iconv.diff
+  files:
+    - configure
+    - include/iconv.h.in
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/iconv.h
+      - /usr/lib/libiconv.a
+      - /usr/lib/libcharset.a
+    upstream_markers:
+      - configure
+      - include/iconv.h.in
+install:
+  headers:
+    - usr/include/iconv.h
+  libraries:
+    - usr/lib/libiconv.a
+    - usr/lib/libcharset.a

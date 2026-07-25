@@ -1,0 +1,45 @@
+schema_version: 1
+kind: package
+name: xz
+version: 5.4.1
+versions:
+  - 5.4.1
+default_version: 5.4.1
+type: executable
+description: XZ compression tools and liblzma
+provides:
+  - liblzma
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://tukaani.org/xz/xz-5.4.1.tar.gz
+  archive: xz-5.4.1.tar.gz
+  sha256: e4b0f81582efa155ccf27bb88275254a429d44968e488fc94b806f2a61cd3e22
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - patches/01_src_xz_hardware.diff
+  files:
+    - configure
+    - src/xz/main.c
+    - src/liblzma/api/lzma.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/xz
+      - /usr/include/lzma
+      - /usr/include/lzma.h
+      - /usr/lib/liblzma.a
+    upstream_markers:
+      - configure
+      - src/xz/main.c
+      - src/liblzma/api/lzma.h
+install:
+  path: /usr/bin/xz
+smoke:
+  command:
+    - xz
+    - --version
