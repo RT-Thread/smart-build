@@ -1,0 +1,48 @@
+schema_version: 1
+kind: package
+name: tmux
+version: 3.3a
+versions:
+  - 3.3a
+default_version: 3.3a
+type: executable
+description: Terminal multiplexer
+depends:
+  - libncurses
+  - libevent
+selects:
+  - ncurses
+  - libevent
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/tmux/tmux/releases/download/3.3a/tmux-3.3a.tar.gz
+  archive: tmux-3.3a.tar.gz
+  sha256: e4fd347843bd0772c4f48d6dde625b0b109b7a380ff15db21e97c11a4dcdf93f
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - patches/tmux-3.3a.patch
+    - conf/tmux-ncurses-dll.h
+    - conf/tmux-ncurses.h
+    - conf/tmux-term.h
+    - conf/tmux-unctrl.h
+  files:
+    - configure
+    - tmux.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/tmux
+    upstream_markers:
+      - configure
+      - tmux.c
+install:
+  path: /usr/bin/tmux
+smoke:
+  command:
+    - tmux
+    - -V
