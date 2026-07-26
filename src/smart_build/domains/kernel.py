@@ -12,7 +12,11 @@ from ..configure import (
     execute_configuration,
     toolchain_configuration_env,
 )
-from ..env_packages import EnvPackages
+from ..env_packages import (
+    EnvPackages,
+    read_env_package_state,
+    validate_package_update_output,
+)
 from ..errors import SmartBuildError
 from ..machines import load_machine
 from ..paths import board_defconfig_path, board_kernel_overlay_dir
@@ -146,7 +150,7 @@ def _make_package_executor(context, packages, commands, command_runner):
         env = packages.environment(_kernel_env(task.env))
         env["BSP_DIR"] = str(context["bsp"])
         completed = _run_commands(task, commands, context["bsp"], env, runner, log)
-        _validate_package_update_output(completed[-1])
+        validate_package_update_output(completed[-1])
         package_state = _read_package_state(context["bsp"])
         record = {
             **packages.manifest_record(),
@@ -292,84 +296,11 @@ def _build_commands(bsp):
 
 
 def _read_package_state(bsp):
-    packages_dir = Path(bsp) / "packages"
-    config_path = Path(bsp) / ".config"
-    state_path = packages_dir / "pkgs.json"
-    error_path = packages_dir / "pkgs_error.json"
-    state = _read_json_list(state_path, "kernel package state")
-    errors = _read_json_list(error_path, "kernel package errors")
-    if errors:
-        names = ", ".join(str(item.get("name", item)) if isinstance(item, dict) else str(item) for item in errors)
-        raise SmartBuildError("BUILD", f"RT-Thread Env package update reported errors: {names}")
-    if not (packages_dir / "SConscript").is_file():
-        raise SmartBuildError("BUILD", f"RT-Thread Env package update did not create {packages_dir / 'SConscript'}")
-
-    result = []
-    actual = []
-    for item in state:
-        if not isinstance(item, dict):
-            raise SmartBuildError("BUILD", f"invalid kernel package state entry in {state_path}: {item!r}")
-        name = item.get("name")
-        version = item.get("ver")
-        index_path = item.get("path")
-        if not all(isinstance(value, str) and value for value in (name, version, index_path)):
-            raise SmartBuildError("BUILD", f"incomplete kernel package state entry in {state_path}: {item!r}")
-        actual.append((name, index_path, version))
-        package_name = Path(index_path.replace("\\", "/").lstrip("/")).name
-        managed_path = packages_dir / f"{package_name}-{version}"
-        if not managed_path.is_dir():
-            raise SmartBuildError(
-                "BUILD",
-                "RT-Thread Env package is not installed at its managed path: "
-                f"{name} version={version} path={managed_path}",
-            )
-        result.append(
-            {
-                "name": name,
-                "version": version,
-                "index_path": index_path,
-                "installed_path": str(managed_path),
-                "managed_by_env": True,
-            }
-        )
-
-    expected = _configured_packages(config_path)
-    if sorted(actual) != expected:
-        raise SmartBuildError(
-            "BUILD",
-            "RT-Thread Env package state does not match the BSP .config: "
-            f"expected={expected!r} actual={sorted(actual)!r}",
-        )
-    return sorted(result, key=lambda item: item["name"])
-
-
-def _configured_packages(config_path):
-    values = load_defconfig(config_path)
-    prefix = "CONFIG_PKG_"
-    suffix = "_PATH"
-    result = []
-    for key, index_path in values.items():
-        if not key.startswith(prefix) or not key.endswith(suffix) or index_path == "n":
-            continue
-        name = key[len(prefix) : -len(suffix)]
-        version = values.get(f"{prefix}{name}_VER")
-        if not name or not version or version == "n":
-            raise SmartBuildError(
-                "CONFIG",
-                f"kernel package {name or key} has a path but no version in {config_path}",
-            )
-        result.append((name, index_path, version))
-    return sorted(result)
-
-
-def _read_json_list(path, label):
-    try:
-        value = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise SmartBuildError("BUILD", f"failed to read {label} {path}: {exc}") from exc
-    if not isinstance(value, list):
-        raise SmartBuildError("BUILD", f"{label} must be a list: {path}")
-    return value
+    return read_env_package_state(
+        bsp,
+        state_label="kernel package",
+        config_label="the BSP .config",
+    )
 
 
 def _run_commands(task, commands, cwd, env, runner, log):
@@ -391,16 +322,6 @@ def _run_commands(task, commands, cwd, env, runner, log):
             )
         results.append(completed)
     return results
-
-
-def _validate_package_update_output(completed):
-    output = completed.stdout or ""
-    if "Operation completed successfully." not in output:
-        raise SmartBuildError(
-            "BUILD",
-            "RT-Thread Env package update did not report success; "
-            "review the kernel package log and packages/pkgs_error.json",
-        )
 
 
 def _kernel_env(task_env):

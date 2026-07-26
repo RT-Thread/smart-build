@@ -98,6 +98,11 @@ def _required_version(values, package_name):
 
 
 def _selected_version(metadata, values, required_version):
+    if metadata.kconfig.mode == "native":
+        version = required_version or metadata.default_version
+        if version != metadata.default_version:
+            raise SmartBuildError("PACKAGE", f"{metadata.name}: unsupported version {version}")
+        return version
     symbol = f"{package_symbol(metadata.name)}_VERSION"
     version = values.get(symbol, required_version or metadata.default_version)
     if required_version is not None and version != required_version:

@@ -15,6 +15,7 @@ from ..cmake_package import (
 )
 from ..config import resolve_rootfs_selection
 from ..configure import (
+    ConfigurationResult,
     configuration_spec_from_mapping,
     execute_configuration,
     package_configuration_workdir,
@@ -35,11 +36,17 @@ from .toolchain import resolve_toolchain, toolchain_task_fields
 PACKAGE_STAGE_DIR = "packages"
 
 
-def package_tasks(paths, toolchain=None, package_names=None, command_runner=None):
+def package_tasks(paths, toolchain=None, package_names=None, command_runner=None, env_packages=None):
     names = list(package_names) if package_names is not None else selected_rootfs_package_names(paths)
     tasks = []
     for name in names:
-        item = package_task(paths, name, toolchain=toolchain, command_runner=command_runner)
+        item = package_task(
+            paths,
+            name,
+            toolchain=toolchain,
+            command_runner=command_runner,
+            env_packages=env_packages,
+        )
         if isinstance(item, list):
             tasks.extend(item)
         else:
@@ -47,23 +54,64 @@ def package_tasks(paths, toolchain=None, package_names=None, command_runner=None
     return tasks
 
 
-def package_task(paths, package_name, toolchain=None, command_runner=None):
+def package_task(paths, package_name, toolchain=None, command_runner=None, env_packages=None):
     name = validate_safe_name(package_name, "package")
     description = _load_package_description(paths, name)
     package_type = description.data.get("type")
+    if package_type not in {"library", "executable"}:
+        raise SmartBuildError("PACKAGE", f"{description.path}: package type must be library or executable")
+    build = description.data.get("build")
+    if isinstance(build, dict) and "rtthread_scons" in build:
+        from .rtthread_scons_package import rtthread_scons_package_task
+
+        metadata = normalize_package_metadata(description)
+        return rtthread_scons_package_task(
+            paths,
+            name,
+            description,
+            metadata,
+            _selected_package(paths, name, description),
+            toolchain=toolchain,
+            command_runner=command_runner,
+            env_packages=env_packages,
+        )
     source_task = package_source_task(paths, name, description)
     if package_type == "executable":
         tasks = _executable_package_tasks(paths, name, description, toolchain=toolchain, command_runner=command_runner)
         return _with_source_task(source_task, tasks)
-    if package_type != "library":
-        raise SmartBuildError("PACKAGE", f"{description.path}: package type must be library or executable")
     task = _library_package_task(paths, name, description, toolchain=toolchain, command_runner=command_runner)
     return _with_source_task(source_task, task)
 
 
-def package_configuration(paths, package_name, toolchain=None, command_runner=None):
+def package_configuration(
+    paths,
+    package_name,
+    toolchain=None,
+    command_runner=None,
+    frontend=None,
+    env_packages=None,
+):
     name = validate_safe_name(package_name, "package")
     description = _load_package_description(paths, name)
+    metadata = normalize_package_metadata(description)
+    if metadata.kconfig.mode == "native":
+        from ..menuconfig import run_package_menuconfig
+        from ..rtthread_scons import parse_rtthread_scons_config
+
+        parse_rtthread_scons_config(
+            paths.root,
+            description,
+            metadata,
+            env_packages=env_packages,
+        )
+        updated = run_package_menuconfig(
+            paths,
+            metadata,
+            frontend=frontend,
+            env_packages=env_packages,
+        )
+        return ConfigurationResult(f"package:{name}", updated)
+
     mapping = description.data.get("configure")
     if mapping is None:
         raise SmartBuildError(
