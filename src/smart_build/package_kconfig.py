@@ -77,6 +77,9 @@ def native_package_configuration_symbols(kconf, metadata):
     symbols = set()
     for node in selection.nodes:
         _collect_configuration_symbols(node, symbols)
+    for selected, _condition in selection.selects:
+        for node in selected.nodes:
+            _collect_configuration_symbols(node, symbols)
     return tuple(sorted(symbols))
 
 

@@ -7,4 +7,12 @@ config RT_VER_NUM
     hex
     default 0x50100
 
+menu "webclient"
+
+config PACKAGE_WEBCLIENT
+    bool "Enable webclient"
+    select PKG_USING_WEBCLIENT
+
 source "$PKGS_DIR/Kconfig"
+
+endmenu

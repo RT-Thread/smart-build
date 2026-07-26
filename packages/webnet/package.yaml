@@ -12,7 +12,7 @@ source:
 kconfig:
   mode: native
   source: source/Kconfig
-  symbol: PKG_USING_WEBNET
+  symbol: PACKAGE_WEBNET
 build:
   rtthread_scons:
     supported_linkage: [static]

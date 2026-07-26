@@ -1,6 +1,3 @@
-config ROOTFS_FULL
-    bool "Full rootfs"
-
 if ROOTFS_FULL
 
 choice
