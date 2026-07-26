@@ -50,9 +50,10 @@ Kconfig 界面目前提供以下选项：
 软件包选项值会被解析并记录到构建 manifest 中，但并非所有现有构建后端都会
 使用这些值。依赖某个选项改变生成的二进制文件前，应先检查该软件包的实现。
 
-## 配置上游项目
+## 配置构建目标
 
-`configure` 命令可以打开提供配置映射的构建域配置界面：
+`configure` 命令可以打开提供配置映射的构建域配置界面，也可以配置使用 native
+Kconfig 的独立 RT-Thread SCons 软件包：
 
 ```sh
 ./smart-build configure kernel
@@ -62,7 +63,9 @@ Kconfig 界面目前提供以下选项：
 ```
 
 并非每个板卡或软件包都会提供所有 configure 目标。不支持的目标会以
-`CONFIG` 错误失败。
+`CONFIG` 错误失败。对于 native Kconfig 包，该命令会启用软件包选择符号、打开
+其 RT-Thread 软件包配置界面，并把该软件包的配置子树保存到所选板卡 defconfig
+和工作区配置。配置阶段不会运行 SCons 或 Env `pkgs --update`。
 
 ## 配置内核软件包
 

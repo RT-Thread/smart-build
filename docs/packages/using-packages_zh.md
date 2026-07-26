@@ -31,13 +31,15 @@ zlib。
 
 ## 配置软件包
 
-包含 `configure` 映射的软件包可以使用以下命令配置：
+包含 `configure` 映射的软件包，以及使用 native Kconfig 的独立 RT-Thread SCons
+包，可以使用以下命令配置：
 
 ```sh
 ./smart-build configure package:<name>
 ```
 
-没有该映射的软件包不提供交互式配置步骤。
+native Kconfig 配置由 smart-build 保存，不修改软件包源码目录，也不会在配置
+阶段下载在线包。其他没有 `configure` 映射的软件包不提供交互式配置步骤。
 
 ## 软件包输出
 

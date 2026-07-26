@@ -32,6 +32,8 @@ build locations needed by the selected machine.
 
 `TARGET` for `configure` is `kernel`, `busybox`, `bootloader`, or
 `package:<name>`. Support depends on the selected board or package metadata.
+Packages using `build.rtthread_scons` with native Kconfig expose their RT-Thread
+package options through this command; downloads still occur during `build`.
 
 ## Build
 

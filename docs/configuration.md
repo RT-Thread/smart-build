@@ -53,10 +53,11 @@ Package option values are resolved and recorded in the build manifest, but not
 all existing build backends consume those values yet. Check the package's
 implementation before relying on an option to alter generated binaries.
 
-## Configure upstream projects
+## Configure build targets
 
 The `configure` command opens configuration for domains that provide a
-configuration mapping:
+configuration mapping and for independent RT-Thread SCons packages that use
+native Kconfig:
 
 ```sh
 ./smart-build configure kernel
@@ -66,7 +67,10 @@ configuration mapping:
 ```
 
 Not every board or package supplies every configure target. Unsupported targets
-fail with a `CONFIG` error.
+fail with a `CONFIG` error. For a native Kconfig package, the command enables
+the package selection symbol, opens its RT-Thread package configuration, and
+saves that package's configuration subtree to the selected board defconfig and
+workspace configuration. It does not run SCons or Env `pkgs --update`.
 
 ## Configure kernel packages
 

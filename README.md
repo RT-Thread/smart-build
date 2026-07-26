@@ -71,6 +71,7 @@ smart-build package metadata.
 ./smart-build menuconfig
 ./smart-build configure kernel
 ./smart-build configure package:curl
+./smart-build configure package:webclient
 ./smart-build build all
 ./smart-build build kernel
 ./smart-build build rootfs
@@ -78,6 +79,9 @@ smart-build package metadata.
 ./smart-build qemu-smoke
 ./smart-build clean
 ```
+
+Independent RT-Thread SCons packages with native Kconfig, such as `webclient`,
+use the package configure command to open their RT-Thread package options.
 
 `build --dry-run` currently prints a placeholder task plan. It is useful for a
 high-level preview, but it is not guaranteed to match every task in a real
