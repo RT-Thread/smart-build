@@ -149,7 +149,8 @@ packages/example/
 The package uses its native `source/Kconfig` in both RT-Thread and smart-build.
 It must not declare generated `options` or multiple versions in `package.yaml`.
 The selection symbol must be defined by the Kconfig closure rooted at that
-file. This allows the symbol to come from the RT-Thread Env package index.
+file. A package-local boolean can select the RT-Thread Env online package while
+keeping the smart-build package selection explicit.
 
 ```yaml
 type: executable
@@ -158,7 +159,7 @@ source:
 kconfig:
   mode: native
   source: source/Kconfig
-  symbol: PKG_USING_WEBCLIENT
+  symbol: PACKAGE_WEBCLIENT
 build:
   rtthread_scons:
     supported_linkage: [static]
@@ -176,7 +177,15 @@ config PKGS_DIR
     option env="PKGS_ROOT"
     default "packages"
 
+menu "webclient"
+
+config PACKAGE_WEBCLIENT
+    bool "Enable webclient"
+    select PKG_USING_WEBCLIENT
+
 source "$PKGS_DIR/Kconfig"
+
+endmenu
 ```
 
 `./smart-build configure package:<name>` opens this native Kconfig and saves

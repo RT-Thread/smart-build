@@ -144,7 +144,8 @@ packages/example/
 
 软件包在 RT-Thread 和 smart-build 中共同使用唯一的 `source/Kconfig`，不得在
 `package.yaml` 中再声明生成式 `options` 或多个版本。选择符号必须由该 Kconfig
-入口所包含的 Kconfig 闭包定义，因此也可以来自 RT-Thread Env 在线包索引。
+入口所包含的 Kconfig 闭包定义。软件包本地 bool 可以选择 RT-Thread Env 在线包，
+同时让 smart-build 软件包选择保持显式。
 
 ```yaml
 type: executable
@@ -153,7 +154,7 @@ source:
 kconfig:
   mode: native
   source: source/Kconfig
-  symbol: PKG_USING_WEBCLIENT
+  symbol: PACKAGE_WEBCLIENT
 build:
   rtthread_scons:
     supported_linkage: [static]
@@ -171,7 +172,15 @@ config PKGS_DIR
     option env="PKGS_ROOT"
     default "packages"
 
+menu "webclient"
+
+config PACKAGE_WEBCLIENT
+    bool "Enable webclient"
+    select PKG_USING_WEBCLIENT
+
 source "$PKGS_DIR/Kconfig"
+
+endmenu
 ```
 
 `./smart-build configure package:<name>` 会打开该 native Kconfig，并保存以
