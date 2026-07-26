@@ -19,6 +19,7 @@ from smart_build.menuconfig import _package_keys, _write_defconfig
 from smart_build.package_kconfig import (
     generate_package_kconfig_files,
     generate_package_kconfig_index,
+    load_native_package_kconfig,
     native_kconfig_environment,
 )
 from smart_build.package_metadata import normalize_package_metadata
@@ -746,16 +747,25 @@ def test_repository_webclient_example_matches_backend_contract(tmp_path):
     root = Path(__file__).resolve().parents[1]
     description = load_description(root / "packages" / "webclient" / "package.yaml")
     metadata = normalize_package_metadata(description)
+    env_packages = _webclient_env_packages(tmp_path)
     config = parse_rtthread_scons_config(
         root,
         description,
         metadata,
-        env_packages=_webclient_env_packages(tmp_path),
+        env_packages=env_packages,
     )
+    kconf = load_native_package_kconfig(metadata, env_packages=env_packages)
 
-    assert config.selection_symbol == "PKG_USING_WEBCLIENT"
+    assert config.selection_symbol == "PACKAGE_WEBCLIENT"
+    assert "PACKAGE_WEBCLIENT" in config.symbols
+    assert "PKG_USING_WEBCLIENT" in config.symbols
     assert config.supported_linkage == ("static",)
     assert [path.as_posix() for path in config.outputs] == ["bin/webclient"]
+    assert _visible_prompts(kconf.top_node.list) == ["webclient"]
+    webclient_menu = _prompt_node(kconf.top_node.list, "webclient")
+    assert _visible_prompts(webclient_menu.list)[0] == "Enable webclient"
+    kconf.syms["PACKAGE_WEBCLIENT"].set_value(2)
+    assert kconf.syms["PKG_USING_WEBCLIENT"].str_value == "y"
     assert (config.source_dir / "building.py").is_file()
     assert (description.path.parent / "README.md").is_file()
 
@@ -764,15 +774,18 @@ def test_repository_webnet_example_matches_backend_contract(tmp_path):
     root = Path(__file__).resolve().parents[1]
     description = load_description(root / "packages" / "webnet" / "package.yaml")
     metadata = normalize_package_metadata(description)
+    env_packages = _webnet_env_packages(tmp_path)
     config = parse_rtthread_scons_config(
         root,
         description,
         metadata,
-        env_packages=_webnet_env_packages(tmp_path),
+        env_packages=env_packages,
     )
+    kconf = load_native_package_kconfig(metadata, env_packages=env_packages)
 
-    assert config.selection_symbol == "PKG_USING_WEBNET"
+    assert config.selection_symbol == "PACKAGE_WEBNET"
     assert set(config.symbols) == {
+        "PACKAGE_WEBNET",
         "PKG_USING_WEBNET",
         "PKG_WEBNET_PATH",
         "PKG_WEBNET_VER",
@@ -782,11 +795,57 @@ def test_repository_webnet_example_matches_backend_contract(tmp_path):
     }
     assert config.supported_linkage == ("static",)
     assert [path.as_posix() for path in config.outputs] == ["bin/webnet"]
+    assert _visible_prompts(kconf.top_node.list) == ["webnet"]
+    webnet_menu = _prompt_node(kconf.top_node.list, "webnet")
+    assert _visible_prompts(webnet_menu.list)[0] == "Enable webnet"
+    kconf.syms["PACKAGE_WEBNET"].set_value(2)
+    assert kconf.syms["PKG_USING_WEBNET"].str_value == "y"
     assert (config.source_dir / "building.py").is_file()
     assert 'Export("env", "RTT_ROOT")' in (config.source_dir / "SConstruct").read_text(
         encoding="utf-8"
     )
     assert (description.path.parent / "README.md").is_file()
+
+
+def test_rootfs_menu_exposes_selected_type_configuration(tmp_path, monkeypatch):
+    root = Path(__file__).resolve().parents[1]
+    env_root = tmp_path / "env-packages"
+    env_root.mkdir()
+    (env_root / "Kconfig").write_text("", encoding="utf-8")
+    monkeypatch.setenv("PKGS_ROOT", str(env_root))
+    monkeypatch.setenv("PKGS_DIR", str(env_root))
+    monkeypatch.setenv("srctree", str(root))
+
+    kconf = kconfiglib.Kconfig(str(root / "rootfs" / "Kconfig"), warn=False)
+    rootfs_menu = kconf.top_node.list
+
+    assert rootfs_menu.prompt[0] == "Root filesystem"
+    assert kconf.syms["PACKAGE_WEBCLIENT"].str_value == "n"
+    assert kconf.syms["PACKAGE_WEBNET"].str_value == "n"
+    assert _visible_prompts(rootfs_menu.list) == [
+        "Root filesystem type",
+        "Rootfs build mode",
+        "Rootfs image format",
+        "Rootfs image size",
+        "Rootfs image size mode",
+    ]
+
+
+def _visible_prompts(node):
+    prompts = []
+    while node is not None:
+        if node.prompt is not None and kconfiglib.expr_value(node.prompt[1]):
+            prompts.append(node.prompt[0])
+        node = node.next
+    return prompts
+
+
+def _prompt_node(node, prompt):
+    while node is not None:
+        if node.prompt is not None and node.prompt[0] == prompt:
+            return node
+        node = node.next
+    raise AssertionError(f"Kconfig prompt not found: {prompt}")
 
 
 @pytest.mark.skipif(shutil.which("scons") is None, reason="SCons is required")
@@ -800,6 +859,7 @@ def test_repository_webclient_example_runs_real_scons_pyconfig(tmp_path):
         "\n".join(
             (
                 "CONFIG_RT_VER_NUM=0x50100",
+                "CONFIG_PACKAGE_WEBCLIENT=y",
                 "CONFIG_PKG_USING_WEBCLIENT=y",
                 'CONFIG_PKG_WEBCLIENT_PATH="/packages/iot/webclient"',
                 'CONFIG_PKG_WEBCLIENT_VER="v2.2.0"',
@@ -822,6 +882,7 @@ def test_repository_webclient_example_runs_real_scons_pyconfig(tmp_path):
 
     assert completed.returncode == 0, completed.stdout
     package_header = (isolated / "pkg_config.h").read_text(encoding="utf-8")
+    assert "#define PACKAGE_WEBCLIENT 1" in package_header
     assert "#define PKG_USING_WEBCLIENT 1" in package_header
     assert '#define PKG_WEBCLIENT_VER "v2.2.0"' in package_header
     assert (isolated / "rtconfig.h").is_file()
@@ -838,6 +899,7 @@ def test_repository_webnet_example_runs_real_scons_pyconfig(tmp_path):
         "\n".join(
             (
                 "CONFIG_RT_VER_NUM=0x50100",
+                "CONFIG_PACKAGE_WEBNET=y",
                 "CONFIG_PKG_USING_WEBNET=y",
                 'CONFIG_PKG_WEBNET_PATH="/packages/iot/webnet"',
                 "CONFIG_WEBNET_PORT=80",
@@ -863,6 +925,7 @@ def test_repository_webnet_example_runs_real_scons_pyconfig(tmp_path):
 
     assert completed.returncode == 0, completed.stdout
     package_header = (isolated / "pkg_config.h").read_text(encoding="utf-8")
+    assert "#define PACKAGE_WEBNET 1" in package_header
     assert "#define PKG_USING_WEBNET 1" in package_header
     assert "#define WEBNET_PORT 80" in package_header
     assert '#define WEBNET_ROOT "/webnet"' in package_header
