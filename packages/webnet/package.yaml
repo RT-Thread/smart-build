@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: webnet
+version: 0.1.0
+type: executable
+description: Independent RT-Thread SCons webnet example
+requires_toolchain:
+  - c
+  - static-library
+source:
+  directory: packages/webnet/source
+kconfig:
+  mode: native
+  source: source/Kconfig
+  symbol: PKG_USING_WEBNET
+build:
+  rtthread_scons:
+    supported_linkage: [static]
+    install_target: install
+    outputs:
+      - /bin/webnet
+smoke:
+  command:
+    - /bin/webnet
+    - --help
+  expected_stdout: "usage: webnet [--help]\n"

@@ -1,0 +1,21 @@
+import glob
+import os
+
+from building import *
+
+
+cwd = GetCurrentDir()
+webclient_headers = sorted(glob.glob(os.path.join(cwd, "packages", "webclient-*", "inc")))
+if len(webclient_headers) != 1:
+    raise RuntimeError(
+        f"expected one downloaded webclient include directory, found: {webclient_headers}"
+    )
+
+group = DefineGroup(
+    "webclient-main",
+    ["main.c"],
+    depend=["PKG_USING_WEBCLIENT"],
+    CPPPATH=webclient_headers,
+)
+
+Return("group")

@@ -1,0 +1,10 @@
+config PKGS_DIR
+    string
+    option env="PKGS_ROOT"
+    default "packages"
+
+config RT_VER_NUM
+    hex
+    default 0x50100
+
+source "$PKGS_DIR/Kconfig"
