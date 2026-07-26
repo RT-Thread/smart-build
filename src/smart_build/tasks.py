@@ -769,13 +769,28 @@ def _package_tasks(target, paths, resolve_real=False, toolchain=None):
         values = _package_config_values(paths)
         selection = resolve_package_selection(paths.root, [package_name], values)
         return _resolved_package_tasks(paths, selection.packages, toolchain)
+    rtthread_scons = _uses_rtthread_scons_backend(paths, package_name)
+    env_package_task = None
+    build_deps = ["toolchain:check"]
+    if rtthread_scons:
+        env_package_task = _placeholder_task(
+            f"package:{package_name}:env-packages",
+            "package",
+            "env-packages",
+            [],
+            [paths.stamps_dir / "packages" / f"{package_name}-env-packages.json"],
+            ["toolchain:check", "source:rt-thread"],
+            paths,
+            run_class="fetch",
+        )
+        build_deps = [env_package_task.id]
     build_task = _placeholder_task(
         f"package:{package_name}:build",
         "package",
         "build",
         [],
         [paths.staging_dir / "packages" / package_name],
-        ["toolchain:check"],
+        build_deps,
         paths,
         run_class="build",
     )
@@ -789,7 +804,18 @@ def _package_tasks(target, paths, resolve_real=False, toolchain=None):
         paths,
         run_class="serial",
     )
-    return [build_task, package_task]
+    return [*([env_package_task] if env_package_task is not None else []), build_task, package_task]
+
+
+def _uses_rtthread_scons_backend(paths, package_name):
+    from .descriptions import load_description
+    from .package_metadata import package_description_path
+
+    description_path = package_description_path(paths.root, package_name)
+    if not description_path.is_file():
+        return False
+    build = load_description(description_path).data.get("build")
+    return isinstance(build, dict) and "rtthread_scons" in build
 
 
 def _package_config_values(paths):

@@ -67,6 +67,7 @@ python -m pip install -e .
 ./smart-build menuconfig
 ./smart-build configure kernel
 ./smart-build configure package:curl
+./smart-build configure package:webclient
 ./smart-build build all
 ./smart-build build kernel
 ./smart-build build rootfs
@@ -74,6 +75,9 @@ python -m pip install -e .
 ./smart-build qemu-smoke
 ./smart-build clean
 ```
+
+`webclient` 等使用 native Kconfig 的独立 RT-Thread SCons 包，可以通过软件包
+configure 命令进入其 RT-Thread 软件包配置界面。
 
 `build --dry-run` 目前输出占位任务计划。它可用于总体预览，但不能保证与实际
 构建中的每项任务完全一致。

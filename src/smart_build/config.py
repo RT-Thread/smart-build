@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .descriptions import load_description
 from .errors import SmartBuildError
-from .package_metadata import package_symbol
+from .package_metadata import load_all_package_metadata, package_selection_symbol
 from .package_resolver import resolve_package_selection
 from .paths import board_defconfig_path, rootfs_description_path
 
@@ -123,9 +123,9 @@ def resolve_rootfs_selection(root, machine):
     else:
         profile = _rootfs_profile(root_path, rootfs, values)
         profile_packages = _profile_packages(root_path, rootfs, profile)
-        explicit_package_keys = _explicit_package_keys(values)
+        explicit_package_keys = _explicit_package_keys(root_path, values)
         package_mode = _rootfs_package_mode(values, explicit_package_keys)
-        explicit_packages = _explicit_packages(values)
+        explicit_packages = _explicit_packages(root_path, values)
         packages = explicit_packages if package_mode == "manual" else profile_packages
     resolved_packages = resolve_package_selection(root_path, packages, values)
     image_config = _rootfs_image_config(values)
@@ -227,22 +227,20 @@ def _rootfs_image_size_mb(values):
     return size_mb
 
 
-def _explicit_package_keys(values):
-    return [
-        key
-        for key in values
-        if key.startswith("PACKAGE_")
-        and not key.endswith("_VERSION")
-        and "_OPTION_" not in key
-        and not key.endswith("_REQUIRE_VERSION")
+def _explicit_package_keys(root, values):
+    symbols = {
+        package_selection_symbol(metadata)
+        for metadata in load_all_package_metadata(root)
+    }
+    return [key for key in values if key in symbols]
+
+
+def _explicit_packages(root, values):
+    packages = [
+        metadata.name
+        for metadata in load_all_package_metadata(root)
+        if _is_enabled(values.get(package_selection_symbol(metadata)))
     ]
-
-
-def _explicit_packages(values):
-    packages = []
-    for package in _package_names_from_descriptions(values):
-        if _is_enabled(values.get(package_symbol(package))):
-            packages.append(package)
     if packages:
         return packages
     return [
@@ -250,21 +248,6 @@ def _explicit_packages(values):
         for key, package in PACKAGE_CONFIGS.items()
         if _is_enabled(values.get(key))
     ]
-
-
-def _package_names_from_descriptions(values):
-    result = []
-    for key in values:
-        if not key.startswith("PACKAGE_"):
-            continue
-        if key.endswith("_VERSION") or "_OPTION_" in key or key.endswith("_REQUIRE_VERSION"):
-            continue
-        name = key[len("PACKAGE_") :].lower().replace("_", "-")
-        if name:
-            result.append(name)
-    return result
-
-
 def _profile_packages(root, rootfs, profile=None):
     description = _rootfs_description(root, rootfs)
     if "profiles" not in description.data:

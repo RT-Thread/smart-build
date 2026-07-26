@@ -16,6 +16,9 @@ use the `_zh.md` suffix, and each page links to its counterpart.
 - [Troubleshooting](troubleshooting.md)
 - [Compatibility and current limitations](compatibility.md)
 
+The configuration guide covers both the workspace menu and target-specific
+configuration, including native Kconfig for independent RT-Thread SCons packages.
+
 ## Extend smart-build
 
 - [Using packages](packages/using-packages.md)

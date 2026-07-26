@@ -1,5 +1,6 @@
+import re
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .descriptions import load_description
 from .errors import SmartBuildError
@@ -7,6 +8,7 @@ from .errors import SmartBuildError
 
 OPTION_TYPES = frozenset(("bool", "choice", "string"))
 RELATION_FIELDS = ("depends", "selects", "conflicts", "provides", "requires_toolchain")
+KCONFIG_SYMBOL_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 @dataclass(frozen=True)
@@ -16,6 +18,14 @@ class PackageOption:
     prompt: str
     default: object = None
     choices: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class PackageKconfig:
+    mode: str
+    source: str
+    symbol: str
+    path: Path
 
 
 @dataclass(frozen=True)
@@ -30,6 +40,7 @@ class PackageMetadata:
     conflicts: tuple[str, ...]
     provides: tuple[str, ...]
     requires_toolchain: tuple[str, ...]
+    kconfig: PackageKconfig
 
 
 def normalize_package_metadata(description):
@@ -42,17 +53,20 @@ def normalize_package_metadata(description):
     if description.name not in provides:
         provides = (description.name, *provides)
 
+    options = _options(description)
+    kconfig = _kconfig(description, options, versions)
     return PackageMetadata(
         name=description.name,
         version=default_version,
         versions=versions,
         default_version=default_version,
-        options=_options(description),
+        options=options,
         depends=_relation_list(description, "depends"),
         selects=_relation_list(description, "selects"),
         conflicts=_relation_list(description, "conflicts"),
         provides=provides,
         requires_toolchain=_relation_list(description, "requires_toolchain"),
+        kconfig=kconfig,
     )
 
 
@@ -76,7 +90,17 @@ def load_all_package_metadata(root):
             )
         seen[description.name] = path
         descriptions.append(description)
-    return [normalize_package_metadata(description) for description in descriptions]
+    packages = [normalize_package_metadata(description) for description in descriptions]
+    symbols = {}
+    for package in packages:
+        symbol = package_selection_symbol(package)
+        if symbol in symbols:
+            raise SmartBuildError(
+                "PACKAGE",
+                f"duplicate package selection symbol {symbol}: {symbols[symbol]} and {package.name}",
+            )
+        symbols[symbol] = package.name
+    return packages
 
 
 def package_description_path(root, name):
@@ -108,6 +132,10 @@ def package_description_paths(root):
 
 def package_symbol(name):
     return f"PACKAGE_{symbol_token(name)}"
+
+
+def package_selection_symbol(metadata):
+    return metadata.kconfig.symbol
 
 
 def package_version_symbol(name, version):
@@ -143,6 +171,67 @@ def _versions(description):
     if raw_versions is None:
         return (description.version,)
     return _non_empty_string_tuple(description, raw_versions, "versions")
+
+
+def _kconfig(description, options, versions):
+    raw = description.data.get("kconfig")
+    if raw is None:
+        return PackageKconfig(
+            mode="generated",
+            source="Kconfig",
+            symbol=package_symbol(description.name),
+            path=description.path.parent / "Kconfig",
+        )
+    if not isinstance(raw, dict):
+        raise SmartBuildError("PACKAGE", f"{description.path}: kconfig must be a mapping")
+    unsupported = sorted(set(raw) - {"mode", "source", "symbol"})
+    if unsupported:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: unsupported kconfig field(s): {', '.join(unsupported)}",
+        )
+    if raw.get("mode") != "native":
+        raise SmartBuildError("PACKAGE", f"{description.path}: kconfig.mode must be native")
+    build = description.data.get("build")
+    if not isinstance(build, dict) or "rtthread_scons" not in build:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: native Kconfig is supported only by build.rtthread_scons",
+        )
+    source = raw.get("source")
+    if source != "source/Kconfig":
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: native kconfig.source must be source/Kconfig",
+        )
+    symbol = raw.get("symbol")
+    if not isinstance(symbol, str) or not KCONFIG_SYMBOL_RE.fullmatch(symbol):
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: kconfig.symbol must be a valid Kconfig symbol",
+        )
+    if options:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: native Kconfig packages must not declare package.yaml options",
+        )
+    if len(versions) != 1:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: native Kconfig packages support one package version",
+        )
+    relative = PurePosixPath(source)
+    path = description.path.parent.joinpath(*relative.parts)
+    package_dir = description.path.parent.resolve()
+    if path.is_symlink():
+        raise SmartBuildError("PACKAGE", f"{description.path}: refusing symlink native Kconfig: {path}")
+    try:
+        path.resolve(strict=False).relative_to(package_dir)
+    except ValueError as exc:
+        raise SmartBuildError("PACKAGE", f"{description.path}: native Kconfig escapes package directory") from exc
+    if not path.is_file():
+        raise SmartBuildError("PACKAGE", f"{description.path}: native Kconfig not found: {path}")
+    return PackageKconfig(mode="native", source=source, symbol=symbol, path=path)
 
 
 def _default_version(description, versions):

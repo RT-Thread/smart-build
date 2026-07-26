@@ -1,8 +1,10 @@
+import json
 import os
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
+from .config import load_defconfig
 from .errors import SmartBuildError
 
 
@@ -58,6 +60,76 @@ class EnvPackages:
         }
 
 
+def validate_package_update_output(completed):
+    output = completed.stdout or ""
+    if "Operation completed successfully." not in output:
+        raise SmartBuildError(
+            "BUILD",
+            "RT-Thread Env package update did not report success; "
+            "review the package log and packages/pkgs_error.json",
+        )
+
+
+def read_env_package_state(project_dir, config_path=None, state_label="package", config_label="project .config"):
+    project = Path(project_dir)
+    packages_dir = project / "packages"
+    selected_config = Path(config_path) if config_path is not None else project / ".config"
+    state_path = packages_dir / "pkgs.json"
+    error_path = packages_dir / "pkgs_error.json"
+    state = _read_json_list(state_path, f"{state_label} state")
+    errors = _read_json_list(error_path, f"{state_label} errors")
+    if errors:
+        names = ", ".join(
+            str(item.get("name", item)) if isinstance(item, dict) else str(item)
+            for item in errors
+        )
+        raise SmartBuildError("BUILD", f"RT-Thread Env package update reported errors: {names}")
+    if not (packages_dir / "SConscript").is_file():
+        raise SmartBuildError(
+            "BUILD",
+            f"RT-Thread Env package update did not create {packages_dir / 'SConscript'}",
+        )
+
+    result = []
+    actual = []
+    for item in state:
+        if not isinstance(item, dict):
+            raise SmartBuildError("BUILD", f"invalid {state_label} state entry in {state_path}: {item!r}")
+        name = item.get("name")
+        version = item.get("ver")
+        index_path = item.get("path")
+        if not all(isinstance(value, str) and value for value in (name, version, index_path)):
+            raise SmartBuildError("BUILD", f"incomplete {state_label} state entry in {state_path}: {item!r}")
+        actual.append((name, index_path, version))
+        package_name = _package_index_name(index_path, state_path)
+        _validate_package_version(version, state_path)
+        managed_path = packages_dir / f"{package_name}-{version}"
+        if managed_path.is_symlink() or not managed_path.is_dir():
+            raise SmartBuildError(
+                "BUILD",
+                "RT-Thread Env package is not installed at its managed path: "
+                f"{name} version={version} path={managed_path}",
+            )
+        result.append(
+            {
+                "name": name,
+                "version": version,
+                "index_path": index_path,
+                "installed_path": str(managed_path),
+                "managed_by_env": True,
+            }
+        )
+
+    expected = _configured_packages(selected_config)
+    if sorted(actual) != expected:
+        raise SmartBuildError(
+            "BUILD",
+            f"RT-Thread Env {state_label} state does not match {config_label}: "
+            f"expected={expected!r} actual={sorted(actual)!r}",
+        )
+    return sorted(result, key=lambda item: item["name"])
+
+
 def _git_output(path, *args):
     try:
         completed = subprocess.run(
@@ -72,3 +144,52 @@ def _git_output(path, *args):
     if completed.returncode != 0:
         return None
     return completed.stdout.strip()
+
+
+def _configured_packages(config_path):
+    values = load_defconfig(config_path)
+    prefix = "CONFIG_PKG_"
+    suffix = "_PATH"
+    result = []
+    for key, index_path in values.items():
+        if not key.startswith(prefix) or not key.endswith(suffix) or index_path == "n":
+            continue
+        name = key[len(prefix) : -len(suffix)]
+        version = values.get(f"{prefix}{name}_VER")
+        if not name or not version or version == "n":
+            raise SmartBuildError(
+                "CONFIG",
+                f"RT-Thread Env package {name or key} has a path but no version in {config_path}",
+            )
+        result.append((name, index_path, version))
+    return sorted(result)
+
+
+def _package_index_name(index_path, state_path):
+    normalized = index_path.replace("\\", "/")
+    path = PurePosixPath(normalized)
+    parts = path.parts[1:] if path.is_absolute() else path.parts
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        raise SmartBuildError(
+            "BUILD",
+            f"unsafe RT-Thread Env package index path in {state_path}: {index_path!r}",
+        )
+    return parts[-1]
+
+
+def _validate_package_version(version, state_path):
+    if version in {"", ".", ".."} or "/" in version or "\\" in version:
+        raise SmartBuildError(
+            "BUILD",
+            f"unsafe RT-Thread Env package version in {state_path}: {version!r}",
+        )
+
+
+def _read_json_list(path, label):
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SmartBuildError("BUILD", f"failed to read {label} {path}: {exc}") from exc
+    if not isinstance(value, list):
+        raise SmartBuildError("BUILD", f"{label} must be a list: {path}")
+    return value

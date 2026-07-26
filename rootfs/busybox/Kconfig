@@ -1,6 +1,3 @@
-config ROOTFS_BASIC
-    bool "Basic rootfs (BusyBox)"
-
 if ROOTFS_BASIC
 
 config ROOTFS_BUILD_MODE

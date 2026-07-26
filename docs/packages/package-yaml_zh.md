@@ -23,6 +23,7 @@
 | `provides` | 否 | 此软件包提供的能力 |
 | `requires_toolchain` | 否 | 所需的工具链能力 |
 | `options` | 否 | 软件包选项定义 |
+| `kconfig` | native SCons 包 | native Kconfig 来源和软件包选择符号 |
 | `source` | 源码构建时为是 | 仓库目录或归档源码 |
 | `build` | 是 | 构建后端配置 |
 | `install` | 取决于后端 | rootfs 安装路径 |
@@ -126,3 +127,99 @@ build:
 
 所选 rootfs 构建模式决定输出集合。CMake 选项不能覆盖由 smart-build 管理的
 工具链、安装前缀或链接方式定义。
+
+## 独立 RT-Thread SCons 后端
+
+此后端仅支持经过调整的、仓库内的独立 RT-Thread 软件包，目录结构固定为：
+
+```text
+packages/example/
+  package.yaml
+  source/
+    Kconfig
+    SConstruct
+    SConscript
+    main.c
+```
+
+软件包在 RT-Thread 和 smart-build 中共同使用唯一的 `source/Kconfig`，不得在
+`package.yaml` 中再声明生成式 `options` 或多个版本。选择符号必须由该 Kconfig
+入口所包含的 Kconfig 闭包定义。软件包本地 bool 可以选择 RT-Thread Env 在线包，
+同时让 smart-build 软件包选择保持显式。
+
+```yaml
+type: executable
+source:
+  directory: packages/webclient/source
+kconfig:
+  mode: native
+  source: source/Kconfig
+  symbol: PACKAGE_WEBCLIENT
+build:
+  rtthread_scons:
+    supported_linkage: [static]
+    install_target: install
+    outputs:
+      - /bin/webclient
+```
+
+需要使用 RT-Thread 在线包时，native Kconfig 可以按独立 RT-Thread 工程的方式
+包含已安装的 Env 索引：
+
+```kconfig
+config PKGS_DIR
+    string
+    option env="PKGS_ROOT"
+    default "packages"
+
+menu "webclient"
+
+config PACKAGE_WEBCLIENT
+    bool "Enable webclient"
+    select PKG_USING_WEBCLIENT
+
+source "$PKGS_DIR/Kconfig"
+
+endmenu
+```
+
+`./smart-build configure package:<name>` 会打开该 native Kconfig，并保存以
+`kconfig.symbol` 为根的配置子树。配置阶段不会运行 SCons 或 Env
+`pkgs --update`；后续构建会使用已保存的值。
+
+`source.directory`、`kconfig.source`、`SConstruct`、`SConscript` 和 `install`
+target 均由此契约固定。每个 output 都是绝对 rootfs 路径。install target 必须在
+`DESTDIR` 下仅创建这些普通文件；缺失文件、未声明文件、链接和越界路径都会被
+拒绝。
+
+当 rootfs 构建模式为 `static` 或 `dynamic` 时，该模式作为 `LINKAGE` 传入，并且
+必须列在 `supported_linkage` 中。`mixed` rootfs 接受软件包支持的任意链接模式；
+smart-build 选择 `supported_linkage` 的第一项，因此列表顺序同时表示软件包的
+选择优先级。smart-build 提供以下构建环境；从 `BUILD_DIR` 到 `LINKAGE` 的变量
+还会作为 SCons 命令行变量传入：
+
+| 变量 | 含义 |
+| --- | --- |
+| `BUILD_DIR` | 位于隔离源码副本之外的软件包构建目录 |
+| `DESTDIR` | 软件包专用暂存目录 |
+| `KCONFIG_CONFIG` | 生成的软件包配置快照 |
+| `SMART_SDK_DIR` | 仓库中的 RT-Thread Smart SDK 软件包 |
+| `RTT_ROOT` | 仓库中的 RT-Thread 源码根目录 |
+| `RTTHREAD_TOOLS_DIR` | RT-Thread Python 构建工具目录 |
+| `CROSS_COMPILE` | 所选 machine 的工具链前缀 |
+| `MACHINE` | 所选目标 machine |
+| `LINKAGE` | 为当前软件包选择的链接模式 |
+| `ENV_ROOT` | 已安装的 RT-Thread Env 根目录 |
+| `PKGS_ROOT` | Kconfig 使用的 Env 软件包元数据根目录 |
+| `PKGS_DIR` | Kconfig 使用的 Env 软件包元数据根目录 |
+| `PYTHONPATH` | 包含 `RTTHREAD_TOOLS_DIR` |
+
+smart-build 会把 `source/` 复制到 machine work 目录，并排除本地生成状态。随后
+写入 `.config`，执行 `scons --pyconfig-silent`，再执行已安装 Env 的
+`pkgs --update`。校验生成的 `packages/SConscript`、软件包状态和下载源码后，
+从同一隔离副本执行 `scons install`。源软件包不会被修改。
+
+在线依赖仍由 RT-Thread Env 管理，并通过 `packages/SConscript` 参与构建。它们
+不会成为独立的 smart-build package 或 IPKG；只有顶层独立工程声明的输出会被
+打包。此后端不支持完整 userapps、应用扫描、其他 SConstruct 入口名、任意远程
+源码准备，也不会解释 SCons 脚本。

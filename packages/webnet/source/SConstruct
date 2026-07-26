@@ -1,0 +1,173 @@
+import os
+import sys
+from pathlib import Path
+
+from SCons.Errors import UserError
+from SCons.Script import (
+    ARGUMENTS,
+    AddOption,
+    Alias,
+    Dir,
+    Environment,
+    Exit,
+    Export,
+    Flatten,
+    GetOption,
+    SConscript,
+    Variables,
+)
+
+
+PROJECT_ROOT = Path(Dir("#").abspath)
+
+AddOption(
+    "--pyconfig-silent",
+    dest="pyconfig_silent",
+    action="store_true",
+    default=False,
+    help="generate RT-Thread package configuration headers",
+)
+
+
+def read_config(path):
+    values = {}
+    for raw_line in Path(path).read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        if key.startswith("CONFIG_"):
+            values[key[len("CONFIG_") :]] = value
+    return values
+
+
+def write_config_header(path, values, guard):
+    lines = [f"#ifndef {guard}", f"#define {guard}", ""]
+    for name in sorted(values):
+        value = values[name]
+        if value == "n":
+            continue
+        if value in {"y", "m"}:
+            lines.append(f"#define {name} 1")
+        else:
+            lines.append(f"#define {name} {value}")
+    lines.extend(("", f"#endif /* {guard} */", ""))
+    Path(path).write_text("\n".join(lines), encoding="utf-8")
+
+
+config_path = Path(
+    ARGUMENTS.get(
+        "KCONFIG_CONFIG",
+        os.environ.get("KCONFIG_CONFIG", PROJECT_ROOT / ".config"),
+    )
+)
+if GetOption("pyconfig_silent"):
+    if not config_path.is_file():
+        raise UserError(f"configuration file not found: {config_path}")
+    config_values = read_config(config_path)
+    write_config_header(PROJECT_ROOT / "rtconfig.h", config_values, "WEBNET_RTCONFIG_H")
+    write_config_header(PROJECT_ROOT / "pkg_config.h", config_values, "WEBNET_PKG_CONFIG_H")
+    Exit(0)
+
+
+variables = Variables()
+for name in (
+    "BUILD_DIR",
+    "DESTDIR",
+    "KCONFIG_CONFIG",
+    "SMART_SDK_DIR",
+    "CROSS_COMPILE",
+    "LINKAGE",
+):
+    variables.Add(name)
+variables.Add("MACHINE", default=os.environ.get("MACHINE", ""))
+env = Environment(variables=variables, ENV=os.environ)
+
+required = (
+    "BUILD_DIR",
+    "DESTDIR",
+    "KCONFIG_CONFIG",
+    "SMART_SDK_DIR",
+    "CROSS_COMPILE",
+    "LINKAGE",
+    "MACHINE",
+)
+missing = [name for name in required if not env.get(name)]
+if missing:
+    raise UserError(f"missing build variable(s): {', '.join(missing)}")
+if env["LINKAGE"] != "static":
+    raise UserError(f"webnet example supports static linkage only, got {env['LINKAGE']}")
+
+RTT_ROOT = os.environ.get("RTT_ROOT", "")
+if not RTT_ROOT:
+    raise UserError("missing build variable: RTT_ROOT")
+
+
+def sdk_layout(machine):
+    if "aarch64" in machine:
+        return "aarch64", "cortex-a", ["-march=armv8-a"]
+    if "riscv64" in machine:
+        return "risc-v", "rv64gc", ["-march=rv64gc", "-mabi=lp64d"]
+    if "vexpress-a9" in machine or machine.startswith("arm"):
+        return "arm", "cortex-a", ["-march=armv7-a"]
+    raise UserError(f"unsupported webnet example machine: {machine}")
+
+
+sdk_dir = Path(env["SMART_SDK_DIR"])
+sdk_arch, sdk_cpu, arch_flags = sdk_layout(env["MACHINE"])
+sdk_include = sdk_dir / "rt-thread" / "include"
+sdk_lib = sdk_dir / "rt-thread" / "lib" / sdk_arch / sdk_cpu
+if not sdk_include.is_dir() or not (sdk_lib / "librtthread.a").is_file():
+    raise UserError(f"RT-Thread Smart SDK layout not found below {sdk_dir}")
+
+cross_compile = env["CROSS_COMPILE"]
+env.Replace(
+    CC=f"{cross_compile}gcc",
+    AR=f"{cross_compile}ar",
+    RANLIB=f"{cross_compile}ranlib",
+    LINK=f"{cross_compile}gcc",
+)
+env.AppendUnique(
+    CCFLAGS=[
+        "-std=gnu99",
+        "-Wall",
+        "-include",
+        str(PROJECT_ROOT / "webnet_compat.h"),
+        *arch_flags,
+    ],
+    CPPPATH=[
+        str(sdk_include),
+        str(sdk_dir / "rt-thread" / "components" / "dfs"),
+        str(sdk_dir / "rt-thread" / "components" / "drivers"),
+        str(sdk_dir / "rt-thread" / "components" / "drivers" / "include"),
+        str(sdk_dir / "rt-thread" / "components" / "finsh"),
+        str(sdk_dir / "rt-thread" / "components" / "net"),
+        str(sdk_dir / "rt-thread" / "components" / "net" / "netdev"),
+        str(PROJECT_ROOT),
+    ],
+    CPPDEFINES=[
+        "HAVE_CCONFIG_H",
+        "HAVE_PKG_CONFIG_H",
+        ("closesocket", "close"),
+        ("rt_strcpy", "strcpy"),
+    ],
+)
+
+sys.path.insert(0, str(PROJECT_ROOT))
+import building
+
+config_values = read_config(env["KCONFIG_CONFIG"])
+building.ConfigureBuild(env, env["BUILD_DIR"], config_values)
+Export("env", "RTT_ROOT")
+
+objects = Flatten(SConscript("SConscript"))
+objects.extend(Flatten(SConscript("packages/SConscript")))
+program = env.Program(
+    target=str(Path(env["BUILD_DIR"]) / "webnet"),
+    source=objects,
+    LINKFLAGS=["-static", *arch_flags],
+    LIBPATH=[str(sdk_lib)],
+    LIBS=["rtthread"],
+)
+installed = env.InstallAs(str(Path(env["DESTDIR"]) / "bin" / "webnet"), program)
+Alias("install", installed)

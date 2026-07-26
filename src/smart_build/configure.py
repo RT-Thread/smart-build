@@ -63,7 +63,14 @@ class ConfigurationResult:
     updated: tuple
 
 
-def configure_target(paths, target, toolchain=None, command_runner=None):
+def configure_target(
+    paths,
+    target,
+    toolchain=None,
+    command_runner=None,
+    frontend=None,
+    env_packages=None,
+):
     target_name = str(target).strip()
     if target_name == "kernel":
         from .domains.kernel import kernel_configuration
@@ -89,6 +96,8 @@ def configure_target(paths, target, toolchain=None, command_runner=None):
             package_name,
             toolchain=toolchain,
             command_runner=command_runner,
+            frontend=frontend,
+            env_packages=env_packages,
         )
     raise SmartBuildError(
         "CONFIG",

@@ -31,7 +31,9 @@
 ```
 
 `configure` 的 `TARGET` 可以是 `kernel`、`busybox`、`bootloader` 或
-`package:<name>`。是否支持取决于所选板卡或软件包的元数据。
+`package:<name>`。是否支持取决于所选板卡或软件包的元数据。使用 native
+Kconfig 的 `build.rtthread_scons` 包通过此命令提供 RT-Thread 软件包选项；在线
+包下载仍在 `build` 阶段执行。
 
 ## 构建
 

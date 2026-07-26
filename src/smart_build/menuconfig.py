@@ -1,4 +1,5 @@
 import os
+from contextlib import nullcontext
 from pathlib import Path
 
 from .config import (
@@ -9,6 +10,13 @@ from .config import (
     write_workspace_config,
 )
 from .errors import SmartBuildError
+from .package_kconfig import (
+    load_native_package_kconfig,
+    native_kconfig_environment,
+    native_package_configuration_symbols,
+    native_package_symbols_from_kconfig,
+)
+from .package_metadata import load_all_package_metadata, package_selection_symbol
 from .paths import board_defconfig_path
 
 
@@ -79,38 +87,119 @@ def run_menuconfig(paths, frontend=None):
         raise SmartBuildError("CONFIG", f"defconfig not found: {defconfig_path}")
 
     workspace_config = workspace_config_path(paths.root)
-    old_srctree = os.environ.get("srctree")
-    old_kconfig_config = os.environ.get("KCONFIG_CONFIG")
-    old_config_prefix = os.environ.get("CONFIG_")
-    os.environ["srctree"] = str(paths.root)
-    os.environ["KCONFIG_CONFIG"] = str(workspace_config)
-    os.environ["CONFIG_"] = ""
-    try:
-        kconf = kconfiglib.Kconfig(str(kconfig_path), warn=False)
-        kconf.config_prefix = ""
-        _load_values(kconf, _initial_values(paths.root, paths.machine, defconfig_path))
-        _write_frontend_config(kconf, workspace_config)
-        selected_frontend = frontend if frontend is not None else default_menuconfig_frontend()
-        selected_frontend(kconf)
-        values = _config_values(kconf)
-        selected_defconfig_path = board_defconfig_path(paths.root, values["MACHINE"])
-        _write_defconfig(selected_defconfig_path, values, _owned_keys(kconf), _package_keys(kconf))
-        write_workspace_config(paths.root, values)
-    finally:
-        if old_srctree is None:
-            os.environ.pop("srctree", None)
-        else:
-            os.environ["srctree"] = old_srctree
-        if old_kconfig_config is None:
-            os.environ.pop("KCONFIG_CONFIG", None)
-        else:
-            os.environ["KCONFIG_CONFIG"] = old_kconfig_config
-        if old_config_prefix is None:
-            os.environ.pop("CONFIG_", None)
-        else:
-            os.environ["CONFIG_"] = old_config_prefix
+    packages = load_all_package_metadata(paths.root)
+    package_environment = (
+        native_kconfig_environment()
+        if any(metadata.kconfig.mode == "native" for metadata in packages)
+        else nullcontext()
+    )
+    with package_environment:
+        old_srctree = os.environ.get("srctree")
+        old_kconfig_config = os.environ.get("KCONFIG_CONFIG")
+        old_config_prefix = os.environ.get("CONFIG_")
+        os.environ["srctree"] = str(paths.root)
+        os.environ["KCONFIG_CONFIG"] = str(workspace_config)
+        os.environ["CONFIG_"] = ""
+        try:
+            kconf = kconfiglib.Kconfig(str(kconfig_path), warn=False)
+            kconf.config_prefix = ""
+            _load_values(kconf, _initial_values(paths.root, paths.machine, defconfig_path))
+            _write_frontend_config(kconf, workspace_config)
+            selected_frontend = frontend if frontend is not None else default_menuconfig_frontend()
+            selected_frontend(kconf)
+            values = _config_values(kconf, paths.root)
+            selected_defconfig_path = board_defconfig_path(paths.root, values["MACHINE"])
+            _write_defconfig(
+                selected_defconfig_path,
+                values,
+                _owned_keys(kconf, paths.root),
+                _package_keys(kconf, paths.root),
+            )
+            write_workspace_config(paths.root, values)
+        finally:
+            if old_srctree is None:
+                os.environ.pop("srctree", None)
+            else:
+                os.environ["srctree"] = old_srctree
+            if old_kconfig_config is None:
+                os.environ.pop("KCONFIG_CONFIG", None)
+            else:
+                os.environ["KCONFIG_CONFIG"] = old_kconfig_config
+            if old_config_prefix is None:
+                os.environ.pop("CONFIG_", None)
+            else:
+                os.environ["CONFIG_"] = old_config_prefix
 
     return selected_defconfig_path
+
+
+def run_package_menuconfig(paths, metadata, frontend=None, env_packages=None):
+    defconfig_path = board_defconfig_path(paths.root, paths.machine)
+    if not defconfig_path.is_file():
+        raise SmartBuildError("CONFIG", f"defconfig not found: {defconfig_path}")
+
+    workspace_config = workspace_config_path(paths.root)
+    frontend_config = (
+        paths.work_dir
+        / "configure"
+        / f"package-{metadata.name}"
+        / ".config"
+    )
+    frontend_config.parent.mkdir(parents=True, exist_ok=True)
+    with native_kconfig_environment(env_packages):
+        old_srctree = os.environ.get("srctree")
+        old_kconfig_config = os.environ.get("KCONFIG_CONFIG")
+        old_config_prefix = os.environ.get("CONFIG_")
+        os.environ["srctree"] = str(metadata.kconfig.path.parent)
+        os.environ["KCONFIG_CONFIG"] = str(frontend_config)
+        os.environ["CONFIG_"] = "CONFIG_"
+        try:
+            kconf = load_native_package_kconfig(metadata, env_packages=env_packages)
+            symbols = native_package_configuration_symbols(kconf, metadata)
+            initial_values = _initial_values(
+                paths.root,
+                paths.machine,
+                defconfig_path,
+            )
+            _load_values(kconf, initial_values)
+            _enable_package_symbol(kconf, metadata)
+            _write_frontend_config(kconf, frontend_config)
+            selected_frontend = frontend if frontend is not None else default_menuconfig_frontend()
+            selected_frontend(kconf)
+            _enable_package_symbol(kconf, metadata)
+            package_values = _package_config_values(kconf, symbols)
+            board_values = _replace_package_values(
+                load_defconfig(defconfig_path),
+                symbols,
+                package_values,
+            )
+            _write_defconfig(
+                defconfig_path,
+                board_values,
+                tuple(board_values),
+                symbols,
+            )
+            workspace_values = _replace_package_values(
+                initial_values,
+                symbols,
+                package_values,
+            )
+            write_workspace_config(paths.root, workspace_values)
+        finally:
+            if old_srctree is None:
+                os.environ.pop("srctree", None)
+            else:
+                os.environ["srctree"] = old_srctree
+            if old_kconfig_config is None:
+                os.environ.pop("KCONFIG_CONFIG", None)
+            else:
+                os.environ["KCONFIG_CONFIG"] = old_kconfig_config
+            if old_config_prefix is None:
+                os.environ.pop("CONFIG_", None)
+            else:
+                os.environ["CONFIG_"] = old_config_prefix
+
+    return defconfig_path, workspace_config
 
 
 def _write_frontend_config(kconf, path):
@@ -160,6 +249,43 @@ def _load_values(kconf, values):
             symbol.set_value(value)
 
 
+def _enable_package_symbol(kconf, metadata):
+    symbol = kconf.syms.get(metadata.kconfig.symbol)
+    if symbol is None or not symbol.nodes:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{metadata.kconfig.path}: native Kconfig does not define {metadata.kconfig.symbol}",
+        )
+    symbol.set_value(2)
+    if symbol.str_value != "y":
+        raise SmartBuildError(
+            "CONFIG",
+            f"native Kconfig dependencies prevent enabling {metadata.kconfig.symbol}",
+        )
+
+
+def _package_config_values(kconf, symbols):
+    values = {}
+    for name in symbols:
+        symbol = kconf.syms.get(name)
+        if symbol is None:
+            continue
+        value = symbol.str_value
+        if value not in {"", "n"}:
+            values[name] = value
+    return values
+
+
+def _replace_package_values(values, symbols, package_values):
+    result = {
+        key: value
+        for key, value in values.items()
+        if key not in symbols
+    }
+    result.update(package_values)
+    return result
+
+
 def _write_defconfig(path, values, owned_keys=OWNED_KEYS, package_keys=PACKAGE_KEYS):
     lines = []
     for key in owned_keys:
@@ -175,10 +301,10 @@ def _write_defconfig(path, values, owned_keys=OWNED_KEYS, package_keys=PACKAGE_K
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _config_values(kconf):
+def _config_values(kconf, root=None):
     result = {}
-    package_keys = _package_keys(kconf)
-    for key in _owned_keys(kconf):
+    package_keys = _package_keys(kconf, root)
+    for key in _owned_keys(kconf, root):
         symbol = kconf.syms.get(key)
         if symbol is None:
             continue
@@ -275,25 +401,38 @@ def _selected_machine_values(kconf):
     return {}
 
 
-def _rootfs_package_mode(values):
+def _rootfs_package_mode(values, root=None):
     mode = values.get("ROOTFS_PACKAGE_MODE")
     if mode is not None:
         return mode
-    if any(key.startswith("PACKAGE_") for key in values):
+    if any(key in values for key in _package_selection_keys(root)):
         return "manual"
     return None
 
 
-def _owned_keys(kconf):
+def _owned_keys(kconf, root=None):
     return (
         *BASE_OWNED_KEYS[:-1],
-        *_package_keys(kconf),
+        *_package_keys(kconf, root),
         BASE_OWNED_KEYS[-1],
     )
 
 
-def _package_keys(kconf):
-    return tuple(sorted(key for key in kconf.syms if key.startswith("PACKAGE_")))
+def _package_keys(kconf, root=None):
+    keys = {key for key in kconf.syms if key.startswith("PACKAGE_")}
+    if root is not None:
+        for metadata in load_all_package_metadata(root):
+            keys.update(native_package_symbols_from_kconfig(kconf, metadata))
+    return tuple(sorted(keys))
+
+
+def _package_selection_keys(root=None):
+    if root is None:
+        return PACKAGE_KEYS
+    return frozenset(
+        package_selection_symbol(metadata)
+        for metadata in load_all_package_metadata(root)
+    )
 
 
 def _drop_package_values(values, package_keys):

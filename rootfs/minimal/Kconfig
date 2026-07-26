@@ -1,6 +1,3 @@
-config ROOTFS_MINIMAL
-    bool "Minimal rootfs"
-
 if ROOTFS_MINIMAL
 
 choice

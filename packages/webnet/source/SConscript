@@ -1,0 +1,21 @@
+import glob
+import os
+
+from building import *
+
+
+cwd = GetCurrentDir()
+webnet_headers = sorted(glob.glob(os.path.join(cwd, "packages", "webnet-*", "inc")))
+if len(webnet_headers) != 1:
+    raise RuntimeError(
+        f"expected one downloaded webnet include directory, found: {webnet_headers}"
+    )
+
+group = DefineGroup(
+    "webnet-main",
+    ["main.c"],
+    depend=["PKG_USING_WEBNET"],
+    CPPPATH=webnet_headers,
+)
+
+Return("group")

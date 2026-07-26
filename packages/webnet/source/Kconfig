@@ -1,0 +1,18 @@
+config PKGS_DIR
+    string
+    option env="PKGS_ROOT"
+    default "packages"
+
+config RT_VER_NUM
+    hex
+    default 0x50100
+
+menu "webnet"
+
+config PACKAGE_WEBNET
+    bool "Enable webnet"
+    select PKG_USING_WEBNET
+
+source "$PKGS_DIR/Kconfig"
+
+endmenu

@@ -32,14 +32,16 @@ dependency, conflict, and option selections.
 
 ## Configure a package
 
-A package with a `configure` mapping can be configured using:
+A package with a `configure` mapping, or an independent RT-Thread SCons package
+with native Kconfig, can be configured using:
 
 ```sh
 ./smart-build configure package:<name>
 ```
 
-Packages without that mapping do not provide an interactive configuration
-step.
+Native Kconfig configuration is saved by smart-build without modifying the
+package source directory or downloading online packages. Other packages
+without a `configure` mapping do not provide an interactive configuration step.
 
 ## Package outputs
 
