@@ -312,6 +312,27 @@ def test_kernel_build_rejects_overlay_into_env_packages(tmp_path):
     assert not (bsp / "packages" / "example.c").exists()
 
 
+def test_kernel_verbose_build_uses_scons_verbose(tmp_path):
+    paths, bsp, packages = _project(tmp_path)
+
+    default_task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        env_packages=packages,
+    )[1]
+    verbose_task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        env_packages=packages,
+        verbose=True,
+    )[1]
+
+    assert default_task.manifest_fields["commands"] == [["scons", "-C", str(bsp)]]
+    assert verbose_task.manifest_fields["commands"] == [
+        ["scons", "--verbose", "-C", str(bsp)]
+    ]
+
+
 def test_env_packages_requires_command_and_index(tmp_path):
     packages = EnvPackages.discover(home=tmp_path)
 

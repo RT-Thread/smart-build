@@ -29,12 +29,12 @@ KERNEL_PACKAGE_TASK_ID = "kernel:packages:update"
 KERNEL_TASK_ID = "kernel:build"
 
 
-def kernel_tasks(paths, toolchain=None, command_runner=None, env_packages=None):
+def kernel_tasks(paths, toolchain=None, command_runner=None, env_packages=None, verbose=False):
     context = _resolve_kernel_context(paths)
     packages = (env_packages or EnvPackages.discover()).validate()
     fields = toolchain_task_fields(toolchain)
     package_commands = _package_commands(context["bsp"], packages)
-    build_commands = _build_commands(context["bsp"])
+    build_commands = _build_commands(context["bsp"], verbose=verbose)
     package_manifest = {
         **packages.manifest_record(),
         "config": str(context["bsp"] / ".config"),
@@ -291,7 +291,9 @@ def _package_commands(bsp, packages):
     )
 
 
-def _build_commands(bsp):
+def _build_commands(bsp, verbose=False):
+    if verbose:
+        return (("scons", "--verbose", "-C", str(bsp)),)
     return (("scons", "-C", str(bsp)),)
 
 

@@ -37,7 +37,11 @@ def build_parser():
     build.add_argument("--machine", default=None, help="target machine")
     build.add_argument("--jobs", type=_positive_int, default=None, help="parallel jobs")
     build.add_argument("--dry-run", action="store_true", help="print planned tasks")
-    build.add_argument("--verbose", action="store_true", help="print task logs to console")
+    build.add_argument(
+        "--verbose",
+        action="store_true",
+        help="print detailed task and build logs to console",
+    )
 
     graph = subparsers.add_parser("graph", help="print task graph")
     graph.add_argument("--machine", default=None, help="target machine")
@@ -126,6 +130,7 @@ def _run_build(args):
             resolve_real=not args.dry_run,
             toolchain=toolchain,
             jobs=args.jobs,
+            verbose=args.verbose,
         )
     )
     if args.dry_run:

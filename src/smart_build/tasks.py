@@ -156,6 +156,7 @@ def create_default_plan(
     force_minirootfs_image=False,
     jobs=None,
     rootfs_selection=None,
+    verbose=False,
 ):
     machine_metadata = machine if isinstance(machine, Machine) else machine
     rootfs_disabled = rootfs_selection is not None and rootfs_selection.rootfs == "none"
@@ -199,7 +200,7 @@ def create_default_plan(
         from .domains.sources import rt_thread_source_task
 
         rt_thread_task = rt_thread_source_task(paths)
-        kernel_plan_tasks = kernel_tasks(paths, toolchain=toolchain)
+        kernel_plan_tasks = kernel_tasks(paths, toolchain=toolchain, verbose=verbose)
     else:
         rt_thread_task = _placeholder_task(
             "source:rt-thread",
@@ -323,7 +324,15 @@ def create_default_plan(
     ]
 
 
-def tasks_for_target(target, machine, paths, resolve_real=False, toolchain=None, jobs=None):
+def tasks_for_target(
+    target,
+    machine,
+    paths,
+    resolve_real=False,
+    toolchain=None,
+    jobs=None,
+    verbose=False,
+):
     rootfs_selection = _rootfs_selection_for_target(target, paths)
     _reject_disabled_rootfs_target(target, paths, selection=rootfs_selection)
     _reject_unsupported_package_target(target, paths, selection=rootfs_selection)
@@ -357,6 +366,7 @@ def tasks_for_target(target, machine, paths, resolve_real=False, toolchain=None,
             force_minirootfs_image=target == "minirootfs",
             jobs=jobs,
             rootfs_selection=rootfs_selection,
+            verbose=verbose,
         )
         + _app_tasks(target, paths, resolve_real=resolve_real, toolchain=resolved_toolchain)
         + _package_tasks(target, paths, resolve_real=resolve_real, toolchain=resolved_toolchain)

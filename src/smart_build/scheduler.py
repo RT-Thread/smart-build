@@ -72,6 +72,8 @@ class Scheduler:
                 log = _ConsoleTee(log_file) if self.verbose else log_file
                 log.write(f"== task {task.id} ==\n")
                 log.write(f"run_class: {task.run_class}\n")
+                if self.verbose:
+                    self._write_task_details(task, log)
                 if self.cache.is_hit(task):
                     log.write("cache hit\n")
                     print(f"skipped: {task.id} log={self.display_path(task.log_path)}")
@@ -94,6 +96,18 @@ class Scheduler:
                     log.write(f"BUILD: task {task.id} failed: {exc}\n")
                     raise SmartBuildError("BUILD", f"task {task.id} failed: {exc}") from exc
         return results
+
+    def _write_task_details(self, task, log):
+        deps = ", ".join(task.deps) or "-"
+        inputs = ", ".join(self.display_path(path) for path in task.inputs) or "-"
+        outputs = ", ".join(self.display_path(path) for path in task.outputs) or "-"
+        log.write(f"domain: {task.domain}\n")
+        log.write(f"action: {task.action}\n")
+        log.write(f"workdir: {self.display_path(task.workdir)}\n")
+        log.write(f"deps: {deps}\n")
+        log.write(f"inputs: {inputs}\n")
+        log.write(f"outputs: {outputs}\n")
+        log.write(f"cache_policy: {task.cache_policy}\n")
 
 
 def _run_task(task, log):
@@ -153,6 +167,8 @@ def _format_command(command):
 
 
 class _ConsoleTee:
+    mirrors_console = True
+
     def __init__(self, log_file):
         self.log_file = log_file
         self.name = log_file.name
