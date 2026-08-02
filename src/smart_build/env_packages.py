@@ -70,6 +70,25 @@ def validate_package_update_output(completed):
         )
 
 
+def read_recorded_env_package_paths(project_dir, state_label="package", missing_ok=False):
+    project = Path(project_dir)
+    packages_dir = project / "packages"
+    state_path = packages_dir / "pkgs.json"
+    if missing_ok and not state_path.exists():
+        return ()
+    state = _read_json_list(state_path, f"{state_label} state")
+    paths = []
+    for item in state:
+        _name, _index_path, _version, managed_path = _env_package_state_entry(
+            item,
+            packages_dir,
+            state_path,
+            state_label,
+        )
+        paths.append(managed_path)
+    return tuple(sorted(paths, key=str))
+
+
 def read_env_package_state(project_dir, config_path=None, state_label="package", config_label="project .config"):
     project = Path(project_dir)
     packages_dir = project / "packages"
@@ -93,17 +112,13 @@ def read_env_package_state(project_dir, config_path=None, state_label="package",
     result = []
     actual = []
     for item in state:
-        if not isinstance(item, dict):
-            raise SmartBuildError("BUILD", f"invalid {state_label} state entry in {state_path}: {item!r}")
-        name = item.get("name")
-        version = item.get("ver")
-        index_path = item.get("path")
-        if not all(isinstance(value, str) and value for value in (name, version, index_path)):
-            raise SmartBuildError("BUILD", f"incomplete {state_label} state entry in {state_path}: {item!r}")
+        name, index_path, version, managed_path = _env_package_state_entry(
+            item,
+            packages_dir,
+            state_path,
+            state_label,
+        )
         actual.append((name, index_path, version))
-        package_name = _package_index_name(index_path, state_path)
-        _validate_package_version(version, state_path)
-        managed_path = packages_dir / f"{package_name}-{version}"
         if managed_path.is_symlink() or not managed_path.is_dir():
             raise SmartBuildError(
                 "BUILD",
@@ -128,6 +143,19 @@ def read_env_package_state(project_dir, config_path=None, state_label="package",
             f"expected={expected!r} actual={sorted(actual)!r}",
         )
     return sorted(result, key=lambda item: item["name"])
+
+
+def _env_package_state_entry(item, packages_dir, state_path, state_label):
+    if not isinstance(item, dict):
+        raise SmartBuildError("BUILD", f"invalid {state_label} state entry in {state_path}: {item!r}")
+    name = item.get("name")
+    version = item.get("ver")
+    index_path = item.get("path")
+    if not all(isinstance(value, str) and value for value in (name, version, index_path)):
+        raise SmartBuildError("BUILD", f"incomplete {state_label} state entry in {state_path}: {item!r}")
+    package_name = _package_index_name(index_path, state_path)
+    _validate_package_version(version, state_path)
+    return name, index_path, version, packages_dir / f"{package_name}-{version}"
 
 
 def _git_output(path, *args):
