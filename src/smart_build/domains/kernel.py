@@ -367,7 +367,11 @@ def _write_warning(log, message):
     text = f"warning: {message}\n"
     log.write(text)
     if not getattr(log, "mirrors_console", False):
-        print(text, end="")
+        console_message = getattr(log, "console_message", None)
+        if console_message is None:
+            print(text, end="")
+        else:
+            console_message(text)
 
 
 def _run_commands(task, commands, cwd, env, runner, log):
