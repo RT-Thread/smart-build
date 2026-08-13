@@ -21,9 +21,10 @@ toolchain package names are env sdk package identifiers and may resolve to
 different concrete toolchain revisions as the local env sdk installation
 changes.
 
-Their kernel defconfigs enable the RT-Thread lwext4 package and pin
-`v2.0.0-dfsv2`. Change the version through `smart-build configure kernel`; Env
-installs the selected version during the next kernel build.
+Their kernel defconfigs enable the RT-Thread lwext4 package and select `latest`,
+which currently resolves to the v2.2 release. Change the version through
+`smart-build configure kernel`; Env installs the selected version during the
+next kernel build.
 
 QEMU support is profile-specific. A board description containing arbitrary
 QEMU values does not automatically add a new QEMU command profile; the profile

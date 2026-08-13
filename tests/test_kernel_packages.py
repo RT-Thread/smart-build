@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from smart_build.config import load_defconfig
 from smart_build.domains.kernel import KERNEL_PACKAGE_TASK_ID, KERNEL_TASK_ID, kernel_tasks
 from smart_build.env_packages import EnvPackages
 from smart_build.errors import SmartBuildError
@@ -82,7 +83,7 @@ def _write_package_state(bsp, errors=None, installed=True, state=None):
     packages_dir = bsp / "packages"
     packages_dir.mkdir(parents=True, exist_ok=True)
     if installed:
-        (packages_dir / "lwext4-v2.0.0-dfsv2").mkdir(parents=True)
+        (packages_dir / "lwext4-v2.0.0-dfsv2").mkdir(parents=True, exist_ok=True)
     (packages_dir / "SConscript").write_text("# packages\n", encoding="utf-8")
     package_state = state
     if package_state is None:
@@ -106,7 +107,7 @@ def test_kernel_package_task_updates_env_packages_before_build(tmp_path):
 
     def runner(command, cwd, env):
         calls.append((command, cwd, env))
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp)
         return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
 
@@ -124,7 +125,7 @@ def test_kernel_package_task_updates_env_packages_before_build(tmp_path):
     assert kernel_task.id == KERNEL_TASK_ID
     assert kernel_task.deps == (KERNEL_PACKAGE_TASK_ID,)
     assert calls[0][0] == ["scons", "--pyconfig-silent", "-C", str(bsp)]
-    assert calls[1][0] == [str(packages.command), "--update"]
+    assert calls[1][0] == [str(packages.command), "--force-update"]
     assert calls[1][1] == bsp
     assert calls[1][2]["ENV_ROOT"] == str(packages.env_root)
     assert (bsp / ".config").read_text(encoding="utf-8") == (
@@ -135,13 +136,14 @@ def test_kernel_package_task_updates_env_packages_before_build(tmp_path):
     assert record["name"] == "LWEXT4"
     assert record["version"] == "v2.0.0-dfsv2"
     assert record["managed_by_env"] is True
+    assert package_task.manifest_fields["kernel_packages"]["removed"] == []
 
 
 def test_kernel_package_task_rejects_env_reported_errors(tmp_path):
     paths, bsp, packages = _project(tmp_path)
 
     def runner(command, cwd, env):
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp, errors=[{"name": "LWEXT4"}])
         return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
 
@@ -163,7 +165,7 @@ def test_kernel_package_task_rejects_env_reported_failure(tmp_path):
     paths, bsp, packages = _project(tmp_path)
 
     def runner(command, cwd, env):
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp, state=[])
             return subprocess.CompletedProcess(command, 0, stdout="Operation failed.\n")
         return subprocess.CompletedProcess(command, 0, stdout="ok\n")
@@ -206,7 +208,7 @@ def test_kernel_package_task_rejects_invalid_package_state(tmp_path, contents):
     paths, bsp, packages = _project(tmp_path)
 
     def runner(command, cwd, env):
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp)
             (bsp / "packages" / "pkgs.json").write_text(contents, encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
@@ -228,7 +230,7 @@ def test_kernel_package_task_rejects_missing_installed_package(tmp_path):
     paths, bsp, packages = _project(tmp_path)
 
     def runner(command, cwd, env):
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp, installed=False)
         return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
 
@@ -253,7 +255,7 @@ def test_kernel_package_task_accepts_empty_selection(tmp_path):
     )
 
     def runner(command, cwd, env):
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp, installed=False, state=[])
         return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
 
@@ -268,11 +270,107 @@ def test_kernel_package_task_accepts_empty_selection(tmp_path):
     assert package_task.manifest_fields["kernel_packages"]["packages"] == []
 
 
+def test_kernel_package_task_removes_unrecorded_buildable_directories(tmp_path, capsys):
+    paths, bsp, packages = _project(tmp_path)
+    _write_package_state(bsp)
+    stale_before = bsp / "packages" / "lwext4-latest"
+    stale_before.mkdir()
+    (stale_before / "SConscript").write_text("# stale before\n", encoding="utf-8")
+    ignored = bsp / "packages" / "notes"
+    ignored.mkdir()
+    stale_after = bsp / "packages" / "orphan-v1"
+
+    def runner(command, cwd, env):
+        if command == [str(packages.command), "--force-update"]:
+            _write_package_state(bsp)
+            stale_after.mkdir()
+            (stale_after / "SConscript").write_text("# stale after\n", encoding="utf-8")
+        return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
+
+    task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        command_runner=runner,
+        env_packages=packages,
+    )[0]
+    log = io.StringIO()
+
+    assert task.executor(task, log) == 0
+    assert not stale_before.exists()
+    assert not stale_after.exists()
+    assert ignored.is_dir()
+    assert (bsp / "packages" / "lwext4-v2.0.0-dfsv2").is_dir()
+    assert task.manifest_fields["kernel_packages"]["removed"] == [
+        {"path": str(stale_before), "phase": "before-update"},
+        {"path": str(stale_after), "phase": "after-update"},
+    ]
+    assert (
+        "warning: removing unrecorded RT-Thread kernel package "
+        f"during before-update: {stale_before}"
+    ) in log.getvalue()
+    assert (
+        "warning: removing unrecorded RT-Thread kernel package "
+        f"during after-update: {stale_after}"
+    ) in capsys.readouterr().out
+
+
+def test_kernel_package_task_unlinks_unrecorded_package_symlink(tmp_path):
+    paths, bsp, packages = _project(tmp_path)
+    _write_package_state(bsp)
+    external = tmp_path / "external-package"
+    external.mkdir()
+    (external / "SConscript").write_text("# external\n", encoding="utf-8")
+    stale = bsp / "packages" / "stale-link"
+    stale.symlink_to(external, target_is_directory=True)
+
+    def runner(command, cwd, env):
+        return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
+
+    task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        command_runner=runner,
+        env_packages=packages,
+    )[0]
+
+    assert task.executor(task, io.StringIO()) == 0
+    assert not stale.exists()
+    assert external.is_dir()
+    assert (external / "SConscript").is_file()
+
+
+def test_kernel_package_task_does_not_remove_with_invalid_old_state(tmp_path):
+    paths, bsp, packages = _project(tmp_path)
+    _write_package_state(bsp)
+    (bsp / "packages" / "pkgs.json").write_text("not json", encoding="utf-8")
+    stale = bsp / "packages" / "stale-v1"
+    stale.mkdir()
+    (stale / "SConscript").write_text("# stale\n", encoding="utf-8")
+    calls = []
+
+    def runner(command, cwd, env):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="ok\n")
+
+    task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        command_runner=runner,
+        env_packages=packages,
+    )[0]
+
+    with pytest.raises(SmartBuildError, match="kernel package state"):
+        task.executor(task, io.StringIO())
+
+    assert stale.is_dir()
+    assert calls == [["scons", "--pyconfig-silent", "-C", str(bsp)]]
+
+
 def test_kernel_package_task_rejects_state_mismatch(tmp_path):
     paths, bsp, packages = _project(tmp_path)
 
     def runner(command, cwd, env):
-        if command == [str(packages.command), "--update"]:
+        if command == [str(packages.command), "--force-update"]:
             _write_package_state(bsp, installed=False, state=[])
         return subprocess.CompletedProcess(command, 0, stdout="Operation completed successfully.\n")
 
@@ -310,6 +408,40 @@ def test_kernel_build_rejects_overlay_into_env_packages(tmp_path):
 
     assert error.value.code == "CONFIG"
     assert not (bsp / "packages" / "example.c").exists()
+
+
+def test_kernel_verbose_build_uses_scons_verbose(tmp_path):
+    paths, bsp, packages = _project(tmp_path)
+
+    default_task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        env_packages=packages,
+    )[1]
+    verbose_task = kernel_tasks(
+        paths,
+        toolchain=_Toolchain(),
+        env_packages=packages,
+        verbose=True,
+    )[1]
+
+    assert default_task.manifest_fields["commands"] == [["scons", "-C", str(bsp)]]
+    assert verbose_task.manifest_fields["commands"] == [
+        ["scons", "--verbose", "-C", str(bsp)]
+    ]
+
+
+@pytest.mark.parametrize(
+    "machine",
+    ("qemu-virt-aarch64", "qemu-virt-riscv64", "qemu-vexpress-a9"),
+)
+def test_qemu_boards_select_latest_lwext4(machine):
+    root = Path(__file__).resolve().parents[1]
+    values = load_defconfig(root / "boards" / machine / "kernel_defconfig")
+
+    assert values["CONFIG_PKG_USING_LWEXT4_LATEST_VERSION"] == "y"
+    assert values["CONFIG_PKG_LWEXT4_VER"] == "latest"
+    assert values.get("CONFIG_PKG_USING_LWEXT4_V200") != "y"
 
 
 def test_env_packages_requires_command_and_index(tmp_path):

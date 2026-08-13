@@ -23,12 +23,29 @@ accept their own `--machine` option after the subcommand.
 Checks host tools, QEMU, the RT-Thread BSP, the env sdk toolchain, and writable
 build locations needed by the selected machine.
 
+## Toolchains
+
+```sh
+./smart-build toolchain list [--machine MACHINE]
+./smart-build toolchain install [--machine MACHINE] [--version VERSION] [--yes]
+```
+
+`list` shows board-compatible versions, the selected version, and whether each
+one is found in Env SDK or `downloads/toolchains/`. `install` downloads only a
+board-declared HTTPS archive, verifies its SHA-256, and installs it under
+`downloads/toolchains/<package>-<version>`. `--yes` is required in non-interactive shells.
+
 ## Configuration
 
 ```sh
 ./smart-build menuconfig [--machine MACHINE]
 ./smart-build configure TARGET [--machine MACHINE]
 ```
+
+`menuconfig` exposes a `Cross toolchain` menu for the selected machine, where
+the toolchain version and optional `TOOLCHAIN_PATH` are saved. The interface
+does not download files; a missing downloadable toolchain is confirmed by an
+interactive build or installed explicitly with `toolchain install` above.
 
 `TARGET` for `configure` is `kernel`, `busybox`, `bootloader`, or
 `package:<name>`. Support depends on the selected board or package metadata.
@@ -54,13 +71,23 @@ Common targets are:
 | `package:<name>` | One package and its resolved dependencies |
 | `qemu-script` | QEMU launch script |
 
-`--verbose` mirrors task logs to the terminal. `--jobs` is currently honored
-by only part of the build pipeline. `--dry-run` uses placeholder tasks and must
-not be treated as an exact representation of a real task graph.
+Without `--verbose`, interactive terminals show a colored progress bar and
+print completed task statuses above it. Successful and skipped tasks use the
+form `build: [2/12] toolchain:check: success` without a log path. Redirected
+output uses plain status lines without ANSI control sequences. Failed tasks
+still report their log path.
+
+`--verbose` mirrors task logs to the terminal and prints each task's domain,
+action, working directory, dependencies, inputs, outputs, cache policy, and log
+path. RT-Thread kernel compilation uses `scons --verbose` in this mode,
+exposing the complete compiler and linker commands. `--jobs` is currently
+honored by only part of the build pipeline. `--dry-run` uses placeholder tasks
+and must not be treated as an exact representation of a real task graph.
 
 Kernel builds include a `kernel:packages:update` task. It runs
-`~/.env/tools/scripts/pkgs --update` from the selected BSP before
-`kernel:build` and records the installed package versions in the manifest.
+`~/.env/tools/scripts/pkgs --force-update` from the selected BSP before
+`kernel:build`. It warns and removes unrecorded buildable package directories,
+then records the installed versions and removed paths in the manifest.
 
 ## Task graph
 
@@ -88,6 +115,8 @@ below the machine build directory.
 ./smart-build distclean
 ./smart-build download-clean
 ```
+
+`download-clean` also removes installed and cached toolchains below `downloads/`.
 
 Machine selection for these commands is currently available through the global
 option, for example `./smart-build --machine qemu-virt-riscv64 clean`.

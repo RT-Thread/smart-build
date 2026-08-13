@@ -24,8 +24,9 @@ appear in the configuration interface but are not yet buildable.
 ## Prerequisites
 
 - Python 3.10 or newer.
-- An env sdk toolchain under `~/.env/tools/scripts/packages` matching the
-  selected machine's `board.yaml`.
+- A compatible toolchain from Env SDK, a configured `TOOLCHAIN_PATH`, or the
+  repository's `downloads/toolchains/` cache. Missing downloadable versions can
+  be installed with `smart-build toolchain install`.
 - RT-Thread Env package scripts under `~/.env/tools/scripts` and a package
   index under `~/.env/packages/packages`.
 - An RT-Thread source tree available as the repository-root `rt-thread` path,
@@ -43,6 +44,7 @@ python -m pip install -e .
 
 ```sh
 ./smart-build doctor
+./smart-build toolchain list
 ./smart-build menuconfig
 ./smart-build build all
 ./smart-build qemu-smoke
@@ -56,32 +58,46 @@ To select a machine without changing the workspace configuration:
 ```
 
 Build results are written below `build/<machine>/`. Downloaded source archives
-are stored below `downloads/`.
+and installed toolchains are stored below `downloads/`.
 
 Before compiling the kernel, smart-build synchronizes its defconfig to the
-RT-Thread BSP and runs `~/.env/tools/scripts/pkgs --update`. Kernel packages
-and their versions are selected by the RT-Thread kernel configuration, not by
-smart-build package metadata.
+RT-Thread BSP and runs `~/.env/tools/scripts/pkgs --force-update`. Kernel
+packages and their versions are selected by the RT-Thread kernel configuration,
+not by smart-build package metadata. Unrecorded package directories that would
+participate in the kernel build are removed with a warning.
 
 ## Common commands
 
 ```sh
 ./smart-build --help
 ./smart-build doctor
+./smart-build toolchain list
+./smart-build toolchain install --yes
 ./smart-build menuconfig
 ./smart-build configure kernel
 ./smart-build configure package:curl
 ./smart-build configure package:webclient
 ./smart-build build all
 ./smart-build build kernel
+./smart-build build kernel --verbose
 ./smart-build build rootfs
 ./smart-build graph
 ./smart-build qemu-smoke
 ./smart-build clean
+./smart-build download-clean
 ```
 
 Independent RT-Thread SCons packages with native Kconfig, such as `webclient`,
 use the package configure command to open their RT-Thread package options.
+
+Normal builds show a colored progress bar in interactive terminals and report
+completed tasks above it, for example `build: [2/12] toolchain:check: skipped`.
+Redirected output uses the same status format without colors or terminal
+control sequences. Successful and skipped tasks do not print log paths or log
+contents. `build --verbose` prints task context, task logs, and log paths to the
+terminal. When the target includes the RT-Thread kernel, smart-build runs its
+compile step with `scons --verbose` to show the complete compiler and linker
+commands.
 
 `build --dry-run` currently prints a placeholder task plan. It is useful for a
 high-level preview, but it is not guaranteed to match every task in a real

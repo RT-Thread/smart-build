@@ -16,8 +16,10 @@ use the `_zh.md` suffix, and each page links to its counterpart.
 - [Troubleshooting](troubleshooting.md)
 - [Compatibility and current limitations](compatibility.md)
 
-The configuration guide covers both the workspace menu and target-specific
+The configuration guide covers toolchain version selection and downloads, both the workspace menu and target-specific
 configuration, including native Kconfig for independent RT-Thread SCons packages.
+The command reference describes verbose task output and detailed RT-Thread
+kernel builds.
 
 ## Extend smart-build
 

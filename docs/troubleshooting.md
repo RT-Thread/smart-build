@@ -4,10 +4,12 @@
 
 ## Toolchain is not found
 
-Run `./smart-build doctor --machine <machine>` and compare the expected package
-with `boards/<machine>/board.yaml`. Toolchains are discovered only below
-`~/.env/tools/scripts/packages`; setting an arbitrary compiler on `PATH` does
-not replace the declared env sdk toolchain.
+Run `./smart-build toolchain list --machine <machine>` to see every compatible
+version and its state. Toolchains are discovered from a configured
+`TOOLCHAIN_PATH`, Env SDK's `~/.env/tools/scripts/packages`, and the repository's
+`downloads/toolchains/` cache. If a downloadable version is missing, run
+`./smart-build toolchain install --machine <machine> --version <version> --yes`.
+An arbitrary compiler on `PATH` does not replace the declared toolchain.
 
 ## RT-Thread BSP is missing
 
@@ -23,13 +25,14 @@ Run `./smart-build doctor --machine <machine>` and confirm both `env-pkgs` and
 
 ```sh
 cd rt-thread/bsp/<bsp>
-~/.env/tools/scripts/pkgs --update
+~/.env/tools/scripts/pkgs --force-update
 ```
 
 Review `build/<machine>/logs/kernel-packages.log`, the BSP
 `packages/pkgs_error.json`, network access, and whether the selected version
 exists in the installed Env package index. Use `smart-build configure kernel`
-to choose another package version.
+to choose another package version. Warnings about removed package directories
+identify entries that contained `SConscript` but were absent from `pkgs.json`.
 
 ## Package download fails
 
@@ -75,4 +78,6 @@ Use:
 
 Each task also writes a dedicated log below `build/<machine>/logs/`. Error
 prefixes such as `CONFIG`, `SCHEMA`, `PACKAGE`, `TOOLCHAIN`, and `BUILD`
-identify the subsystem that rejected the operation.
+identify the subsystem that rejected the operation. Verbose kernel builds show
+the complete compiler and linker commands through RT-Thread's `scons --verbose`
+mode.

@@ -79,6 +79,15 @@ def load_workspace_config(root):
     return load_defconfig(path)
 
 
+def load_machine_config(root, machine):
+    root_path = Path(root)
+    values = load_defconfig(board_defconfig_path(root_path, machine))
+    workspace_values = load_workspace_config(root_path)
+    if workspace_values.get("MACHINE") == machine:
+        values.update(workspace_values)
+    return values
+
+
 def write_workspace_config(root, values):
     path = workspace_config_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -95,10 +104,7 @@ def write_workspace_config(root, values):
 def resolve_rootfs_selection(root, machine):
     root_path = Path(root)
     defconfig = board_defconfig_path(root_path, machine)
-    values = load_defconfig(defconfig)
-    workspace_values = load_workspace_config(root_path)
-    if workspace_values.get("MACHINE") == machine:
-        values.update(workspace_values)
+    values = load_machine_config(root_path, machine)
     rootfs = values.get("ROOTFS", "minimal")
     if rootfs == "none":
         return RootfsSelection(rootfs=rootfs, build_mode=None, profile=None, packages=[])

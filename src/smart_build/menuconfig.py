@@ -32,6 +32,8 @@ BASE_OWNED_KEYS = (
     "ROOTFS_IMAGE_SIZE_MODE",
     "ROOTFS_PACKAGE_MODE",
     "TOOLCHAIN",
+    "TOOLCHAIN_VERSION",
+    "TOOLCHAIN_PATH",
 )
 OWNED_KEYS = (
     *BASE_OWNED_KEYS[:-1],
@@ -57,18 +59,27 @@ MACHINE_CHOICES = {
         "ARCH": "aarch64",
         "BSP": "qemu-virt64-aarch64",
         "TOOLCHAIN": "aarch64-linux-musleabi-gcc-latest",
+        "TOOLCHAIN_VERSION": "12.2.0",
+        "TOOLCHAIN_CHOICES": {"TOOLCHAIN_QEMU_VIRT_AARCH64_12_2_0": ("12.2.0", "aarch64-linux-musleabi-gcc-latest")},
     },
     "MACHINE_QEMU_VIRT_RISCV64": {
         "MACHINE": "qemu-virt-riscv64",
         "ARCH": "riscv64",
         "BSP": "qemu-virt64-riscv",
         "TOOLCHAIN": "riscv64-linux-musleabi-gcc-latest",
+        "TOOLCHAIN_VERSION": "12.2.0",
+        "TOOLCHAIN_CHOICES": {"TOOLCHAIN_QEMU_VIRT_RISCV64_12_2_0": ("12.2.0", "riscv64-linux-musleabi-gcc-latest")},
     },
     "MACHINE_QEMU_VEXPRESS_A9": {
         "MACHINE": "qemu-vexpress-a9",
         "ARCH": "arm",
         "BSP": "qemu-vexpress-a9",
         "TOOLCHAIN": "arm-linux-musleabi-gcc-stable",
+        "TOOLCHAIN_VERSION": "7.3.0",
+        "TOOLCHAIN_CHOICES": {
+            "TOOLCHAIN_QEMU_VEXPRESS_A9_7_3_0": ("7.3.0", "arm-linux-musleabi-gcc-stable"),
+            "TOOLCHAIN_QEMU_VEXPRESS_A9_12_2_0": ("12.2.0", "arm-linux-musleabi-gcc-latest"),
+        },
     },
 }
 
@@ -247,6 +258,7 @@ def _load_values(kconf, values):
             symbol.set_value(2 if value == "y" else 0 if value == "n" else 1)
         else:
             symbol.set_value(value)
+    _set_toolchain_choice_value(kconf, values)
 
 
 def _enable_package_symbol(kconf, metadata):
@@ -397,8 +409,32 @@ def _selected_machine_values(kconf):
     for symbol_name, values in MACHINE_CHOICES.items():
         symbol = kconf.syms.get(symbol_name)
         if symbol is not None and symbol.str_value == "y":
-            return dict(values)
+            result = {key: value for key, value in values.items() if key != "TOOLCHAIN_CHOICES"}
+            choices = values.get("TOOLCHAIN_CHOICES", {})
+            for choice_symbol, choice_values in choices.items():
+                choice = kconf.syms.get(choice_symbol)
+                if choice is not None and choice.str_value == "y":
+                    result["TOOLCHAIN_VERSION"], result["TOOLCHAIN"] = choice_values
+                    break
+            return result
     return {}
+
+
+def _set_toolchain_choice_value(kconf, values):
+    """Restore the active machine's toolchain choice from saved config values."""
+    machine = values.get("MACHINE")
+    for symbol_name, machine_values in MACHINE_CHOICES.items():
+        if machine_values.get("MACHINE") != machine:
+            continue
+        version = values.get("TOOLCHAIN_VERSION")
+        package = values.get("TOOLCHAIN")
+        for choice_symbol, choice_values in machine_values.get("TOOLCHAIN_CHOICES", {}).items():
+            if choice_values == (version, package):
+                symbol = kconf.syms.get(choice_symbol)
+                if symbol is not None:
+                    symbol.set_value(2)
+                return
+        return
 
 
 def _rootfs_package_mode(values, root=None):

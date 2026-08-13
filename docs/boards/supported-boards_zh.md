@@ -20,9 +20,9 @@
 env sdk 软件包标识符；随着本地 env sdk 安装发生变化，它们可能解析为不同的
 具体工具链版本。
 
-这些板卡的内核 defconfig 会启用 RT-Thread lwext4 软件包，并固定为
-`v2.0.0-dfsv2`。通过 `smart-build configure kernel` 可以更改版本；Env 会
-在下一次内核构建时安装所选版本。
+这些板卡的内核 defconfig 会启用 RT-Thread lwext4 软件包并选择 `latest`，
+当前解析到 v2.2 发布版本。通过 `smart-build configure kernel` 可以更改版本；
+Env 会在下一次内核构建时安装所选版本。
 
 QEMU 支持取决于具体 profile。在板卡描述中填写任意 QEMU 值，并不会自动添加
 新的 QEMU 命令 profile；smart-build 中也必须实现该 profile。

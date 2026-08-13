@@ -7,9 +7,21 @@ bsp: qemu-vexpress-a9
 kernel_defconfig: kernel_defconfig
 toolchain:
   package: arm-linux-musleabi-gcc-stable
+  version: 7.3.0
   target: arm-linux-musleabi
   prefix: arm-linux-musleabi-
   loader: ld-musl-arm.so.1
+  versions:
+    - version: 7.3.0
+      package: arm-linux-musleabi-gcc-stable
+      gcc_version: 7.3.0
+    - version: 12.2.0
+      package: arm-linux-musleabi-gcc-latest
+      gcc_version: 12.2.0
+      source:
+        url: https://download.rt-thread.org/download/rt-smart/toolchains/arm-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2
+        archive: arm-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2
+        sha256: 128518c8ebb9a110bbcae48d311f5b4661c65b3ea9c2e8a7b8dc4bfb5d81574a
 qemu:
   binary: qemu-system-arm
   profile: vexpress-a9

@@ -15,6 +15,7 @@ from ..configure import (
 from ..env_packages import (
     EnvPackages,
     read_env_package_state,
+    read_recorded_env_package_paths,
     validate_package_update_output,
 )
 from ..errors import SmartBuildError
@@ -29,17 +30,18 @@ KERNEL_PACKAGE_TASK_ID = "kernel:packages:update"
 KERNEL_TASK_ID = "kernel:build"
 
 
-def kernel_tasks(paths, toolchain=None, command_runner=None, env_packages=None):
+def kernel_tasks(paths, toolchain=None, command_runner=None, env_packages=None, verbose=False):
     context = _resolve_kernel_context(paths)
     packages = (env_packages or EnvPackages.discover()).validate()
     fields = toolchain_task_fields(toolchain)
     package_commands = _package_commands(context["bsp"], packages)
-    build_commands = _build_commands(context["bsp"])
+    build_commands = _build_commands(context["bsp"], verbose=verbose)
     package_manifest = {
         **packages.manifest_record(),
         "config": str(context["bsp"] / ".config"),
         "state": str(context["bsp"] / "packages" / "pkgs.json"),
         "packages": [],
+        "removed": [],
     }
     common_env = {"MACHINE": paths.machine, **fields["env"]}
     package_task = Task(
@@ -149,14 +151,34 @@ def _make_package_executor(context, packages, commands, command_runner):
         _copy_defconfig(context["defconfig"], context["bsp"] / ".config", log)
         env = packages.environment(_kernel_env(task.env))
         env["BSP_DIR"] = str(context["bsp"])
-        completed = _run_commands(task, commands, context["bsp"], env, runner, log)
+        completed = _run_commands(task, commands[:1], context["bsp"], env, runner, log)
+        removed = _remove_unrecorded_kernel_packages(
+            context["bsp"],
+            read_recorded_env_package_paths(
+                context["bsp"],
+                state_label="kernel package",
+                missing_ok=True,
+            ),
+            "before-update",
+            log,
+        )
+        completed.extend(_run_commands(task, commands[1:], context["bsp"], env, runner, log))
         validate_package_update_output(completed[-1])
         package_state = _read_package_state(context["bsp"])
+        removed.extend(
+            _remove_unrecorded_kernel_packages(
+                context["bsp"],
+                [item["installed_path"] for item in package_state],
+                "after-update",
+                log,
+            )
+        )
         record = {
             **packages.manifest_record(),
             "config": str(context["bsp"] / ".config"),
             "state": str(context["bsp"] / "packages" / "pkgs.json"),
             "packages": package_state,
+            "removed": removed,
         }
         task.manifest_fields["kernel_packages"] = record
         marker = task.outputs[0]
@@ -287,11 +309,13 @@ def _overlay_manifest(context):
 def _package_commands(bsp, packages):
     return (
         ("scons", "--pyconfig-silent", "-C", str(bsp)),
-        (str(packages.command), "--update"),
+        (str(packages.command), "--force-update"),
     )
 
 
-def _build_commands(bsp):
+def _build_commands(bsp, verbose=False):
+    if verbose:
+        return (("scons", "--verbose", "-C", str(bsp)),)
     return (("scons", "-C", str(bsp)),)
 
 
@@ -301,6 +325,53 @@ def _read_package_state(bsp):
         state_label="kernel package",
         config_label="the BSP .config",
     )
+
+
+def _remove_unrecorded_kernel_packages(bsp, recorded_paths, phase, log):
+    packages_dir = Path(bsp) / "packages"
+    if not packages_dir.exists():
+        return []
+    if packages_dir.is_symlink() or not packages_dir.is_dir():
+        raise SmartBuildError("BUILD", f"unsafe RT-Thread packages directory: {packages_dir}")
+
+    recorded_names = {Path(path).name for path in recorded_paths}
+    removed = []
+    for candidate in sorted(packages_dir.iterdir(), key=lambda path: path.name):
+        if candidate.name in recorded_names:
+            continue
+        if not candidate.is_symlink() and not candidate.is_dir():
+            continue
+        if not (candidate / "SConscript").is_file():
+            continue
+
+        message = (
+            "removing unrecorded RT-Thread kernel package "
+            f"during {phase}: {candidate}"
+        )
+        _write_warning(log, message)
+        try:
+            if candidate.is_symlink():
+                candidate.unlink()
+            else:
+                shutil.rmtree(candidate)
+        except OSError as exc:
+            raise SmartBuildError(
+                "BUILD",
+                f"failed to remove unrecorded RT-Thread kernel package {candidate}: {exc}",
+            ) from exc
+        removed.append({"path": str(candidate), "phase": phase})
+    return removed
+
+
+def _write_warning(log, message):
+    text = f"warning: {message}\n"
+    log.write(text)
+    if not getattr(log, "mirrors_console", False):
+        console_message = getattr(log, "console_message", None)
+        if console_message is None:
+            print(text, end="")
+        else:
+            console_message(text)
 
 
 def _run_commands(task, commands, cwd, env, runner, log):

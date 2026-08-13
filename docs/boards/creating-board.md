@@ -28,9 +28,18 @@ bsp: qemu-example
 kernel_defconfig: kernel_defconfig
 toolchain:
   package: aarch64-linux-musleabi-gcc-latest
+  version: 12.2.0
   target: aarch64-linux-musleabi
   prefix: aarch64-linux-musleabi-
   loader: ld-musl-aarch64.so.1
+  versions:
+    - version: 12.2.0
+      package: aarch64-linux-musleabi-gcc-latest
+      gcc_version: 12.2.0
+      source:
+        url: https://example.org/toolchains/aarch64.tar.bz2
+        archive: aarch64.tar.bz2
+        sha256: 0000000000000000000000000000000000000000000000000000000000000000
 qemu:
   binary: qemu-system-aarch64
   profile: virt-aarch64
@@ -44,8 +53,10 @@ strings except optional `loader`, and the QEMU `binary`, `profile`, and
 contained by the board directory.
 
 The `bsp` value names a directory below `rt-thread/bsp`. The toolchain package
-must exist below the env sdk package root and provide the declared compiler
-prefix.
+must provide the declared compiler prefix. `toolchain.versions` is optional for
+legacy boards; each entry may provide a package name and a verified HTTPS
+`source` (`url`, archive filename, and SHA-256). Entries without `source` are
+installed by Env SDK or supplied through `TOOLCHAIN_PATH`.
 
 ## Add Kconfig selection
 
@@ -62,8 +73,9 @@ BSP configuration during kernel preparation.
 Select RT-Thread kernel packages and their versions in `kernel_defconfig` using
 the symbols provided by the installed Env package index. For example, ext4
 support is enabled through `PKG_USING_LWEXT4` and its version choice. During a
-kernel build, smart-build runs Env `pkgs --update` and does not maintain a
-separate package source copy.
+kernel build, smart-build reconciles buildable directories against Env's
+`pkgs.json`, removes unrecorded entries with a warning, and runs Env
+`pkgs --force-update`.
 
 An optional `kernel-overlay/` mirrors paths relative to the RT-Thread BSP and
 is applied during kernel source preparation. Keep overlay contents limited to
