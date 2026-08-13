@@ -15,8 +15,40 @@ config BSP
     string
     default "qemu-vexpress-a9"
 
+menu "Cross toolchain"
+
 config TOOLCHAIN
     string
-    default "arm-linux-musleabi-gcc-stable"
+    default "arm-linux-musleabi-gcc-stable" if TOOLCHAIN_QEMU_VEXPRESS_A9_7_3_0
+    default "arm-linux-musleabi-gcc-latest" if TOOLCHAIN_QEMU_VEXPRESS_A9_12_2_0
+
+choice
+    prompt "Toolchain version"
+    default TOOLCHAIN_QEMU_VEXPRESS_A9_7_3_0
+    help
+      Select the cross compiler version used for this machine. The selected
+      release must be installed in Env SDK or downloaded to downloads/.
+
+config TOOLCHAIN_QEMU_VEXPRESS_A9_7_3_0
+    bool "GCC 7.3.0 (Env SDK)"
+
+config TOOLCHAIN_QEMU_VEXPRESS_A9_12_2_0
+    bool "GCC 12.2.0"
+
+endchoice
+
+config TOOLCHAIN_VERSION
+    string
+    default "7.3.0" if TOOLCHAIN_QEMU_VEXPRESS_A9_7_3_0
+    default "12.2.0" if TOOLCHAIN_QEMU_VEXPRESS_A9_12_2_0
+
+config TOOLCHAIN_PATH
+    string "Custom toolchain path"
+    default ""
+    help
+      Optional toolchain root used before Env SDK and the downloads cache.
+      Leave empty to use the standard discovery order.
+
+endmenu
 
 endif

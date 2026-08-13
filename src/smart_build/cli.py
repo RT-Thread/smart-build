@@ -9,7 +9,12 @@ from .config import DEFAULT_MACHINE, load_defconfig, load_workspace_config
 from .configure import configure_target
 from .doctor import host_tools_record, run_doctor, toolchain_manifest_record
 from .domains.qemu import ALLOWED_ROOTFS_IMAGES, run_qemu_smoke
-from .domains.toolchain import resolve_toolchain
+from .domains.toolchain import (
+    install_toolchain,
+    resolve_toolchain,
+    resolve_toolchain_selection,
+    toolchain_statuses,
+)
 from .errors import SmartBuildError
 from .machines import load_machine
 from .manifest import task_manifest_sections, write_manifest
@@ -61,6 +66,15 @@ def build_parser():
         default=30,
         help="seconds to wait for QEMU boot output",
     )
+
+    toolchain = subparsers.add_parser("toolchain", help="manage cross toolchains")
+    toolchain_subparsers = toolchain.add_subparsers(dest="toolchain_command", metavar="action")
+    toolchain_list = toolchain_subparsers.add_parser("list", help="list machine toolchain versions")
+    toolchain_list.add_argument("--machine", default=None, help="target machine")
+    toolchain_install = toolchain_subparsers.add_parser("install", help="download a machine toolchain")
+    toolchain_install.add_argument("--machine", default=None, help="target machine")
+    toolchain_install.add_argument("--version", default=None, help="toolchain version")
+    toolchain_install.add_argument("--yes", action="store_true", help="confirm download")
     qemu_smoke.add_argument(
         "--rootfs-image",
         choices=ALLOWED_ROOTFS_IMAGES,
@@ -121,7 +135,7 @@ def _run_build(args):
     machine = _selected_machine(args)
     paths = BuildPaths.for_machine(machine)
     metadata = None if args.dry_run else _load_machine_if_available(paths, machine)
-    toolchain = None if args.dry_run else _resolve_toolchain_for_cli(metadata)
+    toolchain = None if args.dry_run else _resolve_or_offer_toolchain(metadata, paths)
     graph = TaskGraph(
         tasks_for_target(
             args.target,
@@ -231,6 +245,55 @@ def _run_qemu_smoke(args):
     return 0
 
 
+def _run_toolchain(args):
+    machine = _selected_machine(args)
+    paths = BuildPaths.for_machine(machine)
+    metadata = load_machine(paths.root, machine)
+    if args.toolchain_command == "list":
+        print(f"toolchain: machine={machine}")
+        for status in toolchain_statuses(metadata):
+            selected = "selected" if status.selected else "available"
+            source = status.source or "-"
+            root = str(status.root) if status.root is not None else "-"
+            downloadable = "downloadable" if status.downloadable else "manual-only"
+            print(
+                f"toolchain: version={status.version or '<default>'} package={status.package} "
+                f"state={status.state} source={source} {downloadable} {selected} root={root}"
+            )
+        return 0
+    if args.toolchain_command == "install":
+        selection = resolve_toolchain_selection(metadata, version=args.version)
+        try:
+            existing = resolve_toolchain(machine=metadata, version=args.version)
+        except SmartBuildError as exc:
+            if exc.code != "TOOLCHAIN" or not _toolchain_not_found(exc):
+                raise
+        else:
+            print(
+                f"toolchain: already installed version={existing.configured_version} "
+                f"source={existing.source} root={existing.root}"
+            )
+            return 0
+        if not selection.release.downloadable:
+            raise SmartBuildError(
+                "TOOLCHAIN",
+                f"toolchain version {selection.release.version} has no download source; "
+                "install it with Env SDK or select a downloadable version",
+            )
+        if not args.yes and not _is_interactive():
+            raise SmartBuildError(
+                "TOOLCHAIN",
+                "toolchain install requires confirmation; rerun with --yes in a non-interactive environment",
+            )
+        if not args.yes and not _confirm_toolchain_install(selection):
+            print("toolchain: download cancelled")
+            return 1
+        toolchain = install_toolchain(metadata, version=args.version, output=sys.stdout)
+        print(f"toolchain: installed version={toolchain.configured_version} root={toolchain.root}")
+        return 0
+    raise SmartBuildError("CONFIG", "toolchain requires an action: list or install")
+
+
 def _run_clean(command, args):
     machine = _selected_machine(args)
     paths = BuildPaths.for_machine(machine)
@@ -290,6 +353,8 @@ def main(argv=None):
             return _run_configure(args)
         if args.command == "qemu-smoke":
             return _run_qemu_smoke(args)
+        if args.command == "toolchain":
+            return _run_toolchain(args)
         if args.command in ("clean", "distclean", "download-clean"):
             return _run_clean(args.command, args)
         parser.print_help()
@@ -344,6 +409,47 @@ def _resolve_toolchain_for_cli(metadata):
     if metadata is None:
         return resolve_toolchain()
     return resolve_toolchain(machine=metadata)
+
+
+def _resolve_or_offer_toolchain(metadata, paths):
+    try:
+        return _resolve_toolchain_for_cli(metadata)
+    except SmartBuildError as exc:
+        if exc.code != "TOOLCHAIN" or not _toolchain_not_found(exc):
+            raise
+        selection = resolve_toolchain_selection(metadata)
+        if not selection.release.downloadable:
+            raise
+        if not _is_interactive() or not _confirm_toolchain_install(selection):
+            raise SmartBuildError(
+                "TOOLCHAIN",
+                f"{exc}; run ./smart-build toolchain install --machine {paths.machine} --yes",
+            ) from exc
+        return install_toolchain(metadata, output=sys.stdout)
+
+
+def _toolchain_not_found(error):
+    return "not found" in str(error).lower() and "searched:" in str(error).lower()
+
+
+def _is_interactive():
+    return bool(getattr(sys.stdin, "isatty", lambda: False)() and getattr(sys.stdout, "isatty", lambda: False)())
+
+
+def _confirm_toolchain_install(selection):
+    release = selection.release
+    print(
+        f"Toolchain {release.package} version {release.version} is missing.\n"
+        f"Download from {release.url}\n"
+        f"Install into {selection.machine.root / 'downloads' / 'toolchains' / (release.package + '-' + release.version)}? [y/N] ",
+        end="",
+        file=sys.stderr,
+    )
+    try:
+        answer = input().strip().lower()
+    except EOFError:
+        return False
+    return answer in {"y", "yes"}
 
 
 def _host_tools_record_for_cli(metadata):

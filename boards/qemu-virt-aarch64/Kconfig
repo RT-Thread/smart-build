@@ -15,8 +15,35 @@ config BSP
     string
     default "qemu-virt64-aarch64"
 
+menu "Cross toolchain"
+
 config TOOLCHAIN
     string
-    default "aarch64-linux-musleabi-gcc-latest"
+    default "aarch64-linux-musleabi-gcc-latest" if TOOLCHAIN_QEMU_VIRT_AARCH64_12_2_0
+
+choice
+    prompt "Toolchain version"
+    default TOOLCHAIN_QEMU_VIRT_AARCH64_12_2_0
+    help
+      Select the cross compiler version used for this machine. The selected
+      release must be installed in Env SDK or downloaded to downloads/.
+
+config TOOLCHAIN_QEMU_VIRT_AARCH64_12_2_0
+    bool "GCC 12.2.0"
+
+endchoice
+
+config TOOLCHAIN_VERSION
+    string
+    default "12.2.0" if TOOLCHAIN_QEMU_VIRT_AARCH64_12_2_0
+
+config TOOLCHAIN_PATH
+    string "Custom toolchain path"
+    default ""
+    help
+      Optional toolchain root used before Env SDK and the downloads cache.
+      Leave empty to use the standard discovery order.
+
+endmenu
 
 endif

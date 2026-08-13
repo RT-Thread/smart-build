@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .config import DEFAULT_MACHINE
-from .domains.toolchain import resolve_toolchain
+from .domains.toolchain import resolve_toolchain, resolve_toolchain_selection
 from .env_packages import EnvPackages
 from .errors import SmartBuildError
 from .machines import Machine, load_machine
@@ -32,7 +32,17 @@ def run_doctor(paths, machine=None):
         DoctorCheck("env-pkgs", str(env_packages.command), str(env_packages.command)),
         DoctorCheck("env-package-index", str(env_packages.index), str(env_packages.index)),
     ]
-    toolchain = resolve_toolchain(machine=metadata)
+    try:
+        toolchain = resolve_toolchain(machine=metadata)
+    except SmartBuildError as exc:
+        if exc.code != "TOOLCHAIN":
+            raise
+        selection = resolve_toolchain_selection(metadata)
+        raise SmartBuildError(
+            "TOOLCHAIN",
+            f"{exc}; selected version={selection.release.version or '<default>'}; "
+            f"install with ./smart-build toolchain install --machine {metadata.name} --yes",
+        ) from exc
     checks.append(DoctorCheck("toolchain", str(toolchain.root)))
     checks.append(_check_rt_thread_bsp(paths, metadata))
     checks.append(_check_build_directory(paths))

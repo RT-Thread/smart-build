@@ -7,9 +7,18 @@ bsp: qemu-virt64-aarch64
 kernel_defconfig: kernel_defconfig
 toolchain:
   package: aarch64-linux-musleabi-gcc-latest
+  version: 12.2.0
   target: aarch64-linux-musleabi
   prefix: aarch64-linux-musleabi-
   loader: ld-musl-aarch64.so.1
+  versions:
+    - version: 12.2.0
+      package: aarch64-linux-musleabi-gcc-latest
+      gcc_version: 12.2.0
+      source:
+        url: https://download.rt-thread.org/download/rt-smart/toolchains/aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2
+        archive: aarch64-linux-musleabi_for_x86_64-pc-linux-gnu_latest.tar.bz2
+        sha256: 8f6e13d16d9314f55b7580252939d30cf9f2dcecd3be5dcfc2b8f99a5ace156d
 qemu:
   binary: qemu-system-aarch64
   profile: virt-aarch64
