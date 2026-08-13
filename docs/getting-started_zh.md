@@ -24,17 +24,27 @@ ln -s /path/to/rt-thread rt-thread
 
 默认机器为 `qemu-virt-aarch64`，其 BSP 为 `qemu-virt64-aarch64`。
 
-## 提供交叉工具链
+## 选择并提供交叉工具链
 
-交叉工具链从以下路径发现：
+所选机器会在 `boards/<machine>/board.yaml` 中声明兼容工具链版本。
+`menuconfig` 将所选软件包和版本写入工作区 `.config`。工具链按以下顺序查找：
 
 ```text
 ~/.env/tools/scripts/packages
 ```
 
-所需的软件包名称、目标三元组、编译器前缀和动态加载器在
-`boards/<machine>/board.yaml` 中声明。smart-build 不负责下载或安装交叉
-工具链。
+可选的 `TOOLCHAIN_PATH`，以及仓库缓存：
+
+```text
+downloads/toolchains/<package>-<version>
+```
+
+使用 `./smart-build toolchain list --machine qemu-virt-aarch64` 查看版本和状态。
+交互式构建发现所选的可下载工具链缺失时，会先询问是否下载到
+`downloads/toolchains/`。脚本中使用
+`./smart-build toolchain install --machine qemu-virt-aarch64 --version 12.2.0 --yes`。
+下载完成后会按板卡声明的 SHA-256 校验，再进行解包。仅能由 Env SDK 提供的
+版本必须通过 Env SDK 安装，或使用 `TOOLCHAIN_PATH` 指定外部目录。
 
 ## 提供 RT-Thread Env 软件包
 
@@ -71,9 +81,11 @@ smart-build 会在所选 BSP 目录中，以 `--update` 参数调用第一个路
 ./smart-build build all
 ```
 
-`menuconfig` 用于选择机器、根文件系统、构建模式、镜像设置和软件包。它会
-写入工作区 `.config`，目前还会更新所选板卡的 defconfig。提交前应检查板卡
-defconfig 的变更。
+`menuconfig` 用于选择机器、根文件系统、构建模式、镜像设置、软件包以及
+`Cross toolchain` 菜单中的工具链版本和可选路径。它会写入工作区 `.config`，
+目前还会更新所选板卡的 defconfig。提交前应检查板卡 defconfig 的变更。工具链
+下载不会由 Kconfig 自动触发；缺少工具链时由构建确认，或使用
+`toolchain install` 显式安装。
 
 只处理某个构建域时，可以构建更小的目标：
 
@@ -84,8 +96,9 @@ defconfig 的变更。
 ```
 
 `build kernel` 会先将板卡的 `kernel_defconfig` 复制到 RT-Thread BSP，通过
-`scons --pyconfig-silent` 进行规范化，再运行 Env `pkgs --update`，最后编译
-内核。如果所选内核软件包尚未安装，此更新过程可能访问网络。
+`scons --pyconfig-silent` 进行规范化，在 warning 提示后删除未登记但会参与
+构建的软件包目录，再运行 Env `pkgs --force-update`，最后编译内核。如果所选
+内核软件包尚未安装，此更新过程可能访问网络。
 
 输出位于 `build/<machine>/` 下，任务日志位于该机器目录的 `logs/` 子目录。
 构建完成后还会写入 `manifest.yaml`；尽管后缀为 YAML，该文件目前包含 JSON
@@ -112,4 +125,4 @@ RT-Thread 启动标记。验证网络或应用启动时，即使命令通过，�
 ```
 
 `clean` 删除所选机器的目录，`distclean` 删除所有构建目录，
-`download-clean` 删除已下载的归档文件。
+`download-clean` 删除 `downloads/` 下的源码归档、工具链归档和已安装工具链。

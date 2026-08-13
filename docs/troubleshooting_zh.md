@@ -4,10 +4,12 @@
 
 ## 找不到工具链
 
-运行 `./smart-build doctor --machine <machine>`，并将预期的软件包与
-`boards/<machine>/board.yaml` 对比。工具链只会从
-`~/.env/tools/scripts/packages` 下发现；在 `PATH` 中设置任意编译器不能替代
-声明的 env sdk 工具链。
+运行 `./smart-build toolchain list --machine <machine>` 查看所有兼容版本及其状态。
+工具链会从配置的 `TOOLCHAIN_PATH`、Env SDK 的
+`~/.env/tools/scripts/packages` 和仓库的 `downloads/toolchains/` 缓存中查找。
+缺少可下载版本时，运行
+`./smart-build toolchain install --machine <machine> --version <version> --yes`。
+在 `PATH` 中设置任意编译器不能替代声明的工具链。
 
 ## 缺少 RT-Thread BSP
 
@@ -23,13 +25,14 @@
 
 ```sh
 cd rt-thread/bsp/<bsp>
-~/.env/tools/scripts/pkgs --update
+~/.env/tools/scripts/pkgs --force-update
 ```
 
 检查 `build/<machine>/logs/kernel-packages.log`、BSP 下的
 `packages/pkgs_error.json`、网络访问情况，以及所选版本是否存在于已安装的
 Env 软件包索引中。使用 `smart-build configure kernel` 可以选择其他软件包
-版本。
+版本。关于已删除软件包目录的 warning 表示该目录包含 `SConscript`，但未在
+`pkgs.json` 中登记。
 
 ## 软件包下载失败
 
@@ -71,3 +74,5 @@ Env 软件包索引中。使用 `smart-build configure kernel` 可以选择其�
 
 每个任务还会在 `build/<machine>/logs/` 下写入独立日志。`CONFIG`、`SCHEMA`、
 `PACKAGE`、`TOOLCHAIN` 和 `BUILD` 等错误前缀用于标识拒绝该操作的子系统。
+内核详细构建会通过 RT-Thread 的 `scons --verbose` 模式显示完整的编译器和
+链接器命令。

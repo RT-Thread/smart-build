@@ -23,12 +23,28 @@
 检查所选机器需要的宿主机工具、QEMU、RT-Thread BSP、env sdk 工具链和可写
 构建路径。
 
+## 工具链
+
+```sh
+./smart-build toolchain list [--machine MACHINE]
+./smart-build toolchain install [--machine MACHINE] [--version VERSION] [--yes]
+```
+
+`list` 显示板卡兼容版本、当前选择，以及版本是否已在 Env SDK 或
+`downloads/toolchains/` 中发现。`install` 只下载板卡声明的 HTTPS 归档，校验
+SHA-256 后安装到 `downloads/toolchains/<package>-<version>`。非交互 shell 必须使用
+`--yes`。
+
 ## 配置
 
 ```sh
 ./smart-build menuconfig [--machine MACHINE]
 ./smart-build configure TARGET [--machine MACHINE]
 ```
+
+`menuconfig` 在所选机器的 `Cross toolchain` 菜单中选择工具链版本并编辑可选的
+`TOOLCHAIN_PATH`。界面只保存配置；缺失工具链时由构建确认下载，或使用上面的
+`toolchain install` 命令显式安装。
 
 `configure` 的 `TARGET` 可以是 `kernel`、`busybox`、`bootloader` 或
 `package:<name>`。是否支持取决于所选板卡或软件包的元数据。使用 native
@@ -54,12 +70,21 @@ Kconfig 的 `build.rtthread_scons` 包通过此命令提供 RT-Thread 软件包�
 | `package:<name>` | 单个软件包及其解析出的依赖 |
 | `qemu-script` | QEMU 启动脚本 |
 
-`--verbose` 会将任务日志同步输出到终端。`--jobs` 目前只在部分构建流水线中
-生效。`--dry-run` 使用占位任务，不能将其视为真实任务图的精确表示。
+未使用 `--verbose` 时，交互式终端会显示彩色进度条，并在其上方输出已完成
+任务的状态。成功和跳过的任务使用
+`build: [2/12] toolchain:check: success` 格式，不显示日志路径。重定向输出时只
+输出不含 ANSI 控制符的普通状态行；失败任务仍会显示日志路径。
+
+`--verbose` 会将任务日志同步输出到终端，并显示各任务的构建域、动作、工作
+目录、依赖、输入、输出、缓存策略和日志路径。在该模式下，RT-Thread 内核
+编译使用 `scons --verbose`，显示完整的编译器和链接器命令。`--jobs` 目前只在
+部分构建流水线中生效。`--dry-run` 使用占位任务，不能将其视为真实任务图的
+精确表示。
 
 内核构建包含 `kernel:packages:update` 任务。该任务会在 `kernel:build` 前，
-从所选 BSP 运行 `~/.env/tools/scripts/pkgs --update`，并将已安装的软件包版本
-记录到 manifest。
+从所选 BSP 运行 `~/.env/tools/scripts/pkgs --force-update`。它会在 warning
+提示后删除未登记但会参与构建的软件包目录，并将已安装版本和删除路径记录到
+manifest。
 
 ## 任务图
 
@@ -86,6 +111,8 @@ Kconfig 的 `build.rtthread_scons` 包通过此命令提供 RT-Thread 软件包�
 ./smart-build distclean
 ./smart-build download-clean
 ```
+
+`download-clean` 也会删除 `downloads/` 下已安装和缓存的工具链。
 
 这些命令可以通过全局选项选择机器，例如
 `./smart-build --machine qemu-virt-riscv64 clean`。

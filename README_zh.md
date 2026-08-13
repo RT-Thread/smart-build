@@ -23,8 +23,8 @@ smart-build 是面向 RT-Thread Smart 的独立构建系统。它提供统一的
 ## 环境要求
 
 - Python 3.10 或更高版本。
-- `~/.env/tools/scripts/packages` 下存在与所选机器 `board.yaml` 匹配的
-  env sdk 工具链。
+- Env SDK、自定义 `TOOLCHAIN_PATH` 或仓库 `downloads/toolchains/` 缓存中存在
+  兼容工具链。缺少可下载版本时可使用 `smart-build toolchain install` 安装。
 - `~/.env/tools/scripts` 下存在 RT-Thread Env 软件包脚本，并且
   `~/.env/packages/packages` 下存在软件包索引。
 - 仓库根目录的 `rt-thread` 路径指向 RT-Thread 源码树，通常使用符号链接。
@@ -41,6 +41,7 @@ python -m pip install -e .
 
 ```sh
 ./smart-build doctor
+./smart-build toolchain list
 ./smart-build menuconfig
 ./smart-build build all
 ./smart-build qemu-smoke
@@ -53,31 +54,44 @@ python -m pip install -e .
 ./smart-build build kernel --machine qemu-virt-riscv64
 ```
 
-构建结果写入 `build/<machine>/`，下载的源码归档文件保存在 `downloads/` 下。
+构建结果写入 `build/<machine>/`，下载的源码归档和已安装工具链保存在
+`downloads/` 下。
 
 编译内核前，smart-build 会将内核 defconfig 同步到 RT-Thread BSP，并运行
-`~/.env/tools/scripts/pkgs --update`。内核软件包及其版本由 RT-Thread 内核配置
-选择，而不是由 smart-build 软件包元数据选择。
+`~/.env/tools/scripts/pkgs --force-update`。内核软件包及其版本由 RT-Thread
+内核配置选择，而不是由 smart-build 软件包元数据选择。未登记但会参与内核
+构建的软件包目录会在 warning 提示后被删除。
 
 ## 常用命令
 
 ```sh
 ./smart-build --help
 ./smart-build doctor
+./smart-build toolchain list
+./smart-build toolchain install --yes
 ./smart-build menuconfig
 ./smart-build configure kernel
 ./smart-build configure package:curl
 ./smart-build configure package:webclient
 ./smart-build build all
 ./smart-build build kernel
+./smart-build build kernel --verbose
 ./smart-build build rootfs
 ./smart-build graph
 ./smart-build qemu-smoke
 ./smart-build clean
+./smart-build download-clean
 ```
 
 `webclient` 等使用 native Kconfig 的独立 RT-Thread SCons 包，可以通过软件包
 configure 命令进入其 RT-Thread 软件包配置界面。
+
+普通构建会在交互式终端显示彩色进度条，并在进度条上方报告已完成任务，例如
+`build: [2/12] toolchain:check: skipped`。重定向输出时使用相同的状态格式，但不
+包含颜色和终端控制符。成功和跳过的任务不显示日志路径或日志正文。
+`build --verbose` 会将任务上下文、任务日志和日志路径输出到终端。目标包含
+RT-Thread 内核时，smart-build 会使用 `scons --verbose` 执行编译，以显示完整的
+编译器和链接器命令。
 
 `build --dry-run` 目前输出占位任务计划。它可用于总体预览，但不能保证与实际
 构建中的每项任务完全一致。

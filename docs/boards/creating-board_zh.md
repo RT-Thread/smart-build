@@ -28,9 +28,18 @@ bsp: qemu-example
 kernel_defconfig: kernel_defconfig
 toolchain:
   package: aarch64-linux-musleabi-gcc-latest
+  version: 12.2.0
   target: aarch64-linux-musleabi
   prefix: aarch64-linux-musleabi-
   loader: ld-musl-aarch64.so.1
+  versions:
+    - version: 12.2.0
+      package: aarch64-linux-musleabi-gcc-latest
+      gcc_version: 12.2.0
+      source:
+        url: https://example.org/toolchains/aarch64.tar.bz2
+        archive: aarch64.tar.bz2
+        sha256: 0000000000000000000000000000000000000000000000000000000000000000
 qemu:
   binary: qemu-system-aarch64
   profile: virt-aarch64
@@ -43,8 +52,10 @@ toolchain 字符串，以及 QEMU 的 `binary`、`profile` 和 `machine`。
 `qemu.cpu` 为可选字段。`kernel_defconfig` 必须是包含在板卡目录内的相对
 路径。
 
-`bsp` 值指定 `rt-thread/bsp` 下的目录。工具链软件包必须存在于 env sdk
-软件包根目录下，并提供所声明的编译器前缀。
+`bsp` 值指定 `rt-thread/bsp` 下的目录。工具链软件包必须提供所声明的编译器
+前缀。旧板卡可以不声明 `toolchain.versions`；新增条目可以指定软件包名称和
+经过校验的 HTTPS `source`（URL、归档文件名和 SHA-256）。没有 `source` 的条目
+需要由 Env SDK 安装，或通过 `TOOLCHAIN_PATH` 提供。
 
 ## 添加 Kconfig 选项
 
@@ -59,8 +70,9 @@ toolchain 字符串，以及 QEMU 的 `binary`、`profile` 和 `machine`。
 
 使用已安装 Env 软件包索引提供的符号，在 `kernel_defconfig` 中选择
 RT-Thread 内核软件包及其版本。例如，通过 `PKG_USING_LWEXT4` 及其版本选项
-启用 ext4 支持。内核构建期间，smart-build 会运行 Env `pkgs --update`，
-不会维护单独的软件包源码副本。
+启用 ext4 支持。内核构建期间，smart-build 会根据 Env `pkgs.json` 对可构建
+目录进行同步，在 warning 提示后删除未登记目录，并运行 Env
+`pkgs --force-update`。
 
 可选的 `kernel-overlay/` 按照相对于 RT-Thread BSP 的路径组织，并在内核源码
 准备期间应用。overlay 内容应仅限此机器需要的文件。overlay 不得写入

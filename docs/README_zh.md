@@ -15,8 +15,9 @@
 - [故障排查](troubleshooting_zh.md)
 - [兼容性与当前限制](compatibility_zh.md)
 
-配置说明同时介绍工作区菜单和按目标配置，包括独立 RT-Thread SCons 包的
+配置说明同时介绍工具链版本选择与下载、工作区菜单和按目标配置，包括独立 RT-Thread SCons 包的
 native Kconfig 配置入口。
+命令参考介绍详细任务输出和 RT-Thread 内核详细构建。
 
 ## 扩展 smart-build
 

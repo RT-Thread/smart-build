@@ -26,17 +26,29 @@ ln -s /path/to/rt-thread rt-thread
 The default machine is `qemu-virt-aarch64`, whose BSP is
 `qemu-virt64-aarch64`.
 
-## Provide the cross toolchain
+## Choose and provide the cross toolchain
 
-Cross toolchains are discovered from:
+The selected machine declares compatible toolchain versions in
+`boards/<machine>/board.yaml`. `menuconfig` stores the selected package and
+version in the workspace `.config`. Toolchains are searched in this order:
 
 ```text
 ~/.env/tools/scripts/packages
 ```
 
-The required package name, target triple, compiler prefix, and dynamic loader
-are declared in `boards/<machine>/board.yaml`. smart-build does not download or
-install the cross toolchain.
+an optional `TOOLCHAIN_PATH`, and the repository cache:
+
+```text
+downloads/toolchains/<package>-<version>
+```
+
+List versions and state with `./smart-build toolchain list --machine
+qemu-virt-aarch64`. When an interactive build finds a missing downloadable
+version, it asks before downloading into `downloads/toolchains/`. In scripts,
+use `./smart-build toolchain install --machine qemu-virt-aarch64 --version
+12.2.0 --yes`. Downloads are checked with the board-declared SHA-256 before
+extraction. An Env SDK-only version must be installed by Env SDK or supplied
+through `TOOLCHAIN_PATH`.
 
 ## Provide RT-Thread Env packages
 
@@ -76,8 +88,11 @@ Resolve every failed check before starting a real build.
 ```
 
 `menuconfig` selects the machine, root filesystem, build mode, image settings,
-and packages. It writes the workspace `.config` and currently also updates the
-selected board defconfig. Review board defconfig changes before committing.
+packages, and the toolchain version and optional path under `Cross toolchain`.
+It writes the workspace `.config` and currently also updates the selected board
+defconfig. Review board defconfig changes before committing. Kconfig does not
+start toolchain downloads; a missing toolchain is confirmed by the build or
+installed explicitly with `toolchain install`.
 
 Build a smaller target while working on one domain:
 
@@ -88,7 +103,8 @@ Build a smaller target while working on one domain:
 ```
 
 `build kernel` first copies the board's `kernel_defconfig` to the RT-Thread BSP,
-normalizes it with `scons --pyconfig-silent`, runs Env `pkgs --update`, and then
+normalizes it with `scons --pyconfig-silent`, removes unrecorded buildable
+package directories with a warning, runs Env `pkgs --force-update`, and then
 compiles the kernel. This update can access the network when a selected kernel
 package is not already installed.
 
@@ -117,4 +133,5 @@ pass when validating networking or application startup.
 ```
 
 `clean` removes the selected machine directory. `distclean` removes all build
-directories. `download-clean` removes downloaded archives.
+directories. `download-clean` removes downloaded source and toolchain archives
+and installed toolchains below `downloads/`.
