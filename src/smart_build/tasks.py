@@ -8,6 +8,7 @@ from .config import load_defconfig, load_workspace_config, resolve_rootfs_select
 from .errors import SmartBuildError
 from .machines import Machine
 from .paths import board_defconfig_path, validate_safe_name
+from .progress import report_items, report_phase
 
 
 VALID_RUN_CLASSES = {"fetch", "build", "serial"}
@@ -199,6 +200,7 @@ def create_default_plan(
         from .domains.kernel import kernel_tasks
         from .domains.sources import rt_thread_source_task
 
+        report_phase("analyzing kernel")
         rt_thread_task = rt_thread_source_task(paths)
         kernel_plan_tasks = kernel_tasks(paths, toolchain=toolchain, verbose=verbose)
     else:
@@ -333,6 +335,7 @@ def tasks_for_target(
     jobs=None,
     verbose=False,
 ):
+    report_phase("resolving configuration")
     rootfs_selection = _rootfs_selection_for_target(target, paths)
     _reject_disabled_rootfs_target(target, paths, selection=rootfs_selection)
     _reject_unsupported_package_target(target, paths, selection=rootfs_selection)
@@ -698,6 +701,7 @@ def _minirootfs_tasks(paths, toolchain, selection=None, force_minirootfs=False):
         if package is not None:
             app_build_tasks.append(package)
 
+    report_phase("creating package tasks")
     package_build_tasks = _resolved_package_tasks(
         paths,
         _library_or_executable_selected_packages(paths, selection.selected_packages),
@@ -776,6 +780,7 @@ def _package_tasks(target, paths, resolve_real=False, toolchain=None):
     if resolve_real:
         from .package_resolver import resolve_package_selection
 
+        report_phase("creating package tasks")
         values = _package_config_values(paths)
         selection = resolve_package_selection(paths.root, [package_name], values)
         return _resolved_package_tasks(paths, selection.packages, toolchain)
@@ -849,7 +854,9 @@ def _resolved_package_tasks(paths, selected_packages, toolchain):
         for provided in package.metadata.provides
     }
     tasks = []
-    for package in selected:
+    total = len(selected)
+    for index, package in enumerate(selected, start=1):
+        report_items("tasks", index, total, package.name)
         build_task = package_task(paths, package.name, toolchain=toolchain)
         build_tasks = build_task if isinstance(build_task, list) else [build_task]
         dependency_ipkgs = _package_dependency_ipkg_ids(package, package_names, providers)
@@ -864,7 +871,9 @@ def _library_or_executable_selected_packages(paths, selected_packages):
     from .package_metadata import package_description_path
 
     result = []
-    for package in selected_packages:
+    total = len(selected_packages)
+    for index, package in enumerate(selected_packages, start=1):
+        report_items("packages", index, total, package.name)
         description = load_description(package_description_path(paths.root, package.name))
         if description.data.get("type") in {"library", "executable"}:
             result.append(package)

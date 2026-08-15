@@ -27,13 +27,14 @@ build:
   python:
     script: sbuild.py
     outputs:
-      - /usr/include/ncurses/curses.h
+      - /usr/include/ncurses
       - /usr/lib/libncurses.a
+      - /usr/share/terminfo
     upstream_markers:
       - configure
       - include/curses.h.in
 install:
   headers:
-    - usr/include/ncurses/curses.h
+    - usr/include/ncurses
   libraries:
     - usr/lib/libncurses.a

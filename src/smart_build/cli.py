@@ -4,6 +4,7 @@ import shutil
 import sys
 
 from . import menuconfig
+from .buildroot_import import import_buildroot_packages, run_buildroot_menuconfig
 from .cache import Cache
 from .config import DEFAULT_MACHINE, load_defconfig, load_workspace_config
 from .configure import configure_target
@@ -19,6 +20,8 @@ from .errors import SmartBuildError
 from .machines import load_machine
 from .manifest import task_manifest_sections, write_manifest
 from .paths import BuildPaths, board_defconfig_path
+from .package_metadata import cached_package_metadata
+from .progress import PlanProgress, use_progress
 from .scheduler import Scheduler
 from .tasks import TaskGraph, create_default_plan, tasks_for_target
 
@@ -57,6 +60,17 @@ def build_parser():
     configure_parser = subparsers.add_parser("configure", help="configure one build target")
     configure_parser.add_argument("target", help="kernel, busybox, bootloader, or package:<name>")
     configure_parser.add_argument("--machine", default=None, help="target machine")
+
+    buildroot = subparsers.add_parser("buildroot", help="import packages from Buildroot")
+    buildroot_subparsers = buildroot.add_subparsers(dest="buildroot_command", metavar="action")
+    buildroot_menuconfig = buildroot_subparsers.add_parser("menuconfig", help="configure the root-level Buildroot tree")
+    buildroot_menuconfig.add_argument("--machine", default=None, help="target machine")
+    buildroot_import = buildroot_subparsers.add_parser("import", help="import selected Buildroot packages")
+    buildroot_import.add_argument("--machine", default=None, help="target machine")
+    buildroot_import.add_argument("--config", default=None, help="Buildroot .config path")
+    buildroot_import.add_argument("--package", default=None, help="import one selected package")
+    buildroot_import.add_argument("--check", action="store_true", help="analyze without writing packages")
+    buildroot_import.add_argument("--update", action="store_true", help="replace an existing imported package")
 
     qemu_smoke = subparsers.add_parser("qemu-smoke", help="run QEMU smoke check")
     qemu_smoke.add_argument("--machine", default=None, help="target machine")
@@ -134,19 +148,27 @@ def _run_doctor(args):
 def _run_build(args):
     machine = _selected_machine(args)
     paths = BuildPaths.for_machine(machine)
-    metadata = None if args.dry_run else _load_machine_if_available(paths, machine)
-    toolchain = None if args.dry_run else _resolve_or_offer_toolchain(metadata, paths)
-    graph = TaskGraph(
-        tasks_for_target(
-            args.target,
-            metadata if metadata is not None else machine,
-            paths,
-            resolve_real=not args.dry_run,
-            toolchain=toolchain,
-            jobs=args.jobs,
-            verbose=args.verbose,
+    progress = PlanProgress(sys.stdout, verbose=args.verbose)
+    with cached_package_metadata(), use_progress(progress):
+        progress.phase("loading machine")
+        metadata = None if args.dry_run else _load_machine_if_available(paths, machine)
+        toolchain = None
+        if not args.dry_run:
+            progress.phase("resolving toolchain")
+            toolchain = _resolve_or_offer_toolchain(metadata, paths, progress=progress)
+        progress.phase("analyzing target")
+        graph = TaskGraph(
+            tasks_for_target(
+                args.target,
+                metadata if metadata is not None else machine,
+                paths,
+                resolve_real=not args.dry_run,
+                toolchain=toolchain,
+                jobs=args.jobs,
+                verbose=args.verbose,
+            )
         )
-    )
+        progress.finish(f"ready {len(graph.tasks)} tasks")
     if args.dry_run:
         _print_dry_run(args.target, machine, paths, graph)
         return 0
@@ -231,6 +253,26 @@ def _run_configure(args):
     else:
         print(f"configure: target={result.target} completed")
     return 0
+
+
+def _run_buildroot(args):
+    machine = _selected_machine(args)
+    paths = BuildPaths.for_machine(machine)
+    if args.buildroot_command == "menuconfig":
+        config = run_buildroot_menuconfig(paths)
+        print(f"buildroot: menuconfig wrote {paths.display_path(config)}")
+        return 0
+    if args.buildroot_command == "import":
+        summary = import_buildroot_packages(
+            paths,
+            config_path=args.config,
+            package=args.package,
+            check=args.check,
+            update=args.update,
+            console=sys.stdout,
+        )
+        return 1 if summary.failed else 0
+    raise SmartBuildError("CONFIG", "buildroot requires menuconfig or import")
 
 
 def _run_qemu_smoke(args):
@@ -351,6 +393,8 @@ def main(argv=None):
             return _run_menuconfig(args)
         if args.command == "configure":
             return _run_configure(args)
+        if args.command == "buildroot":
+            return _run_buildroot(args)
         if args.command == "qemu-smoke":
             return _run_qemu_smoke(args)
         if args.command == "toolchain":
@@ -411,7 +455,7 @@ def _resolve_toolchain_for_cli(metadata):
     return resolve_toolchain(machine=metadata)
 
 
-def _resolve_or_offer_toolchain(metadata, paths):
+def _resolve_or_offer_toolchain(metadata, paths, progress=None):
     try:
         return _resolve_toolchain_for_cli(metadata)
     except SmartBuildError as exc:
@@ -420,6 +464,8 @@ def _resolve_or_offer_toolchain(metadata, paths):
         selection = resolve_toolchain_selection(metadata)
         if not selection.release.downloadable:
             raise
+        if progress is not None:
+            progress.clear()
         if not _is_interactive() or not _confirm_toolchain_install(selection):
             raise SmartBuildError(
                 "TOOLCHAIN",
