@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LUAJIT_ARCH_SUPPORTS
+  package_path: buildroot/package/luajit
+source:
+  type: archive
+  url: https://github.com/LuaJIT/LuaJIT/archive/707c12bf00dafdfd3899b1a6c36435dbbf6c7022/luajit-707c12bf00dafdfd3899b1a6c36435dbbf6c7022.tar.gz
+  archive: luajit-707c12bf00dafdfd3899b1a6c36435dbbf6c7022.tar.gz
+  revision: null
+  sha256: ac2defd1e9b4ab07ac0a52f2403318ffb0d54505b975dff0cfc49a927ab84d90
+warnings:
+- build was not verified during import

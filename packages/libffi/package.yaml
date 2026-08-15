@@ -27,13 +27,13 @@ build:
   python:
     script: sbuild.py
     outputs:
-      - /usr/include/ffi.h
+      - /usr/include
       - /usr/lib/libffi.a
     upstream_markers:
       - configure
       - include/ffi.h.in
 install:
   headers:
-    - usr/include/ffi.h
+    - usr/include
   libraries:
     - usr/lib/libffi.a

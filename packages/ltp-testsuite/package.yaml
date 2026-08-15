@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: ltp-testsuite
+version: '20260529'
+type: executable
+description: Linux Test Project test suite
+depends: []
+source:
+  type: archive
+  url: https://github.com/linux-test-project/ltp/releases/download/20260529/ltp-full-20260529.tar.xz
+  archive: ltp-full-20260529.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: 685d83c6e370ac09201fb79593412f868fe031ee2890e204b5727fedcf51fb47
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/ltp-testsuite

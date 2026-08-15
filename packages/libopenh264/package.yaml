@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libopenh264
+version: 2.6.0
+type: executable
+description: OpenH264 video codec
+depends: []
+source:
+  type: archive
+  url: https://github.com/cisco/openh264/archive/v2.6.0/libopenh264-2.6.0.tar.gz
+  archive: libopenh264-2.6.0.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 558544ad358283a7ab2930d69a9ceddf913f4a51ee9bf1bfb9e377322af81a69
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libopenh264

@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: fxdiv
+version: 63058eff77e11aa15bf531df5dd34395ec3017c8
+type: executable
+description: Header-only fixed-point division library
+depends: []
+source:
+  type: archive
+  url: https://github.com/Maratyszcza/FXdiv/archive/63058eff77e11aa15bf531df5dd34395ec3017c8/fxdiv-63058eff77e11aa15bf531df5dd34395ec3017c8.tar.gz
+  archive: fxdiv-63058eff77e11aa15bf531df5dd34395ec3017c8.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: ec74d882a0a47cfd9c0f95bc4fae9901a4ade802a96a3b76e02671bb7340a4c5
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/fxdiv

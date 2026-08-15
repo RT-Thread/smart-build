@@ -1,0 +1,35 @@
+schema_version: 1
+kind: package
+name: libopenssl
+version: 3.6.3
+type: library
+description: OpenSSL TLS and cryptography libraries
+requires_toolchain:
+- c
+- static-library
+depends: []
+source:
+  type: archive
+  url: https://github.com/openssl/openssl/releases/download/openssl-3.6.3/openssl-3.6.3.tar.gz
+  archive: openssl-3.6.3.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 243a86649cf6f23eeb6a2ff2456e09e5d77dd9018a54d3d96b0c6bdd6ba6c7f1
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/include/openssl
+    - /usr/lib/libssl.a
+    - /usr/lib/libcrypto.a
+    upstream_markers: []
+install:
+  headers:
+  - usr/include/openssl
+  libraries:
+  - usr/lib/libssl.a
+  - usr/lib/libcrypto.a

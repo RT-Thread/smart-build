@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: luajit
+version: 707c12bf00dafdfd3899b1a6c36435dbbf6c7022
+type: executable
+description: LuaJIT just-in-time compiler
+depends: []
+source:
+  type: archive
+  url: https://github.com/LuaJIT/LuaJIT/archive/707c12bf00dafdfd3899b1a6c36435dbbf6c7022/luajit-707c12bf00dafdfd3899b1a6c36435dbbf6c7022.tar.gz
+  archive: luajit-707c12bf00dafdfd3899b1a6c36435dbbf6c7022.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: ac2defd1e9b4ab07ac0a52f2403318ffb0d54505b975dff0cfc49a927ab84d90
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/luajit

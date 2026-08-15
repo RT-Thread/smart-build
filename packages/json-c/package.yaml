@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: json-c
+version: '0.18'
+type: executable
+description: JSON-C library for JSON parsing
+depends: []
+source:
+  type: archive
+  url: https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18.tar.gz
+  archive: json-c-0.18.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 876ab046479166b869afc6896d288183bbc0e5843f141200c677b3e8dfb11724
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/json-c

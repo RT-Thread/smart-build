@@ -14,7 +14,7 @@ requires_toolchain:
   - static-library
 source:
   type: archive
-  url: https://ftpmirror.gnu.org/libiconv/libiconv-1.17.tar.gz
+  url: https://ftp.gnu.org/gnu/libiconv/libiconv-1.17.tar.gz
   archive: libiconv-1.17.tar.gz
   sha256: 8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313
   strip_root: true

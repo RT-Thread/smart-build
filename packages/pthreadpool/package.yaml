@@ -1,0 +1,28 @@
+schema_version: 1
+kind: package
+name: pthreadpool
+version: 560c60d342a76076f0557a3946924c6478470044
+type: executable
+description: Portable pthread thread-pool library
+depends:
+- cpuinfo
+- fxdiv
+source:
+  type: archive
+  url: https://github.com/Maratyszcza/pthreadpool/archive/560c60d342a76076f0557a3946924c6478470044/pthreadpool-560c60d342a76076f0557a3946924c6478470044.tar.gz
+  archive: pthreadpool-560c60d342a76076f0557a3946924c6478470044.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 8d8ebab96df6aa12922643060e72c43bfdca9fd80cf5aacaf7391bc6850560a3
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/pthreadpool

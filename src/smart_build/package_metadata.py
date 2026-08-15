@@ -1,3 +1,4 @@
+import contextvars
 import re
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -6,9 +7,13 @@ from .descriptions import load_description
 from .errors import SmartBuildError
 
 
+_metadata_cache = contextvars.ContextVar("smart_build_package_metadata_cache", default=None)
+
+
 OPTION_TYPES = frozenset(("bool", "choice", "string"))
 RELATION_FIELDS = ("depends", "selects", "conflicts", "provides", "requires_toolchain")
 KCONFIG_SYMBOL_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+DESCRIPTION_MAX_LENGTH = 80
 
 
 @dataclass(frozen=True)
@@ -34,6 +39,8 @@ class PackageMetadata:
     version: str
     versions: tuple[str, ...]
     default_version: str
+    description: str
+    category: str
     options: tuple[PackageOption, ...]
     depends: tuple[str, ...]
     selects: tuple[str, ...]
@@ -60,6 +67,8 @@ def normalize_package_metadata(description):
         version=default_version,
         versions=versions,
         default_version=default_version,
+        description=_description(description),
+        category=_category(description),
         options=options,
         depends=_relation_list(description, "depends"),
         selects=_relation_list(description, "selects"),
@@ -75,10 +84,30 @@ def load_package_metadata(root, name):
     return normalize_package_metadata(description)
 
 
+class cached_package_metadata:
+    def __init__(self):
+        self.token = None
+
+    def __enter__(self):
+        self.token = _metadata_cache.set({})
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        _metadata_cache.reset(self.token)
+        return False
+
+
 def load_all_package_metadata(root):
+    cache = _metadata_cache.get()
+    cache_key = str(Path(root).resolve())
+    if isinstance(cache, dict) and cache_key in cache:
+        return list(cache[cache_key])
     package_dir = Path(root) / "packages"
     if not package_dir.is_dir():
-        return []
+        packages = []
+        if isinstance(cache, dict):
+            cache[cache_key] = ()
+        return packages
     descriptions = []
     seen = {}
     for path in package_description_paths(root):
@@ -100,6 +129,8 @@ def load_all_package_metadata(root):
                 f"duplicate package selection symbol {symbol}: {symbols[symbol]} and {package.name}",
             )
         symbols[symbol] = package.name
+    if isinstance(cache, dict):
+        cache[cache_key] = tuple(packages)
     return packages
 
 
@@ -232,6 +263,51 @@ def _kconfig(description, options, versions):
     if not path.is_file():
         raise SmartBuildError("PACKAGE", f"{description.path}: native Kconfig not found: {path}")
     return PackageKconfig(mode="native", source=source, symbol=symbol, path=path)
+
+
+def _category(description):
+    raw = description.data.get("category")
+    if raw is None:
+        return ""
+    if not isinstance(raw, str) or not raw.strip():
+        raise SmartBuildError("PACKAGE", f"{description.path}: category must be a non-empty string")
+    return raw.strip()
+
+
+def shorten_package_description(text):
+    cleaned = " ".join(str(text or "").split())
+    if len(cleaned) <= DESCRIPTION_MAX_LENGTH:
+        return cleaned
+    without_url = cleaned
+    for marker in (" http://", " https://"):
+        if marker in without_url:
+            without_url = without_url.split(marker, 1)[0].strip()
+    if without_url and len(without_url) <= DESCRIPTION_MAX_LENGTH:
+        return without_url
+    for separator in (". ", "; "):
+        if separator in without_url:
+            first = without_url.split(separator, 1)[0].strip()
+            if first and len(first) <= DESCRIPTION_MAX_LENGTH:
+                return first
+    trimmed = without_url[:DESCRIPTION_MAX_LENGTH].rsplit(" ", 1)[0].rstrip(".,;:")
+    return trimmed or without_url[:DESCRIPTION_MAX_LENGTH]
+
+
+def _description(description):
+    raw = description.data.get("description", "")
+    if raw is None:
+        return ""
+    if not isinstance(raw, str):
+        raise SmartBuildError("PACKAGE", f"{description.path}: description must be a string")
+    text = " ".join(raw.split())
+    if "description" in description.data and not text:
+        raise SmartBuildError("PACKAGE", f"{description.path}: description must be a non-empty string")
+    if len(text) > DESCRIPTION_MAX_LENGTH:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{description.path}: description must be at most {DESCRIPTION_MAX_LENGTH} characters",
+        )
+    return text
 
 
 def _default_version(description, versions):

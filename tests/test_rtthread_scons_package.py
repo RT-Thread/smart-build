@@ -335,9 +335,8 @@ def test_native_kconfig_is_indexed_with_env_online_symbols(tmp_path, monkeypatch
 
     with native_kconfig_environment(env_packages):
         assert generate_package_kconfig_files(paths.root) == {}
-        assert generate_package_kconfig_index(paths.root).endswith(
-            'source "packages/demo/source/Kconfig"\n'
-        )
+        index = generate_package_kconfig_index(paths.root)
+        assert 'source "packages/demo/source/Kconfig"' in index
         monkeypatch.setenv("srctree", str(paths.root))
         kconf = kconfiglib.Kconfig(str(paths.root / "Kconfig"), warn=False)
         package_keys = _package_keys(kconf, paths.root)

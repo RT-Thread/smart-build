@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBEASTL_ARCH_SUPPORTS
+  package_path: buildroot/package/libeastl
+source:
+  type: archive
+  url: https://github.com/electronicarts/EASTL/archive/3.27.01/libeastl-3.27.01.tar.gz
+  archive: libeastl-3.27.01.tar.gz
+  revision: null
+  sha256: fce43bf443f5569b00a8deae735394ea0b16f6c3f96867a17ded50775ffcdd12
+warnings:
+- build was not verified during import

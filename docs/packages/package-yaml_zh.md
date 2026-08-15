@@ -16,9 +16,10 @@
 | `versions` | 否 | 非空的可选软件包版本列表 |
 | `default_version` | 否 | `versions` 中的一个条目 |
 | `type` | 取决于构建 | `library` 或 `executable` |
-| `description` | 否 | 面向用户的软件包说明 |
-| `depends` | 否 | 依赖名称或已提供的能力 |
-| `selects` | 否 | 自动选择的软件包或能力 |
+| `description` | 否 | 面向用户的软件包说明，会写入生成的 Kconfig 菜单项和 help，最多 80 个字符 |
+| `category` | 否 | menuconfig 分组；未填写时使用内置分类表 |
+| `depends` | 否 | 构建所需的软件包或能力；menuconfig 会自动选中它们 |
+| `selects` | 否 | 额外自动选中的软件包或能力 |
 | `conflicts` | 否 | 不能同时选择的软件包 |
 | `provides` | 否 | 此软件包提供的能力 |
 | `requires_toolchain` | 否 | 所需的工具链能力 |
@@ -34,7 +35,13 @@
 
 `depends`、`selects`、`conflicts`、`provides` 和 `requires_toolchain` 通常使用
 列表。出于兼容性考虑，`depends` 也接受逗号分隔的字符串。依赖可以引用软件包
-名称，或者另一个软件包在 `provides` 字段中列出的名称。
+名称，或者另一个软件包在 `provides` 字段中列出的名称。生成的软件包 Kconfig
+会把 `depends` 和 `selects` 都写成 `select`，因此软件包始终可以勾选，并自动
+带上所需依赖。
+
+生成的 `packages/Kconfig` 索引会按 Networking、Libraries、Development and
+testing 等菜单分组。可用 `category` 覆盖默认分组；未分类的软件包会出现在
+Other 中。
 
 ## 选项
 
@@ -86,6 +93,10 @@ source:
   files:
     - configure
 ```
+
+对于上游未提供 hash 的尽力导入软件包，可以显式使用
+`source.allow_unverified: true`。普通软件包定义仍应使用不可变的归档 URL 和
+SHA-256 校验值。
 
 归档解压会拒绝路径遍历和不安全的链接目标。`local_files` 会从软件包目录复制到
 准备好的源码树中。

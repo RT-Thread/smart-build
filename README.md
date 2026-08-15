@@ -60,6 +60,15 @@ To select a machine without changing the workspace configuration:
 Build results are written below `build/<machine>/`. Downloaded source archives
 and installed toolchains are stored below `downloads/`.
 
+When a root-level `buildroot/` checkout is available, `buildroot menuconfig`
+and `buildroot import` can create best-effort smart-build packages. If the
+checkout is missing, `buildroot menuconfig` asks whether to shallow-clone the
+latest Buildroot repository first. Existing
+packages are skipped and failures do not stop later imports. Imported package
+metadata keeps upstream network URLs; source archives are downloaded only by
+the normal smart-build package build. Import success means metadata was
+generated, not that cross-compilation has been verified.
+
 Before compiling the kernel, smart-build synchronizes its defconfig to the
 RT-Thread BSP and runs `~/.env/tools/scripts/pkgs --force-update`. Kernel
 packages and their versions are selected by the RT-Thread kernel configuration,
@@ -77,6 +86,8 @@ participate in the kernel build are removed with a warning.
 ./smart-build configure kernel
 ./smart-build configure package:curl
 ./smart-build configure package:webclient
+./smart-build buildroot menuconfig
+./smart-build buildroot import
 ./smart-build build all
 ./smart-build build kernel
 ./smart-build build kernel --verbose
@@ -90,14 +101,17 @@ participate in the kernel build are removed with a warning.
 Independent RT-Thread SCons packages with native Kconfig, such as `webclient`,
 use the package configure command to open their RT-Thread package options.
 
-Normal builds show a colored progress bar in interactive terminals and report
-completed tasks above it, for example `build: [2/12] toolchain:check: skipped`.
-Redirected output uses the same status format without colors or terminal
-control sequences. Successful and skipped tasks do not print log paths or log
-contents. `build --verbose` prints task context, task logs, and log paths to the
-terminal. When the target includes the RT-Thread kernel, smart-build runs its
-compile step with `scons --verbose` to show the complete compiler and linker
-commands.
+Before tasks run, `build` analyzes the machine, toolchain, selected packages,
+and task graph. Interactive terminals show a live `plan:` progress bar while
+package metadata is loaded; redirected output prints each planning phase.
+Planning ends with `plan: ready N tasks`. Normal builds then show a colored
+progress bar in interactive terminals and report completed tasks above it, for
+example `build: [2/12] toolchain:check: skipped`. Redirected output uses the
+same status format without colors or terminal control sequences. Successful and
+skipped tasks do not print log paths or log contents. `build --verbose` prints
+planning items, task context, task logs, and log paths to the terminal. When
+the target includes the RT-Thread kernel, smart-build runs its compile step
+with `scons --verbose` to show the complete compiler and linker commands.
 
 `build --dry-run` currently prints a placeholder task plan. It is useful for a
 high-level preview, but it is not guaranteed to match every task in a real

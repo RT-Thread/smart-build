@@ -11,6 +11,8 @@ menu "webclient"
 
 config PACKAGE_WEBCLIENT
     bool "Enable webclient"
+    help
+      Independent RT-Thread SCons webclient HTTP client example
     select PKG_USING_WEBCLIENT
 
 source "$PKGS_DIR/Kconfig"

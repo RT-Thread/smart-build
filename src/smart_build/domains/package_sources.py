@@ -1,6 +1,7 @@
 import hashlib
 import fcntl
 import os
+import posixpath
 import re
 import shutil
 import stat
@@ -36,6 +37,7 @@ class PackageSourceConfig:
     configuration: dict | None = None
     archive: Path | None = None
     sha256: str | None = None
+    allow_unverified: bool = False
     strip_root: bool | None = None
     revision: str | None = None
 
@@ -56,7 +58,15 @@ def package_source_config(paths, name, description):
     version = _source_version(description, source)
     url = _required_string(source, "url", description.path)
     archive_name = _safe_archive_name(_required_string(source, "archive", description.path), description.path)
-    sha256 = _required_sha256(source, description.path)
+    sha256 = _optional_sha256(source, description.path)
+    allow_unverified = source.get("allow_unverified", False)
+    if not isinstance(allow_unverified, bool):
+        raise SmartBuildError("SOURCE", f"{description.path}: source.allow_unverified must be a boolean")
+    if sha256 is None and not allow_unverified:
+        raise SmartBuildError(
+            "SOURCE",
+            f"{description.path}: source.sha256 is required unless source.allow_unverified is true",
+        )
     strip_root = _strip_root(source, description.path)
     prepared = paths.work_dir / "sources" / f"{safe_name}-{version}"
     local_files = _local_files(paths.root, source, description.path)
@@ -72,6 +82,7 @@ def package_source_config(paths, name, description):
         configuration=description.data.get("configure"),
         archive=paths.root / "downloads" / archive_name,
         sha256=sha256,
+        allow_unverified=allow_unverified,
         strip_root=strip_root,
     )
 
@@ -358,8 +369,10 @@ def _extract_tar_safely(archive, destination):
             for member in members:
                 _validate_archive_member(destination, member.name)
                 if member.issym() or member.islnk():
-                    raise SmartBuildError("SOURCE", f"unsafe archive member link: {member.name}")
+                    _validate_archive_link(member)
                 if not (member.isfile() or member.isdir()):
+                    if member.issym() or member.islnk():
+                        continue
                     raise SmartBuildError("SOURCE", f"unsupported archive member type: {member.name}")
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=DeprecationWarning, module="tarfile")
@@ -407,6 +420,24 @@ def _validate_archive_member(destination, name):
         raise SmartBuildError("SOURCE", f"unsafe archive member path: {name}") from exc
 
 
+def _validate_archive_link(member):
+    linkname = member.linkname
+    if not linkname or "\\" in linkname:
+        raise SmartBuildError("SOURCE", f"unsafe archive member link: {member.name}")
+    link = PurePosixPath(linkname)
+    if link.is_absolute():
+        raise SmartBuildError("SOURCE", f"unsafe archive member link: {member.name}")
+
+    if member.issym():
+        base = PurePosixPath(member.name).parent
+        resolved = PurePosixPath(posixpath.normpath(str(base / link)))
+    else:
+        # Tar hard-link names identify another member from the archive root.
+        resolved = PurePosixPath(posixpath.normpath(str(link)))
+    if resolved.is_absolute() or not resolved.parts or resolved.parts[0] == "..":
+        raise SmartBuildError("SOURCE", f"unsafe archive member link: {member.name}")
+
+
 def _stripped_source_root(raw_root):
     children = list(Path(raw_root).iterdir())
     if len(children) == 1 and children[0].is_dir():
@@ -431,6 +462,7 @@ def _source_manifest(config, reused):
                 "archive": str(config.archive),
                 "sha256": config.sha256,
                 "strip_root": config.strip_root,
+                "allow_unverified": config.allow_unverified,
                 "archive_sha256": path_record(config.archive).get("sha256") if config.archive.exists() else None,
             }
         )
@@ -461,8 +493,10 @@ def _required_string(source, key, description_path):
     return value
 
 
-def _required_sha256(source, description_path):
+def _optional_sha256(source, description_path):
     value = source.get("sha256")
+    if value is None:
+        return None
     if not isinstance(value, str) or not SHA256_RE.fullmatch(value):
         raise SmartBuildError("SOURCE", f"{description_path}: source.sha256 must be 64 hex characters")
     return value.lower()
@@ -584,6 +618,8 @@ def _safe_segment(raw_value, label, description_path):
 
 
 def _verify_archive_sha256(archive, expected):
+    if expected is None:
+        return
     actual = _sha256_file(archive)
     if actual != expected:
         raise SmartBuildError(

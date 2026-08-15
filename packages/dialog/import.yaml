@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_DIALOG
+  package_path: buildroot/package/dialog
+source:
+  type: archive
+  url: https://invisible-mirror.net/archives/dialog/dialog-1.3-20251001.tgz
+  archive: dialog-1.3-20251001.tgz
+  revision: null
+  sha256: bee47347a983312facc4dbcccd7fcc86608d684e1f119d9049c4692213db96c3
+warnings:
+- build was not verified during import

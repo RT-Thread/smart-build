@@ -1,0 +1,19 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_TINYSSH
+  package_path: buildroot/package/tinyssh
+source:
+  type: archive
+  url: https://github.com/janmojzis/tinyssh/archive/20240101/tinyssh-20240101.tar.gz
+  archive: tinyssh-20240101.tar.gz
+  revision: null
+  sha256: d2cd49d0e5e8bdb808d86f07f946a0cfbf2dc9a449a4b8243a82be267d852b62
+build:
+  make_target: cross-compile
+  outputs:
+  - /usr/sbin
+  - /usr/share/man
+  install_path: /usr/sbin/tinysshd
+  materialize_symlinks: true
+warnings:
+- build was not verified during import

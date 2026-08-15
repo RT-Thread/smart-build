@@ -57,6 +57,13 @@ python -m pip install -e .
 构建结果写入 `build/<machine>/`，下载的源码归档和已安装工具链保存在
 `downloads/` 下。
 
+如果仓库根目录存在 `buildroot/`，可以通过 `buildroot menuconfig` 选择软件包；如果
+目录不存在，`buildroot menuconfig` 会询问是否先浅克隆最新 Buildroot 仓库。然后再
+使用 `buildroot import` 将其尽力转换为独立的 smart-build 软件包。已有软件包会
+跳过，单个软件包失败不会阻止后续导入。导入后的 source 元数据保留上游网络 URL，
+源码只在后续 smart-build 构建时下载；导入成功表示元数据已生成，不表示交叉编译
+已经验证。
+
 编译内核前，smart-build 会将内核 defconfig 同步到 RT-Thread BSP，并运行
 `~/.env/tools/scripts/pkgs --force-update`。内核软件包及其版本由 RT-Thread
 内核配置选择，而不是由 smart-build 软件包元数据选择。未登记但会参与内核
@@ -73,6 +80,8 @@ python -m pip install -e .
 ./smart-build configure kernel
 ./smart-build configure package:curl
 ./smart-build configure package:webclient
+./smart-build buildroot menuconfig
+./smart-build buildroot import
 ./smart-build build all
 ./smart-build build kernel
 ./smart-build build kernel --verbose
@@ -86,12 +95,15 @@ python -m pip install -e .
 `webclient` 等使用 native Kconfig 的独立 RT-Thread SCons 包，可以通过软件包
 configure 命令进入其 RT-Thread 软件包配置界面。
 
-普通构建会在交互式终端显示彩色进度条，并在进度条上方报告已完成任务，例如
+`build` 在执行任务前会先分析机器、工具链、已选软件包和任务图。交互式终端会
+显示实时的 `plan:` 进度条，用于软件包元数据加载；重定向输出则逐阶段打印规划
+过程。规划结束时输出 `plan: ready N tasks`。随后普通构建会在交互式终端显示
+彩色进度条，并在进度条上方报告已完成任务，例如
 `build: [2/12] toolchain:check: skipped`。重定向输出时使用相同的状态格式，但不
 包含颜色和终端控制符。成功和跳过的任务不显示日志路径或日志正文。
-`build --verbose` 会将任务上下文、任务日志和日志路径输出到终端。目标包含
-RT-Thread 内核时，smart-build 会使用 `scons --verbose` 执行编译，以显示完整的
-编译器和链接器命令。
+`build --verbose` 会将规划条目、任务上下文、任务日志和日志路径输出到终端。
+目标包含 RT-Thread 内核时，smart-build 会使用 `scons --verbose` 执行编译，以
+显示完整的编译器和链接器命令。
 
 `build --dry-run` 目前输出占位任务计划。它可用于总体预览，但不能保证与实际
 构建中的每项任务完全一致。

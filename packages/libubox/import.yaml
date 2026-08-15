@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBUBOX
+  package_path: buildroot/package/libubox
+source:
+  type: git
+  url: https://git.openwrt.org/project/libubox.git
+  archive: null
+  revision: ecddb31dc34d89be5c9dc4595a4c58070eb090e4
+  sha256: c4432d4f902bd0a2974d3fe76620bbb5e04b9d52e55701829aa12507651bc4d9
+warnings:
+- build was not verified during import

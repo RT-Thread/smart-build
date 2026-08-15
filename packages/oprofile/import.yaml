@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_OPROFILE_ARCH_SUPPORTS
+  package_path: buildroot/package/oprofile
+source:
+  type: archive
+  url: http://downloads.sourceforge.net/project/oprofile/oprofile/oprofile-1.4.0/oprofile-1.4.0.tar.gz
+  archive: oprofile-1.4.0.tar.gz
+  revision: null
+  sha256: 32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670
+warnings:
+- build was not verified during import

@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: fdk-aac
+version: 2.0.3
+type: executable
+description: Fraunhofer FDK AAC audio codec
+depends: []
+source:
+  type: archive
+  url: http://downloads.sourceforge.net/project/opencore-amr/fdk-aac/fdk-aac-2.0.3.tar.gz
+  archive: fdk-aac-2.0.3.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 829b6b89eef382409cda6857fd82af84fabb63417b08ede9ea7a553f811cb79e
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/fdk-aac

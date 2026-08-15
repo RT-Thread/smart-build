@@ -1,0 +1,520 @@
+symbols:
+  BR2_PACKAGE_BOTAN:
+    owner: native
+    package: botan
+  BR2_PACKAGE_BOTAN_ARCH_SUPPORTS:
+    owner: imported
+    package: botan
+  BR2_PACKAGE_BUSYBOX:
+    owner: native
+    package: busybox
+  BR2_PACKAGE_BZIP2:
+    owner: imported
+    package: bzip2
+  BR2_PACKAGE_CPUINFO:
+    owner: imported
+    package: cpuinfo
+  BR2_PACKAGE_CURL:
+    owner: native
+    package: curl
+  BR2_PACKAGE_DIALOG:
+    owner: imported
+    package: dialog
+  BR2_PACKAGE_DROPBEAR:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_CLIENT:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_DISABLE_REVERSEDNS:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_LASTLOG:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_LEGACY_CRYPTO:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_LOCALOPTIONS_FILE:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_SMALL:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_DROPBEAR_WTMP:
+    owner: native
+    package: dropbear
+  BR2_PACKAGE_FDK_AAC:
+    owner: native
+    package: fdk-aac
+  BR2_PACKAGE_FDK_AAC_ARCH_SUPPORTS:
+    owner: imported
+    package: fdk-aac
+  BR2_PACKAGE_FFMPEG:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_ARCH_SUPPORTS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_BSFS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_DECODERS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_DEMUXERS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_ENCODERS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_EXTRACONF:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_FFMPEG:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_FFPLAY:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_FFPROBE:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_FILTERS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_GPL:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_INDEVS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_MUXERS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_NONFREE:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_OUTDEVS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_PARSERS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_POSTPROC:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_PROTOCOLS:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_SWSCALE:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FFMPEG_XCBGRAB:
+    owner: native
+    package: ffmpeg
+  BR2_PACKAGE_FP16:
+    owner: imported
+    package: fp16
+  BR2_PACKAGE_FREETYPE:
+    owner: native
+    package: freetype
+  BR2_PACKAGE_FXDIV:
+    owner: imported
+    package: fxdiv
+  BR2_PACKAGE_GNUPG2:
+    owner: native
+    package: gnupg2
+  BR2_PACKAGE_GNUPG2_DEPENDS:
+    owner: imported
+    package: gnupg2
+  BR2_PACKAGE_HAPROXY:
+    owner: native
+    package: haproxy
+  BR2_PACKAGE_HAPROXY_ARCH_SUPPORTS:
+    owner: imported
+    package: haproxy
+  BR2_PACKAGE_HAS_OPENSSL:
+    owner: native
+    package: openssl
+  BR2_PACKAGE_HAS_ZLIB:
+    owner: native
+    package: zlib
+  BR2_PACKAGE_HELLO:
+    owner: native
+    package: hello
+  BR2_PACKAGE_IPERF3:
+    owner: imported
+    package: iperf3
+  BR2_PACKAGE_JEMALLOC:
+    owner: native
+    package: jemalloc
+  BR2_PACKAGE_JEMALLOC_ARCH_SUPPORTS:
+    owner: imported
+    package: jemalloc
+  BR2_PACKAGE_JSON_C:
+    owner: imported
+    package: json-c
+  BR2_PACKAGE_LAPACK:
+    owner: native
+    package: lapack
+  BR2_PACKAGE_LAPACK_ARCH_SUPPORTS:
+    owner: imported
+    package: lapack
+  BR2_PACKAGE_LIBABSEIL_CPP:
+    owner: native
+    package: libabseil-cpp
+  BR2_PACKAGE_LIBABSEIL_CPP_ARCH_SUPPORTS:
+    owner: imported
+    package: libabseil-cpp
+  BR2_PACKAGE_LIBATOMIC_OPS:
+    owner: native
+    package: libatomic_ops
+  BR2_PACKAGE_LIBATOMIC_OPS_ARCH_SUPPORTS:
+    owner: imported
+    package: libatomic_ops
+  BR2_PACKAGE_LIBBSD:
+    owner: native
+    package: libbsd
+  BR2_PACKAGE_LIBBSD_ARCH_SUPPORTS:
+    owner: imported
+    package: libbsd
+  BR2_PACKAGE_LIBCURL:
+    owner: native
+    package: libcurl
+  BR2_PACKAGE_LIBCURL_CURL:
+    owner: imported
+    package: libcurl
+  BR2_PACKAGE_LIBEASTL:
+    owner: native
+    package: libeastl
+  BR2_PACKAGE_LIBEASTL_ARCH_SUPPORTS:
+    owner: imported
+    package: libeastl
+  BR2_PACKAGE_LIBEVENT:
+    owner: native
+    package: libevent
+  BR2_PACKAGE_LIBEXPAT:
+    owner: native
+    package: libexpat
+  BR2_PACKAGE_LIBFFI:
+    owner: native
+    package: libffi
+  BR2_PACKAGE_LIBGLIB2:
+    owner: imported
+    package: libglib2
+  BR2_PACKAGE_LIBGPG_ERROR:
+    owner: native
+    package: libgpg-error
+  BR2_PACKAGE_LIBGPG_ERROR_ARCH_SUPPORTS:
+    owner: imported
+    package: libgpg-error
+  BR2_PACKAGE_LIBICONV:
+    owner: native
+    package: libiconv
+  BR2_PACKAGE_LIBICONV_EXTRA_ENCODINGS:
+    owner: native
+    package: libiconv
+  BR2_PACKAGE_LIBJPEG:
+    owner: native
+    package: libjpeg
+  BR2_PACKAGE_LIBJPEG_TURBO:
+    owner: native
+    package: libjpeg-turbo
+  BR2_PACKAGE_LIBNSPR:
+    owner: native
+    package: libnspr
+  BR2_PACKAGE_LIBNSPR_ARCH_SUPPORT:
+    owner: imported
+    package: libnspr
+  BR2_PACKAGE_LIBOPENH264:
+    owner: native
+    package: libopenh264
+  BR2_PACKAGE_LIBOPENH264_ARCH_SUPPORTS:
+    owner: imported
+    package: libopenh264
+  BR2_PACKAGE_LIBOPENSSL:
+    owner: imported
+    package: libopenssl
+  BR2_PACKAGE_LIBPNG:
+    owner: native
+    package: libpng
+  BR2_PACKAGE_LIBRESSL:
+    owner: native
+    package: libressl
+  BR2_PACKAGE_LIBRESSL_ARCH_SUPPORTS:
+    owner: native
+    package: openssl
+  BR2_PACKAGE_LIBRESSL_BIN:
+    owner: imported
+    package: libressl
+  BR2_PACKAGE_LIBUBOX:
+    owner: imported
+    package: libubox
+  BR2_PACKAGE_LIBUNWIND:
+    owner: native
+    package: libunwind
+  BR2_PACKAGE_LIBUNWIND_ARCH_SUPPORTS:
+    owner: imported
+    package: libunwind
+  BR2_PACKAGE_LIBURCU:
+    owner: native
+    package: liburcu
+  BR2_PACKAGE_LIBURCU_ARCH_SUPPORTS:
+    owner: imported
+    package: liburcu
+  BR2_PACKAGE_LIBUV:
+    owner: native
+    package: libuv
+  BR2_PACKAGE_LIBXCRYPT:
+    owner: imported
+    package: libxcrypt
+  BR2_PACKAGE_LIBXML2:
+    owner: native
+    package: libxml2
+  BR2_PACKAGE_LIBZLIB:
+    owner: imported
+    package: libzlib
+  BR2_PACKAGE_LLAMA_CPP:
+    owner: native
+    package: llama-cpp
+  BR2_PACKAGE_LLAMA_CPP_ARCH_SUPPORTS:
+    owner: imported
+    package: llama-cpp
+  BR2_PACKAGE_LTP_TESTSUITE:
+    owner: native
+    package: ltp-testsuite
+  BR2_PACKAGE_LTP_TESTSUITE_ARCH_SUPPORTS:
+    owner: imported
+    package: ltp-testsuite
+  BR2_PACKAGE_LUA:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUAJIT:
+    owner: native
+    package: luajit
+  BR2_PACKAGE_LUAJIT_ARCH_SUPPORTS:
+    owner: imported
+    package: luajit
+  BR2_PACKAGE_LUA_32BITS:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_5_1:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_5_3:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_5_4:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_CVT_N2S:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_CVT_S2N:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_EDITING_NONE:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_LINENOISE:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LUA_READLINE:
+    owner: native
+    package: lua
+  BR2_PACKAGE_LVGL:
+    owner: native
+    package: lvgl
+  BR2_PACKAGE_LZO:
+    owner: native
+    package: lzo
+  BR2_PACKAGE_MC:
+    owner: imported
+    package: mc
+  BR2_PACKAGE_MICROPYTHON:
+    owner: native
+    package: micropython
+  BR2_PACKAGE_MICROPYTHON_LIB:
+    owner: native
+    package: micropython
+  BR2_PACKAGE_MICROPYTHON_LIB_UNIXFFI:
+    owner: native
+    package: micropython
+  BR2_PACKAGE_NANO:
+    owner: imported
+    package: nano
+  BR2_PACKAGE_NANO_TINY:
+    owner: native
+    package: nano
+  BR2_PACKAGE_NCURSES:
+    owner: native
+    package: ncurses
+  BR2_PACKAGE_NCURSES_ADDITIONAL_TERMINFO:
+    owner: native
+    package: ncurses
+  BR2_PACKAGE_NCURSES_TARGET_PROGS:
+    owner: native
+    package: ncurses
+  BR2_PACKAGE_NCURSES_WCHAR:
+    owner: native
+    package: ncurses
+  BR2_PACKAGE_OPENCV:
+    owner: native
+    package: opencv
+  BR2_PACKAGE_OPENSSL:
+    owner: native
+    package: openssl
+  BR2_PACKAGE_OPENSSL_FORCE_LIBOPENSSL:
+    owner: native
+    package: openssl
+  BR2_PACKAGE_OPROFILE:
+    owner: native
+    package: oprofile
+  BR2_PACKAGE_OPROFILE_ARCH_SUPPORTS:
+    owner: imported
+    package: oprofile
+  BR2_PACKAGE_PCRE:
+    owner: native
+    package: pcre
+  BR2_PACKAGE_PCRE2:
+    owner: native
+    package: pcre2
+  BR2_PACKAGE_PCRE2_16:
+    owner: native
+    package: pcre2
+  BR2_PACKAGE_PCRE2_32:
+    owner: native
+    package: pcre2
+  BR2_PACKAGE_PCRE2_JIT:
+    owner: native
+    package: pcre2
+  BR2_PACKAGE_PCRE2_JIT_ARCH_SUPPORTS:
+    owner: native
+    package: pcre2
+  BR2_PACKAGE_POCO:
+    owner: native
+    package: poco
+  BR2_PACKAGE_POCO_ARCH_SUPPORTS:
+    owner: imported
+    package: poco
+  BR2_PACKAGE_PROTOBUF:
+    owner: native
+    package: protobuf
+  BR2_PACKAGE_PROTOBUF_ARCH_SUPPORTS:
+    owner: imported
+    package: protobuf
+  BR2_PACKAGE_PROVIDES_HOST_OPENSSL:
+    owner: native
+    package: openssl
+  BR2_PACKAGE_PROVIDES_HOST_ZLIB:
+    owner: native
+    package: zlib
+  BR2_PACKAGE_PROVIDES_LUAINTERPRETER:
+    owner: native
+    package: lua
+  BR2_PACKAGE_PROVIDES_OPENSSL:
+    owner: native
+    package: openssl
+  BR2_PACKAGE_PROVIDES_ZLIB:
+    owner: native
+    package: zlib
+  BR2_PACKAGE_PSIMD:
+    owner: imported
+    package: psimd
+  BR2_PACKAGE_PTHREADPOOL:
+    owner: imported
+    package: pthreadpool
+  BR2_PACKAGE_QUICKJS:
+    owner: native
+    package: quickjs
+  BR2_PACKAGE_READLINE:
+    owner: native
+    package: readline
+  BR2_PACKAGE_READLINE_BRACKETED_PASTE:
+    owner: native
+    package: readline
+  BR2_PACKAGE_SDL2:
+    owner: native
+    package: sdl2
+  BR2_PACKAGE_SDL2_IMAGE:
+    owner: native
+    package: sdl2-image
+  BR2_PACKAGE_SDL2_KMSDRM:
+    owner: native
+    package: sdl2
+  BR2_PACKAGE_SDL2_OPENGL:
+    owner: native
+    package: sdl2
+  BR2_PACKAGE_SDL2_OPENGLES:
+    owner: native
+    package: sdl2
+  BR2_PACKAGE_SDL2_WAYLAND:
+    owner: native
+    package: sdl2
+  BR2_PACKAGE_SDL2_X11:
+    owner: native
+    package: sdl2
+  BR2_PACKAGE_SEDUTIL:
+    owner: native
+    package: sedutil
+  BR2_PACKAGE_SEDUTIL_ARCH_SUPPORTS:
+    owner: imported
+    package: sedutil
+  BR2_PACKAGE_TENSORFLOW_LITE:
+    owner: native
+    package: tensorflow-lite
+  BR2_PACKAGE_TENSORFLOW_LITE_ARCH_SUPPORTS:
+    owner: imported
+    package: tensorflow-lite
+  BR2_PACKAGE_TINYSSH:
+    owner: imported
+    package: tinyssh
+  BR2_PACKAGE_TMUX:
+    owner: native
+    package: tmux
+  BR2_PACKAGE_UHTTPD:
+    owner: native
+    package: uhttpd
+  BR2_PACKAGE_UTEST_H:
+    owner: native
+    package: utest-h
+  BR2_PACKAGE_VIM:
+    owner: native
+    package: vim
+  BR2_PACKAGE_VIM_RUNTIME:
+    owner: native
+    package: vim
+  BR2_PACKAGE_WEBCLIENT:
+    owner: native
+    package: webclient
+  BR2_PACKAGE_WEBNET:
+    owner: native
+    package: webnet
+  BR2_PACKAGE_WGET:
+    owner: native
+    package: wget
+  BR2_PACKAGE_XNNPACK:
+    owner: imported
+    package: xnnpack
+  BR2_PACKAGE_XZ:
+    owner: native
+    package: xz
+  BR2_PACKAGE_Z3:
+    owner: native
+    package: z3
+  BR2_PACKAGE_Z3_ARCH_SUPPORTS:
+    owner: imported
+    package: z3
+  BR2_PACKAGE_ZLIB:
+    owner: native
+    package: zlib
+  BR2_PACKAGE_ZLIB_FORCE_LIBZLIB:
+    owner: native
+    package: zlib
+  BR2_PACKAGE_ZLIB_NG:
+    owner: imported
+    package: zlib-ng
+  BR2_PACKAGE_ZLIB_NG_ARCH_SUPPORTS:
+    owner: native
+    package: zlib

@@ -1,0 +1,37 @@
+schema_version: 1
+kind: package
+name: libglib2
+version: 2.88.3
+type: library
+description: GLib core library
+depends:
+- libffi
+- pcre2
+- zlib
+provides:
+- glib-2.0
+requires_toolchain:
+- c
+- static-library
+source:
+  type: archive
+  url: https://download.gnome.org/sources/glib/2.88/glib-2.88.3.tar.xz
+  archive: glib-2.88.3.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: ab24d24e698dfa1e408b7bcdb508f4aafc906185a8b8ce72fdf79bbbdc9b383b
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr
+    upstream_markers: []
+install:
+  headers:
+  - usr/include/glib-2.0
+  libraries:
+  - usr/lib/libglib-2.0.so

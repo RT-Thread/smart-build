@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libcurl
+version: 8.21.0
+type: executable
+description: curl command-line URL transfer tool imported as libcurl
+depends: []
+source:
+  type: archive
+  url: https://curl.se/download/curl-8.21.0.tar.xz
+  archive: curl-8.21.0.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: aa1b66a70eace83dc624508745646c08ae561de512ab403adffb93ac87fc72e6
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libcurl

@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: jemalloc
+version: 5.3.1
+type: executable
+description: jemalloc scalable memory allocator
+depends: []
+source:
+  type: archive
+  url: https://github.com/jemalloc/jemalloc/releases/download/5.3.1/jemalloc-5.3.1.tar.bz2
+  archive: jemalloc-5.3.1.tar.bz2
+  strip_root: true
+  allow_unverified: false
+  sha256: 3826bc80232f22ed5c4662f3034f799ca316e819103bdc7bb99018a421706f92
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/jemalloc

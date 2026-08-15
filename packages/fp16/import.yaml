@@ -1,0 +1,18 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_FP16
+  package_path: buildroot/package/fp16
+source:
+  type: archive
+  url: https://github.com/Maratyszcza/FP16/archive/98b0a46bce017382a6351a19577ec43a715b6835/fp16-98b0a46bce017382a6351a19577ec43a715b6835.tar.gz
+  archive: fp16-98b0a46bce017382a6351a19577ec43a715b6835.tar.gz
+  revision: null
+  sha256: e7b509c76a2ea162ebdda77fb6b6f51f2f37dedee0866077d428e214516f0c2b
+build:
+  make_target: null
+  outputs:
+  - /usr/bin
+  install_path: /usr/bin/fp16
+  materialize_symlinks: false
+warnings:
+- build was not verified during import

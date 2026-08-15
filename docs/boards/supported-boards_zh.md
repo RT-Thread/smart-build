@@ -25,4 +25,6 @@ env sdk 软件包标识符；随着本地 env sdk 安装发生变化，它们可
 Env 会在下一次内核构建时安装所选版本。
 
 QEMU 支持取决于具体 profile。在板卡描述中填写任意 QEMU 值，并不会自动添加
-新的 QEMU 命令 profile；smart-build 中也必须实现该 profile。
+新的 QEMU 命令 profile；smart-build 中也必须实现该 profile。`virt-aarch64` 和
+`virt-riscv64` 会通过 virtio-blk 挂载根文件系统，并在内核命令行中设置
+`root=vda0`（AArch64 使用 `ttyAMA0`，RISC-V 使用 `ttyS0`）。

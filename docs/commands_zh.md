@@ -51,6 +51,44 @@ SHA-256 后安装到 `downloads/toolchains/<package>-<version>`。非交互 shel
 Kconfig 的 `build.rtthread_scons` 包通过此命令提供 RT-Thread 软件包选项；在线
 包下载仍在 `build` 阶段执行。
 
+## Buildroot 软件包导入
+
+当仓库根目录存在 `buildroot/` 时，可以使用 Buildroot 自己的配置界面选择软件包：
+
+```sh
+./smart-build buildroot menuconfig [--machine MACHINE]
+```
+
+如果根目录没有 `buildroot/`，命令会询问是否从 GitHub 克隆最新 Buildroot 仓库。
+确认后使用浅克隆将仓库放到根目录，并自动继续进入 menuconfig。非交互执行或拒绝
+确认时不会执行克隆。
+
+导入当前选择的目标软件包：
+
+```sh
+./smart-build buildroot import [--machine MACHINE] [--config PATH]
+./smart-build buildroot import --check
+./smart-build buildroot import --package NAME
+```
+
+导入器是尽力而为的辅助工具。已有 smart-build 软件包会跳过；单个软件包失败不会
+阻止后续软件包继续导入；最终存在失败项时命令返回非零状态。成功导入会在
+`packages/<name>/` 下生成 `package.yaml`、`Kconfig`、`sbuild.py` 和 `import.yaml`，
+不会把上游源码复制到软件包目录。`import.yaml` 用仓库相对路径记录来源，Buildroot
+固定位于根目录 `buildroot/`，例如 `buildroot/package/iperf3`。生成的 source 元数据保留 Buildroot 的网络归档 URL，
+后续执行普通 smart-build 构建时再下载；如果有 hash 则会校验。导入过程本身不执行
+交叉编译验证。导入后的 Kconfig 按 smart-build 软件包元数据生成，与其它软件包相同，
+不再带 Buildroot 标识。
+
+`packages/.imports/never-import.yaml` 中的名字永远不会被导入。该名单包含 C 库实现、
+Linux 内核相关包、依赖 RT-Thread Smart 不具备的内核特性（eBPF、KVM、seccomp、
+ptrace、RDMA、V4L2、音频、UEFI）的软件包，以及曾经导入后又手工删除的软件包。
+导入器还会按当前软件包元数据刷新 `packages/Kconfig`，因此已删除软件包的
+`source` 残留不会留下。
+
+已经由 smart-build 拥有的软件包符号会在 Buildroot menuconfig 返回后恢复为已选择，
+ownership 映射保存在 `packages/.imports/buildroot-ownership.yaml`。
+
 ## 构建
 
 ```sh
@@ -70,13 +108,17 @@ Kconfig 的 `build.rtthread_scons` 包通过此命令提供 RT-Thread 软件包�
 | `package:<name>` | 单个软件包及其解析出的依赖 |
 | `qemu-script` | QEMU 启动脚本 |
 
-未使用 `--verbose` 时，交互式终端会显示彩色进度条，并在其上方输出已完成
+在任何构建任务开始前，`build` 会分析所选机器、工具链、软件包和任务图。交互
+式终端会在扫描软件包元数据和创建软件包任务时显示实时的 `plan:` 进度条。重
+定向输出则将每个规划阶段打印为一行。规划结束时输出 `plan: ready N tasks`。
+
+未使用 `--verbose` 时，交互式终端随后会显示彩色进度条，并在其上方输出已完成
 任务的状态。成功和跳过的任务使用
 `build: [2/12] toolchain:check: success` 格式，不显示日志路径。重定向输出时只
 输出不含 ANSI 控制符的普通状态行；失败任务仍会显示日志路径。
 
-`--verbose` 会将任务日志同步输出到终端，并显示各任务的构建域、动作、工作
-目录、依赖、输入、输出、缓存策略和日志路径。在该模式下，RT-Thread 内核
+`--verbose` 会打印每个规划条目，将任务日志同步输出到终端，并显示各任务的
+构建域、动作、工作目录、依赖、输入、输出、缓存策略和日志路径。在该模式下，RT-Thread 内核
 编译使用 `scons --verbose`，显示完整的编译器和链接器命令。`--jobs` 目前只在
 部分构建流水线中生效。`--dry-run` 使用占位任务，不能将其视为真实任务图的
 精确表示。

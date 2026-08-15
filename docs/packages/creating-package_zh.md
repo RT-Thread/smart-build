@@ -138,7 +138,9 @@ PY
 ```
 
 生成器会跳过 native 包的逐包 Kconfig 输出，并把其 `source/Kconfig` 直接加入
-`packages/Kconfig`。
+`packages/Kconfig`。生成的软件包条目会使用 `package.yaml` 的 `description`
+作为菜单提示和 help，因此软件包列表不只是一个名称。生成的索引会按类别把
+软件包放进对应菜单。
 
 ## 验证软件包
 

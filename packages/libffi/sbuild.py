@@ -44,6 +44,18 @@ def copy_file(source: Path, destination: Path, mode: int) -> None:
     destination.chmod(mode)
 
 
+def copy_headers(source_dir: Path, destination_dir: Path) -> None:
+    for source in sorted(source_dir.iterdir()):
+        if source.is_dir():
+            copy_headers(source, destination_dir / source.name)
+            continue
+        if source.is_symlink():
+            source = source.resolve()
+        if not source.is_file():
+            raise SystemExit(f"unexpected libffi header entry: {source}")
+        copy_file(source, destination_dir / source.name, 0o644)
+
+
 def first_existing(*paths: Path) -> Path:
     for path in paths:
         if path.exists():
@@ -85,14 +97,32 @@ def main() -> int:
     )
     run(["make", "-j" + jobs], cwd=build_dir)
     run(["make", "install", f"DESTDIR={dest_dir}"], cwd=build_dir)
+    archive = first_existing(dest_dir / "usr/lib/libffi.a", dest_dir / "usr/lib64/libffi.a")
+    _add_riscv_icache_stub(build_dir, archive)
 
-    copy_file(dest_dir / "usr/include/ffi.h", stage_dir / "usr/include/ffi.h", 0o644)
-    copy_file(
-        first_existing(dest_dir / "usr/lib/libffi.a", dest_dir / "usr/lib64/libffi.a"),
-        stage_dir / "usr/lib/libffi.a",
-        0o644,
-    )
+    copy_headers(dest_dir / "usr/include", stage_dir / "usr/include")
+    copy_file(archive, stage_dir / "usr/lib/libffi.a", 0o644)
     return 0
+
+
+def _add_riscv_icache_stub(build_dir, archive):
+    target = os.environ.get("SMART_BUILD_TARGET", "")
+    if "riscv" not in target:
+        return
+    stub = build_dir / "riscv_flush_icache.c"
+    stub.write_text(
+        "void __riscv_flush_icache(void *start, void *end, unsigned long flags)\n"
+        "{\n"
+        "    (void)start;\n"
+        "    (void)end;\n"
+        "    (void)flags;\n"
+        "}\n",
+        encoding="ascii",
+    )
+    obj = build_dir / "riscv_flush_icache.o"
+    cc = os.environ.get("CC") or (os.environ.get("SMART_BUILD_CROSS_COMPILE", "") + "gcc")
+    run([cc, "-c", str(stub), "-o", str(obj)], cwd=build_dir)
+    run(["ar", "r", str(archive), str(obj)], cwd=build_dir)
 
 
 if __name__ == "__main__":

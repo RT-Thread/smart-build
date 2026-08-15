@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libabseil-cpp
+version: '20260107.1'
+type: executable
+description: Abseil C++ common libraries
+depends: []
+source:
+  type: archive
+  url: https://github.com/abseil/abseil-cpp/archive/20260107.1/libabseil-cpp-20260107.1.tar.gz
+  archive: libabseil-cpp-20260107.1.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 4314e2a7cbac89cac25a2f2322870f343d81579756ceff7f431803c2c9090195
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libabseil-cpp

@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libgpg-error
+version: '1.61'
+type: executable
+description: Common error codes for GnuPG libraries
+depends: []
+source:
+  type: archive
+  url: https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.61.tar.bz2
+  archive: libgpg-error-1.61.tar.bz2
+  strip_root: true
+  allow_unverified: false
+  sha256: 7a85413f2bc354f4f8aa832b718af122e48965e9e0eb9012ee659c13c6385c93
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libgpg-error

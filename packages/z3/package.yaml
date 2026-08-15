@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: z3
+version: 4.16.0
+type: executable
+description: Z3 theorem prover
+depends: []
+source:
+  type: archive
+  url: https://github.com/Z3Prover/z3/archive/z3-4.16.0/z3-4.16.0.tar.gz
+  archive: z3-4.16.0.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: c68c3e5e4810b16126b8cb4c47eee85c1ac3e24a81914c8e371b40de9dd33ac7
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/z3

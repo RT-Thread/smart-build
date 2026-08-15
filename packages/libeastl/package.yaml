@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libeastl
+version: 3.27.01
+type: executable
+description: Electronic Arts Standard Template Library
+depends: []
+source:
+  type: archive
+  url: https://github.com/electronicarts/EASTL/archive/3.27.01/libeastl-3.27.01.tar.gz
+  archive: libeastl-3.27.01.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: fce43bf443f5569b00a8deae735394ea0b16f6c3f96867a17ded50775ffcdd12
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libeastl

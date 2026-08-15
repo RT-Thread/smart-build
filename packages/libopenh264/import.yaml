@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBOPENH264_ARCH_SUPPORTS
+  package_path: buildroot/package/libopenh264
+source:
+  type: archive
+  url: https://github.com/cisco/openh264/archive/v2.6.0/libopenh264-2.6.0.tar.gz
+  archive: libopenh264-2.6.0.tar.gz
+  revision: null
+  sha256: 558544ad358283a7ab2930d69a9ceddf913f4a51ee9bf1bfb9e377322af81a69
+warnings:
+- build was not verified during import

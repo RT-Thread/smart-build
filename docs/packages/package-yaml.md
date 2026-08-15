@@ -16,9 +16,10 @@ Package descriptions use YAML schema version 1 and live at
 | `versions` | No | Non-empty list of selectable package versions |
 | `default_version` | No | Entry from `versions` |
 | `type` | Build dependent | `library` or `executable` |
-| `description` | No | User-facing package description |
-| `depends` | No | Dependency names or provided capabilities |
-| `selects` | No | Packages or capabilities selected automatically |
+| `description` | No | User-facing package description shown in generated Kconfig, at most 80 characters |
+| `category` | No | menuconfig group; defaults to the built-in package category map |
+| `depends` | No | Required packages or capabilities; menuconfig selects them automatically |
+| `selects` | No | Extra packages or capabilities selected automatically |
 | `conflicts` | No | Packages that cannot be selected together |
 | `provides` | No | Capabilities provided by this package |
 | `requires_toolchain` | No | Required toolchain capabilities |
@@ -35,7 +36,12 @@ Package descriptions use YAML schema version 1 and live at
 `depends`, `selects`, `conflicts`, `provides`, and `requires_toolchain` normally
 use lists. For compatibility, `depends` also accepts a comma-separated string.
 Dependencies can refer to a package name or a name listed by another package's
-`provides` field.
+`provides` field. Generated package Kconfig turns both `depends` and `selects`
+into `select`, so a package stays checkable and pulls in its requirements.
+
+The generated `packages/Kconfig` index groups packages into menus such as
+Networking, Libraries, and Development and testing. Set `category` to override
+the default group; unknown names appear in Other.
 
 ## Options
 
@@ -89,6 +95,10 @@ source:
   files:
     - configure
 ```
+
+For best-effort imported packages whose upstream does not publish a hash,
+`source.allow_unverified: true` may be used explicitly. Normal package
+definitions should keep an immutable archive URL and SHA-256 checksum.
 
 Archive extraction rejects path traversal and unsafe link targets. `local_files`
 are copied from the package directory into the prepared source tree.

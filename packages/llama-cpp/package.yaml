@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: llama-cpp
+version: b8117
+type: executable
+description: llama.cpp large language model inference
+depends: []
+source:
+  type: archive
+  url: https://github.com/ggml-org/llama.cpp/archive/refs/tags/b8117.tar.gz
+  archive: b8117.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 4f9fdf018339783722936d537573d40cca596262e42714f597b1c93299113cea
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/llama-cpp

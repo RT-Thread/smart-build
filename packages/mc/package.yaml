@@ -1,0 +1,31 @@
+schema_version: 1
+kind: package
+name: mc
+version: 4.8.33
+type: executable
+description: GNU Midnight Commander file manager
+depends:
+- libglib2
+- ncurses
+source:
+  type: archive
+  url: http://ftp.midnight-commander.org/mc-4.8.33.tar.xz
+  archive: mc-4.8.33.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: cae149d42f844e5185d8c81d7db3913a8fa214c65f852200a9d896b468af164c
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    - /usr/etc/mc
+    - /usr/libexec/mc
+    - /usr/share/mc
+    upstream_markers: []
+install:
+  path: /usr/bin/mc

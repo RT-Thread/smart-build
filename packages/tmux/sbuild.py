@@ -81,6 +81,7 @@ def main() -> int:
         ),
         "LDFLAGS": f"-L{ncurses / 'lib'} -L{libevent / 'lib'}",
         "LIBS": "-levent -lncurses",
+        "PKG_CONFIG": "false",
     }
     configure = [
         str(source_dir / "configure"),

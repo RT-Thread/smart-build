@@ -28,4 +28,7 @@ next kernel build.
 
 QEMU support is profile-specific. A board description containing arbitrary
 QEMU values does not automatically add a new QEMU command profile; the profile
-must also be implemented by smart-build.
+must also be implemented by smart-build. The `virt-aarch64` and
+`virt-riscv64` profiles pass a root filesystem on virtio-blk and set
+`root=vda0` in the kernel command line (`ttyAMA0` on AArch64, `ttyS0` on
+RISC-V).

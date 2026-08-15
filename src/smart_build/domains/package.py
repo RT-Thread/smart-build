@@ -1066,7 +1066,9 @@ def _make_python_executable_target_executor(
         checks = [
             _verify_binary_architecture(toolchain, staged_dir.joinpath(*path.parts), runner, workdir, env, log)
             for path in output_paths
-            if _is_executable_output_path(f"/{path.as_posix()}") and not path.as_posix().endswith(".a")
+            if _is_executable_output_path(f"/{path.as_posix()}")
+            and not path.as_posix().endswith(".a")
+            and staged_dir.joinpath(*path.parts).is_file()
         ]
         task.manifest_fields["executable"]["install_files"] = install_files
         if checks:
@@ -1654,7 +1656,13 @@ def _is_header_path(path):
 
 
 def _is_library_path(path):
-    return "/lib/" in path or path.endswith((".a", ".so"))
+    name = Path(path).name
+    if name.endswith((".a", ".so")):
+        return True
+    if ".so." not in name:
+        return False
+    version = name.split(".so.", 1)[1]
+    return bool(version) and version.replace(".", "").isdigit()
 
 
 def _is_shared_library_path(path):
@@ -1666,7 +1674,12 @@ def _is_executable_output_path(path):
         return False
     if path.endswith(".a"):
         return False
-    return _is_shared_library_path(path) or "/bin/" in path or "/sbin/" in path
+    return (
+        _is_shared_library_path(path)
+        or "/bin/" in path
+        or "/sbin/" in path
+        or "/libexec/" in path
+    )
 
 
 def _package_input_paths(source_dir, source_files, headers):

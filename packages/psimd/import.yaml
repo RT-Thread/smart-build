@@ -1,0 +1,18 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_PSIMD
+  package_path: buildroot/package/psimd
+source:
+  type: archive
+  url: https://github.com/snest/psimd/archive/4674816f56757dbd99b297cb5647f2520df08db1/psimd-4674816f56757dbd99b297cb5647f2520df08db1.tar.gz
+  archive: psimd-4674816f56757dbd99b297cb5647f2520df08db1.tar.gz
+  revision: null
+  sha256: 8934a8dff062663331a17588dfb771940be9d22887596c8ca77e25026c2adc6f
+build:
+  make_target: null
+  outputs:
+  - /usr/bin
+  install_path: /usr/bin/psimd
+  materialize_symlinks: false
+warnings:
+- build was not verified during import

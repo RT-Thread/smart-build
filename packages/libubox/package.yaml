@@ -1,0 +1,24 @@
+schema_version: 1
+kind: package
+name: libubox
+version: ecddb31dc34d89be5c9dc4595a4c58070eb090e4
+type: executable
+description: OpenWrt utility library
+depends:
+- lua
+source:
+  type: git
+  url: https://git.openwrt.org/project/libubox.git
+  commit: ecddb31dc34d89be5c9dc4595a4c58070eb090e4
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libubox

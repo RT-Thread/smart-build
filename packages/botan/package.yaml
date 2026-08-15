@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: botan
+version: 3.11.1
+type: executable
+description: Botan cryptography library
+depends:
+- zlib
+source:
+  type: archive
+  url: http://botan.randombit.net/releases/Botan-3.11.1.tar.xz
+  archive: Botan-3.11.1.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: c1cd7152519f4188591fa4f6ddeb116bc1004491f5f3c58aa99b00582eb8a137
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/botan

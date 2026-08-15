@@ -1,0 +1,63 @@
+# Packages that must never be imported from Buildroot.
+# RT-Thread Smart uses a custom libc and does not host a Linux kernel.
+# Names match smart-build package directories / Buildroot package names.
+schema_version: 1
+packages:
+  # C libraries and Linux kernel surfaces
+  - glibc
+  - linux
+  - linux-firmware
+  - linux-headers
+  - linux-syscall-support
+  - linux-tools
+  - musl
+  - uclibc
+  - uclibc-ng
+  # Previously imported and then removed by hand
+  - audit
+  - bitcoin
+  - cmake
+  - delve
+  - efivar
+  - fwts
+  - google-breakpad
+  - gtkiostream
+  - igt-gpu-tools
+  - kexec
+  - kvm-unit-tests
+  - libspdm
+  - makedumpfile
+  - mono
+  - mraa
+  - netsurf
+  - openjdk
+  - openvmtools
+  - php
+  - pulseaudio
+  - qt5
+  - qt6
+  - rocksdb
+  - ruy
+  - swipl
+  - systemd
+  - systemd-bootchart
+  - tcf-agent
+  - trinity
+  - valgrind
+  - webkitgtk
+  - webrtc-audio-processing
+  - wine
+  - wpewebkit
+  - xmrig
+  # RT-Thread Smart has no eBPF, KVM, seccomp, ptrace, RDMA, V4L2, audio, or UEFI
+  - bpftool
+  - flashrom
+  - gnu-efi
+  - gobject-introspection
+  - libcamera
+  - libseccomp
+  - libvirt
+  - ltrace
+  - openal
+  - perftest
+  - uftrace

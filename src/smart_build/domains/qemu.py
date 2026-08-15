@@ -46,6 +46,8 @@ def qemu_script_task(paths):
     }
     if machine.qemu_profile == "virt-aarch64":
         manifest["bootargs"] = _aarch64_bootargs(rootfs_format)
+    elif machine.qemu_profile == "virt-riscv64":
+        manifest["bootargs"] = _riscv64_bootargs(rootfs_format)
     manifest.update(_rootfs_manifest(paths, machine))
     return Task(
         id=QEMU_SCRIPT_TASK_ID,
@@ -108,6 +110,8 @@ def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
             "256M",
             "-kernel",
             "images/rtthread.bin",
+            "-append",
+            _riscv64_bootargs(rootfs_format),
             "-nographic",
             "-drive",
             "if=none,file=images/${ROOTFS_IMAGE},format=raw,id=blk0",
@@ -250,16 +254,26 @@ def _configured_build_values(paths):
 
 
 def _aarch64_bootargs(rootfs_format):
-    filesystem = ROOTFS_DRIVER_BY_IMAGE_FORMAT.get(rootfs_format)
-    if filesystem is None:
-        raise SmartBuildError(
-            "CONFIG",
-            f"qemu profile 'virt-aarch64' does not support rootfs image format {rootfs_format!r}",
-        )
+    filesystem = _rootfs_driver(rootfs_format, "virt-aarch64")
     return (
         "console=ttyAMA0 earlycon cma=8M coherent_pool=2M "
         f"root=vda0 rootfstype={filesystem} rootwait rw"
     )
+
+
+def _riscv64_bootargs(rootfs_format):
+    filesystem = _rootfs_driver(rootfs_format, "virt-riscv64")
+    return f"console=ttyS0 earlycon root=vda0 rootfstype={filesystem} rootwait rw"
+
+
+def _rootfs_driver(rootfs_format, profile):
+    filesystem = ROOTFS_DRIVER_BY_IMAGE_FORMAT.get(rootfs_format)
+    if filesystem is None:
+        raise SmartBuildError(
+            "CONFIG",
+            f"qemu profile {profile!r} does not support rootfs image format {rootfs_format!r}",
+        )
+    return filesystem
 
 
 def _timeout_output(exc):

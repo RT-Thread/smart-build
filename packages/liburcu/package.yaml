@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: liburcu
+version: 0.15.5
+type: executable
+description: Userspace RCU library
+depends: []
+source:
+  type: archive
+  url: http://lttng.org/files/urcu/userspace-rcu-0.15.5.tar.bz2
+  archive: userspace-rcu-0.15.5.tar.bz2
+  strip_root: true
+  allow_unverified: false
+  sha256: b2f787a8a83512c32599e71cdabcc5131464947b82014896bd11413b2d782de1
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/liburcu

@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: poco
+version: 1.14.2
+type: executable
+description: POCO C++ libraries
+depends: []
+source:
+  type: archive
+  url: https://github.com/pocoproject/poco/archive/poco-1.14.2-release/poco-1.14.2.tar.gz
+  archive: poco-1.14.2.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 47394ea7ddb7b0a40e1a5be896f8f5dc77cfdc4f561d2e7131ecf582df5a0c3a
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/poco
