@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_ZLIB_NG
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/zlib-ng
+source:
+  type: archive
+  url: https://github.com/zlib-ng/zlib-ng/archive/2.3.3/zlib-ng-2.3.3.tar.gz
+  archive: zlib-ng-2.3.3.tar.gz
+  revision: null
+  sha256: f9c65aa9c852eb8255b636fd9f07ce1c406f061ec19a2e7d508b318ca0c907d1
+warnings:
+- build was not verified during import

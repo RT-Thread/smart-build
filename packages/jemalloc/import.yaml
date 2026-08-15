@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_JEMALLOC_ARCH_SUPPORTS
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/jemalloc
+source:
+  type: archive
+  url: https://github.com/jemalloc/jemalloc/releases/download/5.3.1/jemalloc-5.3.1.tar.bz2
+  archive: jemalloc-5.3.1.tar.bz2
+  revision: null
+  sha256: 3826bc80232f22ed5c4662f3034f799ca316e819103bdc7bb99018a421706f92
+warnings:
+- build was not verified during import

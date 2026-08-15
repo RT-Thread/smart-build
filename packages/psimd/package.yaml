@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: psimd
+version: 4674816f56757dbd99b297cb5647f2520df08db1
+type: executable
+description: Portable 128-bit SIMD intrinsics
+depends: []
+source:
+  type: archive
+  url: https://github.com/snest/psimd/archive/4674816f56757dbd99b297cb5647f2520df08db1/psimd-4674816f56757dbd99b297cb5647f2520df08db1.tar.gz
+  archive: psimd-4674816f56757dbd99b297cb5647f2520df08db1.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 8934a8dff062663331a17588dfb771940be9d22887596c8ca77e25026c2adc6f
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/psimd

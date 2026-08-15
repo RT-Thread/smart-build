@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libbsd
+version: 0.12.2
+type: executable
+description: Compatibility library for BSD functions
+depends: []
+source:
+  type: archive
+  url: https://libbsd.freedesktop.org/releases/libbsd-0.12.2.tar.xz
+  archive: libbsd-0.12.2.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: b88cc9163d0c652aaf39a99991d974ddba1c3a9711db8f1b5838af2a14731014
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libbsd

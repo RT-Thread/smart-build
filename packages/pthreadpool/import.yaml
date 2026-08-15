@@ -1,0 +1,18 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_PTHREADPOOL
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/pthreadpool
+source:
+  type: archive
+  url: https://github.com/Maratyszcza/pthreadpool/archive/560c60d342a76076f0557a3946924c6478470044/pthreadpool-560c60d342a76076f0557a3946924c6478470044.tar.gz
+  archive: pthreadpool-560c60d342a76076f0557a3946924c6478470044.tar.gz
+  revision: null
+  sha256: 8d8ebab96df6aa12922643060e72c43bfdca9fd80cf5aacaf7391bc6850560a3
+build:
+  make_target: null
+  outputs:
+  - /usr/bin
+  install_path: /usr/bin/pthreadpool
+  materialize_symlinks: false
+warnings:
+- build was not verified during import

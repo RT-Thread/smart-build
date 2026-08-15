@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: haproxy
+version: 2.6.27
+type: executable
+description: HAProxy TCP/HTTP load balancer
+depends:
+- zlib
+source:
+  type: archive
+  url: http://www.haproxy.org/download/2.6/src/haproxy-2.6.27.tar.gz
+  archive: haproxy-2.6.27.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: ccdaf08e8653f9651992212b51af0b5513c2e2cf0cd822ca67c94cffe10386a6
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/haproxy

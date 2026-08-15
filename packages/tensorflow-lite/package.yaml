@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: tensorflow-lite
+version: 2.11.0
+type: executable
+description: TensorFlow Lite inference runtime
+depends:
+- xnnpack
+source:
+  type: archive
+  url: https://github.com/tensorflow/tensorflow/archive/v2.11.0/tensorflow-lite-2.11.0.tar.gz
+  archive: tensorflow-lite-2.11.0.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 99c732b92b1b37fc243a559e02f9aef5671771e272758aa4aec7f34dc92dac48
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/tensorflow-lite

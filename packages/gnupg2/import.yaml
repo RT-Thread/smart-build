@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_GNUPG2_DEPENDS
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/gnupg2
+source:
+  type: archive
+  url: https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.5.21.tar.bz2
+  archive: gnupg-2.5.21.tar.bz2
+  revision: null
+  sha256: e3af2c8caa46a66a9329fa7c6880af260451914d819595beabc2c26597b31352
+warnings:
+- build was not verified during import

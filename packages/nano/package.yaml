@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: nano
+version: '9.0'
+type: executable
+description: GNU nano terminal text editor
+depends:
+- ncurses
+source:
+  type: archive
+  url: https://www.nano-editor.org/dist/v9/nano-9.0.tar.xz
+  archive: nano-9.0.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: 9f384374b496110a25b73ad5a5febb384783c6e3188b37063f677ac908013fde
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/nano

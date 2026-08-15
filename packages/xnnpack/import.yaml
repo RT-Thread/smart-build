@@ -1,0 +1,18 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_XNNPACK
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/xnnpack
+source:
+  type: archive
+  url: https://github.com/google/XNNPACK/archive/d7f398ee5e135ef4f7045802eea973cc6cb26c6c/xnnpack-d7f398ee5e135ef4f7045802eea973cc6cb26c6c.tar.gz
+  archive: xnnpack-d7f398ee5e135ef4f7045802eea973cc6cb26c6c.tar.gz
+  revision: null
+  sha256: 0ed35a104a697abbae72b02b967e057883ff57b388178649c453b68cffb81f72
+build:
+  make_target: null
+  outputs:
+  - /usr/bin
+  install_path: /usr/bin/xnnpack
+  materialize_symlinks: false
+warnings:
+- build was not verified during import

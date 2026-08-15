@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_IPERF3
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/iperf3
+source:
+  type: archive
+  url: https://downloads.es.net/pub/iperf/iperf-3.21.tar.gz
+  archive: iperf-3.21.tar.gz
+  revision: null
+  sha256: 656e4405ebd620121de7ceca3eaf43a88f79ea1b857d041a6a0b1314801acdd8
+warnings:
+- build was not verified during import

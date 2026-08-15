@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: tinyssh
+version: '20240101'
+type: executable
+description: TinySSH server
+depends: []
+source:
+  type: archive
+  url: https://github.com/janmojzis/tinyssh/archive/20240101/tinyssh-20240101.tar.gz
+  archive: tinyssh-20240101.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: d2cd49d0e5e8bdb808d86f07f946a0cfbf2dc9a449a4b8243a82be267d852b62
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/sbin
+    - /usr/share/man
+    upstream_markers: []
+install:
+  path: /usr/sbin/tinysshd

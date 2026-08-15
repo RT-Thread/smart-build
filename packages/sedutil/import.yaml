@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_SEDUTIL_ARCH_SUPPORTS
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/sedutil
+source:
+  type: archive
+  url: https://github.com/Drive-Trust-Alliance/sedutil/archive/1.20.0/sedutil-1.20.0.tar.gz
+  archive: sedutil-1.20.0.tar.gz
+  revision: null
+  sha256: 88016b93cbbef98fa6f5c4e6f58e6c871662b6a7f1fc8dc788c8599fa37a44f3
+warnings:
+- build was not verified during import

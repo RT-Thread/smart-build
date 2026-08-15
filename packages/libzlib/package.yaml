@@ -1,0 +1,36 @@
+schema_version: 1
+kind: package
+name: libzlib
+version: 1.3.2
+type: library
+description: zlib compression library imported as libzlib
+requires_toolchain:
+- c
+- static-library
+- shared-library
+depends: []
+source:
+  type: archive
+  url: https://www.zlib.net/zlib-1.3.2.tar.xz
+  archive: zlib-1.3.2.tar.xz
+  strip_root: true
+  allow_unverified: false
+  sha256: d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/include
+    - /usr/lib/libz.a
+    - /usr/lib/libz.so.1.3.2
+    upstream_markers: []
+install:
+  headers:
+  - usr/include
+  libraries:
+  - usr/lib/libz.a
+  - usr/lib/libz.so.1.3.2

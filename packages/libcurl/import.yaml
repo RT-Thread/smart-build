@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBCURL_CURL
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libcurl
+source:
+  type: archive
+  url: https://curl.se/download/curl-8.21.0.tar.xz
+  archive: curl-8.21.0.tar.xz
+  revision: null
+  sha256: aa1b66a70eace83dc624508745646c08ae561de512ab403adffb93ac87fc72e6
+warnings:
+- build was not verified during import

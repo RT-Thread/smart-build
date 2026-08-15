@@ -1,0 +1,18 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_CPUINFO
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/cpuinfo
+source:
+  type: archive
+  url: https://github.com/pytorch/cpuinfo/archive/8a1772a0c5c447df2d18edf33ec4603a8c9c04a6/cpuinfo-8a1772a0c5c447df2d18edf33ec4603a8c9c04a6.tar.gz
+  archive: cpuinfo-8a1772a0c5c447df2d18edf33ec4603a8c9c04a6.tar.gz
+  revision: null
+  sha256: 37bb2fd2d1e87102baea8d131a0c550c4ceff5a12fba61faeb1bff63868155f1
+build:
+  make_target: null
+  outputs:
+  - /usr/bin
+  install_path: /usr/bin/cpuinfo
+  materialize_symlinks: false
+warnings:
+- build was not verified during import

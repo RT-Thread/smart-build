@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: gnupg2
+version: 2.5.21
+type: executable
+description: GNU Privacy Guard 2 OpenPGP suite
+depends: []
+source:
+  type: archive
+  url: https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.5.21.tar.bz2
+  archive: gnupg-2.5.21.tar.bz2
+  strip_root: true
+  allow_unverified: false
+  sha256: e3af2c8caa46a66a9329fa7c6880af260451914d819595beabc2c26597b31352
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/gnupg2

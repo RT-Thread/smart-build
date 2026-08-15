@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBNSPR_ARCH_SUPPORT
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libnspr
+source:
+  type: archive
+  url: https://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v4.38.2/src/nspr-4.38.2.tar.gz
+  archive: nspr-4.38.2.tar.gz
+  revision: null
+  sha256: e4092faeab77bdc9b32db1113e4215948ee768e26c4666db3b5a60b35f2c9105
+warnings:
+- build was not verified during import

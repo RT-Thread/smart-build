@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: lapack
+version: 3.12.1
+type: executable
+description: LAPACK and BLAS linear algebra libraries
+depends: []
+source:
+  type: archive
+  url: https://github.com/Reference-LAPACK/lapack/archive/v3.12.1/lapack-3.12.1.tar.gz
+  archive: lapack-3.12.1.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/lapack

@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_Z3_ARCH_SUPPORTS
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/z3
+source:
+  type: archive
+  url: https://github.com/Z3Prover/z3/archive/z3-4.16.0/z3-4.16.0.tar.gz
+  archive: z3-4.16.0.tar.gz
+  revision: null
+  sha256: c68c3e5e4810b16126b8cb4c47eee85c1ac3e24a81914c8e371b40de9dd33ac7
+warnings:
+- build was not verified during import

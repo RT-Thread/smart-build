@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBRESSL_BIN
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libressl
+source:
+  type: archive
+  url: https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.9.2.tar.gz
+  archive: libressl-3.9.2.tar.gz
+  revision: null
+  sha256: 7b031dac64a59eb6ee3304f7ffb75dad33ab8c9d279c847f92c89fb846068f97
+warnings:
+- build was not verified during import

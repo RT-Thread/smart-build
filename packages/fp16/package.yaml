@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: fp16
+version: 98b0a46bce017382a6351a19577ec43a715b6835
+type: executable
+description: Half-precision floating-point conversion headers
+depends:
+- psimd
+source:
+  type: archive
+  url: https://github.com/Maratyszcza/FP16/archive/98b0a46bce017382a6351a19577ec43a715b6835/fp16-98b0a46bce017382a6351a19577ec43a715b6835.tar.gz
+  archive: fp16-98b0a46bce017382a6351a19577ec43a715b6835.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: e7b509c76a2ea162ebdda77fb6b6f51f2f37dedee0866077d428e214516f0c2b
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/fp16

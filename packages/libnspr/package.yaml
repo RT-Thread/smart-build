@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libnspr
+version: 4.38.2
+type: executable
+description: Netscape Portable Runtime
+depends: []
+source:
+  type: archive
+  url: https://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v4.38.2/src/nspr-4.38.2.tar.gz
+  archive: nspr-4.38.2.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: e4092faeab77bdc9b32db1113e4215948ee768e26c4666db3b5a60b35f2c9105
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libnspr

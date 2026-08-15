@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: lvgl
+version: 9.5.0
+versions:
+  - 9.5.0
+default_version: 9.5.0
+type: library
+description: Lightweight graphics library for embedded UIs
+provides:
+  - lvgl
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/lvgl/lvgl/archive/refs/tags/v9.5.0.tar.gz
+  archive: lvgl-9.5.0.tar.gz
+  sha256: 34a955cdf3a2d005507b704e87357af669a114523b6d3f77b5344fdc68717bc6
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - lvgl.h
+    - lv_conf_template.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/lvgl
+      - /usr/lib/liblvgl.a
+    upstream_markers:
+      - CMakeLists.txt
+      - lvgl.h
+install:
+  headers:
+    - usr/include/lvgl
+  libraries:
+    - usr/lib/liblvgl.a

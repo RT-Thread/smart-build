@@ -1,0 +1,27 @@
+schema_version: 1
+kind: package
+name: protobuf
+version: '35.1'
+type: executable
+description: Protocol Buffers serialization library
+depends:
+- zlib
+source:
+  type: archive
+  url: https://github.com/protocolbuffers/protobuf/releases/download/v35.1/protobuf-35.1.tar.gz
+  archive: protobuf-35.1.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/protobuf

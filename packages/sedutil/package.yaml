@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: sedutil
+version: 1.20.0
+type: executable
+description: sedutil Self-Encrypting Drive utilities
+depends: []
+source:
+  type: archive
+  url: https://github.com/Drive-Trust-Alliance/sedutil/archive/1.20.0/sedutil-1.20.0.tar.gz
+  archive: sedutil-1.20.0.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 88016b93cbbef98fa6f5c4e6f58e6c871662b6a7f1fc8dc788c8599fa37a44f3
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/sedutil

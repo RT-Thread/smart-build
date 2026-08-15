@@ -1,0 +1,12 @@
+origin:
+  system: buildroot
+  symbol: BR2_PACKAGE_LIBXCRYPT
+  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libxcrypt
+source:
+  type: archive
+  url: https://github.com/besser82/libxcrypt/releases/download/v4.5.2/libxcrypt-4.5.2.tar.xz
+  archive: libxcrypt-4.5.2.tar.xz
+  revision: null
+  sha256: 71513a31c01a428bccd5367a32fd95f115d6dac50fb5b60c779d5c7942aec071
+warnings:
+- build was not verified during import

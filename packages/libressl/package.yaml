@@ -1,0 +1,26 @@
+schema_version: 1
+kind: package
+name: libressl
+version: 3.9.2
+type: executable
+description: LibreSSL TLS and cryptography library
+depends: []
+source:
+  type: archive
+  url: https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.9.2.tar.gz
+  archive: libressl-3.9.2.tar.gz
+  strip_root: true
+  allow_unverified: false
+  sha256: 7b031dac64a59eb6ee3304f7ffb75dad33ab8c9d279c847f92c89fb846068f97
+  local_files:
+  - sbuild.py
+  files:
+  - sbuild.py
+build:
+  python:
+    script: sbuild.py
+    outputs:
+    - /usr/bin
+    upstream_markers: []
+install:
+  path: /usr/bin/libressl
