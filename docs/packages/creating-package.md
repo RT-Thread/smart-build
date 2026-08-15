@@ -147,7 +147,10 @@ Review the generated diff before building. Each generated file starts with:
 ```
 
 The generator skips per-package Kconfig output for native packages and adds
-their `source/Kconfig` directly to `packages/Kconfig`.
+their `source/Kconfig` directly to `packages/Kconfig`. Generated package
+entries use `package.yaml` `description` as the menu prompt and help text,
+so the package list is not just a name. The generated index groups packages
+into category menus.
 
 ## Validate the package
 

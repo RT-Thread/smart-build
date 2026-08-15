@@ -52,6 +52,50 @@ interactive build or installed explicitly with `toolchain install` above.
 Packages using `build.rtthread_scons` with native Kconfig expose their RT-Thread
 package options through this command; downloads still occur during `build`.
 
+## Buildroot package import
+
+With a Buildroot checkout at `buildroot/`, configure package selection with:
+
+```sh
+./smart-build buildroot menuconfig [--machine MACHINE]
+```
+
+If `buildroot/` is missing, the command asks whether to clone the latest
+Buildroot repository from GitHub. After confirmation it performs a shallow
+clone into the repository root and continues directly into menuconfig. A
+non-interactive invocation or a declined prompt does not clone anything.
+
+Import the selected target packages with:
+
+```sh
+./smart-build buildroot import [--machine MACHINE] [--config PATH]
+./smart-build buildroot import --check
+./smart-build buildroot import --package NAME
+```
+
+The importer is deliberately best effort. Existing smart-build packages are
+skipped, unsupported packages are reported as failures, and later packages are
+still attempted. A nonzero exit status means at least one package failed.
+Successful imports create `package.yaml`, `Kconfig`, `sbuild.py`, and
+`import.yaml` under `packages/<name>/`; they do not copy upstream sources into
+the package directory. The generated source metadata retains the Buildroot
+archive URL, so smart-build downloads the archive during the normal package
+build and verifies it when a hash is available. Imported packages are not
+cross-compiled during import. Their Kconfig is generated from package metadata
+the same way as other smart-build packages; it does not carry a Buildroot label.
+
+Names listed in `packages/.imports/never-import.yaml` are never imported.
+That list includes C library implementations, Linux kernel surfaces,
+packages that need kernel features RT-Thread Smart does not provide
+(eBPF, KVM, seccomp, ptrace, RDMA, V4L2, audio, UEFI), and packages that
+were imported and then removed by hand. The importer also refreshes
+`packages/Kconfig` from current package metadata so leftover `source`
+lines for deleted packages do not remain.
+
+Package symbols already owned by smart-build are restored as selected after the
+Buildroot menuconfig command. The ownership registry is stored under
+`packages/.imports/buildroot-ownership.yaml`.
+
 ## Build
 
 ```sh
@@ -71,15 +115,21 @@ Common targets are:
 | `package:<name>` | One package and its resolved dependencies |
 | `qemu-script` | QEMU launch script |
 
-Without `--verbose`, interactive terminals show a colored progress bar and
+Before any build task starts, `build` analyzes the selected machine, toolchain,
+packages, and task graph. Interactive terminals show a live `plan:` progress
+bar while package metadata is scanned and package tasks are created.
+Redirected output prints each planning phase as a line. Planning finishes with
+`plan: ready N tasks`.
+
+Without `--verbose`, interactive terminals then show a colored progress bar and
 print completed task statuses above it. Successful and skipped tasks use the
 form `build: [2/12] toolchain:check: success` without a log path. Redirected
 output uses plain status lines without ANSI control sequences. Failed tasks
 still report their log path.
 
-`--verbose` mirrors task logs to the terminal and prints each task's domain,
-action, working directory, dependencies, inputs, outputs, cache policy, and log
-path. RT-Thread kernel compilation uses `scons --verbose` in this mode,
+`--verbose` prints each planning item, mirrors task logs to the terminal, and
+prints each task's domain, action, working directory, dependencies, inputs,
+outputs, cache policy, and log path. RT-Thread kernel compilation uses `scons --verbose` in this mode,
 exposing the complete compiler and linker commands. `--jobs` is currently
 honored by only part of the build pipeline. `--dry-run` uses placeholder tasks
 and must not be treated as an exact representation of a real task graph.

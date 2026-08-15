@@ -28,7 +28,11 @@ Run:
 
 Choose the full rootfs to select packages manually or use one of its profiles.
 Package Kconfig entries are generated from package metadata, including version,
-dependency, conflict, and option selections.
+dependency, conflict, option selections, and the package description shown in
+the menu. Packages are grouped into categories such as Networking, Libraries,
+and Development and testing. Selecting a package also selects its declared
+dependencies, so packages stay checkable even when their libraries are not
+enabled yet.
 
 ## Configure a package
 
