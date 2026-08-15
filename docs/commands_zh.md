@@ -74,7 +74,8 @@ Kconfig 的 `build.rtthread_scons` 包通过此命令提供 RT-Thread 软件包�
 导入器是尽力而为的辅助工具。已有 smart-build 软件包会跳过；单个软件包失败不会
 阻止后续软件包继续导入；最终存在失败项时命令返回非零状态。成功导入会在
 `packages/<name>/` 下生成 `package.yaml`、`Kconfig`、`sbuild.py` 和 `import.yaml`，
-不会把上游源码复制到软件包目录。生成的 source 元数据保留 Buildroot 的网络归档 URL，
+不会把上游源码复制到软件包目录。`import.yaml` 用仓库相对路径记录来源，Buildroot
+固定位于根目录 `buildroot/`，例如 `buildroot/package/iperf3`。生成的 source 元数据保留 Buildroot 的网络归档 URL，
 后续执行普通 smart-build 构建时再下载；如果有 hash 则会校验。导入过程本身不执行
 交叉编译验证。导入后的 Kconfig 按 smart-build 软件包元数据生成，与其它软件包相同，
 不再带 Buildroot 标识。

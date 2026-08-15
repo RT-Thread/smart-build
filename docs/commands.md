@@ -78,7 +78,8 @@ skipped, unsupported packages are reported as failures, and later packages are
 still attempted. A nonzero exit status means at least one package failed.
 Successful imports create `package.yaml`, `Kconfig`, `sbuild.py`, and
 `import.yaml` under `packages/<name>/`; they do not copy upstream sources into
-the package directory. The generated source metadata retains the Buildroot
+the package directory. `import.yaml` records the origin as a repository-relative
+path under the fixed `buildroot/` checkout, for example `buildroot/package/iperf3`. The generated source metadata retains the Buildroot
 archive URL, so smart-build downloads the archive during the normal package
 build and verifies it when a hash is available. Imported packages are not
 cross-compiled during import. Their Kconfig is generated from package metadata
