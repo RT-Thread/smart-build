@@ -7,6 +7,7 @@ import kconfiglib
 
 from .errors import SmartBuildError
 from .env_packages import EnvPackages
+from .package_categories import grouped_packages
 from .package_metadata import (
     load_all_package_metadata,
     package_option_choice_symbol,
@@ -36,12 +37,18 @@ def generate_package_kconfig_files(root):
 
 
 def generate_package_kconfig_index(root):
-    packages = sorted(load_all_package_metadata(root), key=lambda item: item.name)
+    packages = load_all_package_metadata(root)
     lines = [INDEX_HEADER.rstrip(), ""]
-    for metadata in packages:
-        if metadata.kconfig.mode == "native":
-            native_package_symbols(metadata)
-        lines.append(f'source "packages/{metadata.name}/{metadata.kconfig.source}"')
+    for title, items in grouped_packages(packages):
+        lines.append(f'menu "{_escape_string(title)}"')
+        lines.append("")
+        for metadata in items:
+            if metadata.kconfig.mode == "native":
+                native_package_symbols(metadata)
+            lines.append(f'source "packages/{metadata.name}/{metadata.kconfig.source}"')
+        lines.append("")
+        lines.append("endmenu")
+        lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -122,35 +129,49 @@ def _package_kconfig(metadata, provider_map):
 
 def _package_lines(metadata, provider_map):
     symbol = package_selection_symbol(metadata)
+    prompt = _package_prompt(metadata)
     lines = [
-        f"menu \"{metadata.name}\"",
+        f'menu "{_escape_string(prompt)}"',
         "",
         f"config {symbol}",
-        f"    bool \"{metadata.name}\"",
+        f'    bool "{_escape_string(prompt)}"',
     ]
-    selected_symbols = {
-        symbol
-        for selected in metadata.selects
-        for symbol in [_provided_dependency_symbol(metadata, selected, provider_map)]
-        if symbol is not None
-    }
-    if metadata.depends:
-        for dependency in metadata.depends:
-            dependency_symbol = _provided_dependency_symbol(metadata, dependency, provider_map)
-            if dependency_symbol is not None and dependency_symbol not in selected_symbols:
-                lines.append(f"    depends on {dependency_symbol}")
+    selected_symbols = set()
+    for name in (*metadata.selects, *metadata.depends):
+        selected_symbol = _provided_dependency_symbol(metadata, name, provider_map)
+        if selected_symbol is not None:
+            selected_symbols.add(selected_symbol)
     for selected_symbol in sorted(selected_symbols):
         lines.append(f"    select {selected_symbol}")
     for conflict in metadata.conflicts:
         conflict_symbol = _provided_dependency_symbol(metadata, conflict, provider_map)
         if conflict_symbol is not None:
             lines.append(f"    depends on !{conflict_symbol}")
+    lines.extend(_help_lines(metadata.description or metadata.name))
     lines.append("")
     lines.extend(_version_lines(metadata, symbol))
     for option in metadata.options:
         lines.extend(_option_lines(metadata.name, symbol, option))
     lines.append("endmenu")
     return lines
+
+
+def _package_prompt(metadata):
+    name = metadata.name
+    description = (metadata.description or "").strip()
+    if not description or description == name:
+        return name
+    lowered = description.lower()
+    if lowered.startswith(name.lower() + " ") or lowered.startswith(name.lower() + "-"):
+        return description
+    return f"{name} - {description}"
+
+
+def _help_lines(text):
+    lines = [line.strip() for line in str(text).splitlines() if line.strip()]
+    if not lines:
+        return []
+    return ["    help", *[f"      {line}" for line in lines]]
 
 
 def _version_lines(metadata, package_config):

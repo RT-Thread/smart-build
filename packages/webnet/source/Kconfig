@@ -11,6 +11,8 @@ menu "webnet"
 
 config PACKAGE_WEBNET
     bool "Enable webnet"
+    help
+      Independent RT-Thread SCons webnet HTTP server example
     select PKG_USING_WEBNET
 
 source "$PKGS_DIR/Kconfig"
