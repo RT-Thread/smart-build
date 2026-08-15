@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBBSD_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libbsd
+  package_path: buildroot/package/libbsd
 source:
   type: archive
   url: https://libbsd.freedesktop.org/releases/libbsd-0.12.2.tar.xz

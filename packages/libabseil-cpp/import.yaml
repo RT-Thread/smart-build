@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBABSEIL_CPP_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libabseil-cpp
+  package_path: buildroot/package/libabseil-cpp
 source:
   type: archive
   url: https://github.com/abseil/abseil-cpp/archive/20260107.1/libabseil-cpp-20260107.1.tar.gz

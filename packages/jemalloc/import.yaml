@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_JEMALLOC_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/jemalloc
+  package_path: buildroot/package/jemalloc
 source:
   type: archive
   url: https://github.com/jemalloc/jemalloc/releases/download/5.3.1/jemalloc-5.3.1.tar.bz2

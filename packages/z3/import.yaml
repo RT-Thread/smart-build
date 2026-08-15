@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_Z3_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/z3
+  package_path: buildroot/package/z3
 source:
   type: archive
   url: https://github.com/Z3Prover/z3/archive/z3-4.16.0/z3-4.16.0.tar.gz

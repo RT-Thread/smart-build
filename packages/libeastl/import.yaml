@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBEASTL_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libeastl
+  package_path: buildroot/package/libeastl
 source:
   type: archive
   url: https://github.com/electronicarts/EASTL/archive/3.27.01/libeastl-3.27.01.tar.gz

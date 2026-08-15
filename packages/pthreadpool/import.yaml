@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_PTHREADPOOL
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/pthreadpool
+  package_path: buildroot/package/pthreadpool
 source:
   type: archive
   url: https://github.com/Maratyszcza/pthreadpool/archive/560c60d342a76076f0557a3946924c6478470044/pthreadpool-560c60d342a76076f0557a3946924c6478470044.tar.gz

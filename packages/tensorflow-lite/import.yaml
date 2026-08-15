@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_TENSORFLOW_LITE_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/tensorflow-lite
+  package_path: buildroot/package/tensorflow-lite
 source:
   type: archive
   url: https://github.com/tensorflow/tensorflow/archive/v2.11.0/tensorflow-lite-2.11.0.tar.gz

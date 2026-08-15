@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LLAMA_CPP_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/llama-cpp
+  package_path: buildroot/package/llama-cpp
 source:
   type: archive
   url: https://github.com/ggml-org/llama.cpp/archive/refs/tags/b8117.tar.gz

@@ -520,7 +520,7 @@ def _write_package(root, package):
                 "origin": {
                     "system": "buildroot",
                     "symbol": package.symbol,
-                    "package_path": str(package.directory),
+                    "package_path": _origin_package_path(root, package.directory),
                 },
                 "source": {
                     "type": package.source_type,
@@ -541,6 +541,24 @@ def _write_package(root, package):
         ),
         encoding="utf-8",
     )
+
+
+def _origin_package_path(root, directory):
+    package_dir = Path(directory)
+    project_root = Path(root)
+    try:
+        relative = package_dir.resolve().relative_to(project_root.resolve())
+    except ValueError as exc:
+        raise SmartBuildError(
+            "BUILDROOT",
+            f"imported package path is outside the project: {package_dir}",
+        ) from exc
+    if relative.is_absolute() or ".." in relative.parts:
+        raise SmartBuildError(
+            "BUILDROOT",
+            f"imported package path is not project-relative: {package_dir}",
+        )
+    return relative.as_posix()
 
 
 def _package_layout(package):

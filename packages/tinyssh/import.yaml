@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_TINYSSH
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/tinyssh
+  package_path: buildroot/package/tinyssh
 source:
   type: archive
   url: https://github.com/janmojzis/tinyssh/archive/20240101/tinyssh-20240101.tar.gz

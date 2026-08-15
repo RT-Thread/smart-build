@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_HAPROXY_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/haproxy
+  package_path: buildroot/package/haproxy
 source:
   type: archive
   url: http://www.haproxy.org/download/2.6/src/haproxy-2.6.27.tar.gz

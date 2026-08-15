@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBURCU_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/liburcu
+  package_path: buildroot/package/liburcu
 source:
   type: archive
   url: http://lttng.org/files/urcu/userspace-rcu-0.15.5.tar.bz2

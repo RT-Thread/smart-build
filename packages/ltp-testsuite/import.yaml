@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LTP_TESTSUITE_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/ltp-testsuite
+  package_path: buildroot/package/ltp-testsuite
 source:
   type: archive
   url: https://github.com/linux-test-project/ltp/releases/download/20260529/ltp-full-20260529.tar.xz

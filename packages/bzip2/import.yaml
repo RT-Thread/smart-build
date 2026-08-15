@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_BZIP2
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/bzip2
+  package_path: buildroot/package/bzip2
 source:
   type: archive
   url: https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz

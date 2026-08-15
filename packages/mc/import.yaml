@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_MC
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/mc
+  package_path: buildroot/package/mc
 source:
   type: archive
   url: http://ftp.midnight-commander.org/mc-4.8.33.tar.xz

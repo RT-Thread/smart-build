@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_ZLIB_NG
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/zlib-ng
+  package_path: buildroot/package/zlib-ng
 source:
   type: archive
   url: https://github.com/zlib-ng/zlib-ng/archive/2.3.3/zlib-ng-2.3.3.tar.gz

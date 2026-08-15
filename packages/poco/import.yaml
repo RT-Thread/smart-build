@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_POCO_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/poco
+  package_path: buildroot/package/poco
 source:
   type: archive
   url: https://github.com/pocoproject/poco/archive/poco-1.14.2-release/poco-1.14.2.tar.gz

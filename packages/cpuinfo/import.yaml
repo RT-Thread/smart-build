@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_CPUINFO
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/cpuinfo
+  package_path: buildroot/package/cpuinfo
 source:
   type: archive
   url: https://github.com/pytorch/cpuinfo/archive/8a1772a0c5c447df2d18edf33ec4603a8c9c04a6/cpuinfo-8a1772a0c5c447df2d18edf33ec4603a8c9c04a6.tar.gz

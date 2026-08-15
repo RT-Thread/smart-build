@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_XNNPACK
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/xnnpack
+  package_path: buildroot/package/xnnpack
 source:
   type: archive
   url: https://github.com/google/XNNPACK/archive/d7f398ee5e135ef4f7045802eea973cc6cb26c6c/xnnpack-d7f398ee5e135ef4f7045802eea973cc6cb26c6c.tar.gz

@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_JSON_C
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/json-c
+  package_path: buildroot/package/json-c
 source:
   type: archive
   url: https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18.tar.gz

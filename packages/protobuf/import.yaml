@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_PROTOBUF_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/protobuf
+  package_path: buildroot/package/protobuf
 source:
   type: archive
   url: https://github.com/protocolbuffers/protobuf/releases/download/v35.1/protobuf-35.1.tar.gz

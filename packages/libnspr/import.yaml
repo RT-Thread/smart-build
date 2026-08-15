@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBNSPR_ARCH_SUPPORT
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libnspr
+  package_path: buildroot/package/libnspr
 source:
   type: archive
   url: https://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v4.38.2/src/nspr-4.38.2.tar.gz

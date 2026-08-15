@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_OPROFILE_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/oprofile
+  package_path: buildroot/package/oprofile
 source:
   type: archive
   url: http://downloads.sourceforge.net/project/oprofile/oprofile/oprofile-1.4.0/oprofile-1.4.0.tar.gz

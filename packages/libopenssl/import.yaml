@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBOPENSSL
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libopenssl
+  package_path: buildroot/package/libopenssl
 source:
   type: archive
   url: https://github.com/openssl/openssl/releases/download/openssl-3.6.3/openssl-3.6.3.tar.gz

@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_GNUPG2_DEPENDS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/gnupg2
+  package_path: buildroot/package/gnupg2
 source:
   type: archive
   url: https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.5.21.tar.bz2

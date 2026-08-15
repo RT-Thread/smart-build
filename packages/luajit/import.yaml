@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LUAJIT_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/luajit
+  package_path: buildroot/package/luajit
 source:
   type: archive
   url: https://github.com/LuaJIT/LuaJIT/archive/707c12bf00dafdfd3899b1a6c36435dbbf6c7022/luajit-707c12bf00dafdfd3899b1a6c36435dbbf6c7022.tar.gz

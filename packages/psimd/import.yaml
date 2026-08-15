@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_PSIMD
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/psimd
+  package_path: buildroot/package/psimd
 source:
   type: archive
   url: https://github.com/snest/psimd/archive/4674816f56757dbd99b297cb5647f2520df08db1/psimd-4674816f56757dbd99b297cb5647f2520df08db1.tar.gz

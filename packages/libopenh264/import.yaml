@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBOPENH264_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libopenh264
+  package_path: buildroot/package/libopenh264
 source:
   type: archive
   url: https://github.com/cisco/openh264/archive/v2.6.0/libopenh264-2.6.0.tar.gz

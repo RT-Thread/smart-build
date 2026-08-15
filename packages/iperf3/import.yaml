@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_IPERF3
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/iperf3
+  package_path: buildroot/package/iperf3
 source:
   type: archive
   url: https://downloads.es.net/pub/iperf/iperf-3.21.tar.gz

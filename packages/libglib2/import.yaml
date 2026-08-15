@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LIBGLIB2
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/libglib2
+  package_path: buildroot/package/libglib2
 source:
   type: archive
   url: https://download.gnome.org/sources/glib/2.88/glib-2.88.3.tar.xz

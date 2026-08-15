@@ -1,7 +1,7 @@
 origin:
   system: buildroot
   symbol: BR2_PACKAGE_LAPACK_ARCH_SUPPORTS
-  package_path: /media/bernard/data/home/smart/smart-build/buildroot/package/lapack
+  package_path: buildroot/package/lapack
 source:
   type: archive
   url: https://github.com/Reference-LAPACK/lapack/archive/v3.12.1/lapack-3.12.1.tar.gz
