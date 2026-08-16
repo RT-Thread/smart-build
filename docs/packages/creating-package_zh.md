@@ -2,10 +2,12 @@
 
 # 添加软件包
 
-每个软件包使用一个小写、连字符命名的目录：
+每个软件包使用一个小写、连字符命名的目录。软件包名是最后一级目录名，不能包含 `/`。
 
 ```text
-packages/<name>/
+packages/<name>/                 # 目标软件包
+packages/ros2/<name>/            # 目标 ROS 2 软件包
+packages/host/<name>/            # 仅主机工具（不进入 rootfs）
   package.yaml
   Kconfig          # 生成式元数据后端
   sbuild.py        # 用于 Python 构建后端
@@ -17,6 +19,15 @@ packages/<name>/
   patches/         # 可选
   conf/            # 可选
 ```
+
+按名称查找的顺序是 `packages/<name>/`、`packages/ros2/<name>/`、
+`packages/host/<name>/`。同一名称不得出现在多个位置。`packages/host/` 下的
+软件包只在开发主机上构建，不会进入 rootfs 或 IPKG。未分组软件包沿用现有
+分类表；`packages/ros2/` 默认归入 ROS 2，`packages/host/` 默认归入 Host tools。
+
+ROS 2 软件包的目标运行时和目标 C/C++ 库放在 `packages/ros2/`；ament、Python、
+rosidl 生成器以及其他仅开发主机使用的内容放在 `packages/host/`。后者使用
+`host_depends` 声明，使构建图能够选择和构建它们，但不会把它们当成目标运行时依赖。
 
 对于默认后端，`package.yaml` 是软件包选择元数据来源，`Kconfig` 由其生成。
 独立 RT-Thread SCons 包则声明 `kconfig.mode: native`；其唯一 Kconfig 是
@@ -30,11 +41,16 @@ packages/<name>/
 - `build.cmake` 构建仓库内的 CMake 可执行程序。
 - `build.python.script` 运行仓库内受信任的 Python 构建代码，用于需要自定义
   适配的上游软件包。
+- `build.ament_cmake` 交叉编译 ament CMake 软件包，并安装到软件包暂存目录。
 - `build.rtthread_scons` 通过固定的 `source/SConstruct` 入口和 `install` target
   构建经过调整的独立 RT-Thread 软件包。
 
 自定义 `sbuild.py` 脚本属于受信任代码。它以构建用户权限执行，必须校验所需
 输入，并且只能创建已声明的暂存输出。
+
+普通 ROS 2 C/C++ 软件包应直接使用 `build.ament_cmake`，不要添加空的
+`configure:` 或包级 `sbuild.py`。只有 Rust FFI、PSMX 适配器或确实不同的构建/安装
+流程才使用自定义脚本。
 
 RT-Thread SCons 文件同样属于受信任代码。此后端不是通用 SCons 适配层：应先把
 软件包完整独立到 `source/` 下，移除相对 userapps 的路径和应用扫描，并使其

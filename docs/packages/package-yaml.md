@@ -3,7 +3,8 @@
 # Package description reference
 
 Package descriptions use YAML schema version 1 and live at
-`packages/<name>/package.yaml`.
+`packages/<name>/package.yaml`, `packages/ros2/<name>/package.yaml`, or
+`packages/host/<name>/package.yaml`.
 
 ## Common fields
 
@@ -19,6 +20,7 @@ Package descriptions use YAML schema version 1 and live at
 | `description` | No | User-facing package description shown in generated Kconfig, at most 80 characters |
 | `category` | No | menuconfig group; defaults to the built-in package category map |
 | `depends` | No | Required packages or capabilities; menuconfig selects them automatically |
+| `host_depends` | No | Host-only build dependencies; they are selected and built without entering the target IPKG |
 | `selects` | No | Extra packages or capabilities selected automatically |
 | `conflicts` | No | Packages that cannot be selected together |
 | `provides` | No | Capabilities provided by this package |
@@ -33,11 +35,13 @@ Package descriptions use YAML schema version 1 and live at
 
 ## Relations
 
-`depends`, `selects`, `conflicts`, `provides`, and `requires_toolchain` normally
-use lists. For compatibility, `depends` also accepts a comma-separated string.
-Dependencies can refer to a package name or a name listed by another package's
-`provides` field. Generated package Kconfig turns both `depends` and `selects`
-into `select`, so a package stays checkable and pulls in its requirements.
+`depends`, `host_depends`, `selects`, `conflicts`, `provides`, and
+`requires_toolchain` normally use lists. For compatibility, `depends` and
+`host_depends` also accept comma-separated strings. Dependencies can refer to a
+package name or a name listed by another package's `provides` field. Generated
+package Kconfig turns `depends`, `host_depends`, and `selects` into `select`, so
+a package stays checkable and pulls in its requirements. Host dependencies are
+used by the build graph but are excluded from target IPKG assembly.
 
 The generated `packages/Kconfig` index groups packages into menus such as
 Networking, Libraries, and Development and testing. Set `category` to override
@@ -92,6 +96,9 @@ source:
   strip_root: true
   local_files:
     - sbuild.py
+    - patches/example.patch
+  patches:
+    - example.patch
   files:
     - configure
 ```
@@ -101,7 +108,10 @@ For best-effort imported packages whose upstream does not publish a hash,
 definitions should keep an immutable archive URL and SHA-256 checksum.
 
 Archive extraction rejects path traversal and unsafe link targets. `local_files`
-are copied from the package directory into the prepared source tree.
+are copied from the package directory into the prepared source tree. Every
+entry in `patches` must also be listed in `local_files`; patches are applied to
+the prepared tree in declaration order with `git apply`, before configuration
+is restored. A patch failure stops source preparation.
 
 ## Python backend
 
@@ -120,6 +130,33 @@ install:
 
 Every declared output must be created below the package staging directory.
 Output paths are absolute rootfs paths in metadata but cannot escape staging.
+
+## ament CMake backend
+
+```yaml
+type: library
+category: ROS 2
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    cmake_args:
+      - -DCMAKE_BUILD_TYPE=Release
+    outputs:
+      - /usr/lib
+      - /usr/include
+      - /usr/share
+```
+
+The backend writes a Generic/UNIX CMake toolchain file, turns off tests unless
+`testing` is true, applies the selected `linkage`, and installs with `DESTDIR`
+set to the package staging directory. `CMAKE_PREFIX_PATH` and
+`AMENT_PREFIX_PATH` include the complete dependency closure and
+`build/<machine>/host/ros2-sdk`. With `host_python: sdk`, CMake and ament
+generators use the Host SDK virtual environment. Toolchain, prefix, install,
+and Python arguments are protected from override by `cmake_args`. Declared
+outputs must exist after install.
 
 ## CMake executable backend
 

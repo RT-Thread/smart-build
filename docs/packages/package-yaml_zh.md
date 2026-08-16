@@ -3,7 +3,8 @@
 # 软件包描述文件参考
 
 软件包描述使用 YAML schema 版本 1，并保存在
-`packages/<name>/package.yaml`。
+`packages/<name>/package.yaml`、`packages/ros2/<name>/package.yaml` 或
+`packages/host/<name>/package.yaml`。
 
 ## 通用字段
 
@@ -19,6 +20,7 @@
 | `description` | 否 | 面向用户的软件包说明，会写入生成的 Kconfig 菜单项和 help，最多 80 个字符 |
 | `category` | 否 | menuconfig 分组；未填写时使用内置分类表 |
 | `depends` | 否 | 构建所需的软件包或能力；menuconfig 会自动选中它们 |
+| `host_depends` | 否 | 仅开发主机的构建依赖；会构建但不会进入目标 IPKG |
 | `selects` | 否 | 额外自动选中的软件包或能力 |
 | `conflicts` | 否 | 不能同时选择的软件包 |
 | `provides` | 否 | 此软件包提供的能力 |
@@ -33,11 +35,12 @@
 
 ## 关系
 
-`depends`、`selects`、`conflicts`、`provides` 和 `requires_toolchain` 通常使用
-列表。出于兼容性考虑，`depends` 也接受逗号分隔的字符串。依赖可以引用软件包
-名称，或者另一个软件包在 `provides` 字段中列出的名称。生成的软件包 Kconfig
-会把 `depends` 和 `selects` 都写成 `select`，因此软件包始终可以勾选，并自动
-带上所需依赖。
+`depends`、`host_depends`、`selects`、`conflicts`、`provides` 和
+`requires_toolchain` 通常使用列表。出于兼容性考虑，`depends` 和
+`host_depends` 也接受逗号分隔的字符串。依赖可以引用软件包名称，或者另一个
+软件包在 `provides` 字段中列出的名称。生成的软件包 Kconfig 会把 `depends`、
+`host_depends` 和 `selects` 都写成 `select`，因此软件包始终可以勾选，并自动
+带上所需依赖。Host 依赖只参与构建图，不进入目标 IPKG。
 
 生成的 `packages/Kconfig` 索引会按 Networking、Libraries、Development and
 testing 等菜单分组。可用 `category` 覆盖默认分组；未分类的软件包会出现在
@@ -90,6 +93,9 @@ source:
   strip_root: true
   local_files:
     - sbuild.py
+    - patches/example.patch
+  patches:
+    - example.patch
   files:
     - configure
 ```
@@ -99,7 +105,9 @@ source:
 SHA-256 校验值。
 
 归档解压会拒绝路径遍历和不安全的链接目标。`local_files` 会从软件包目录复制到
-准备好的源码树中。
+准备好的源码树中。`patches` 中的每一项还必须列入 `local_files`；补丁会在恢复
+配置前按声明顺序通过 `git apply` 应用到准备好的源码树，任一补丁失败都会终止
+源码准备。
 
 ## Python 后端
 
@@ -118,6 +126,31 @@ install:
 
 每个声明的输出都必须创建在软件包暂存目录下。元数据中的输出路径是绝对
 rootfs 路径，但不能越出暂存目录。
+
+## ament CMake 后端
+
+```yaml
+type: library
+category: ROS 2
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    cmake_args:
+      - -DCMAKE_BUILD_TYPE=Release
+    outputs:
+      - /usr/lib
+      - /usr/include
+      - /usr/share
+```
+
+此后端会写入 Generic/UNIX 的 CMake toolchain 文件；除非 `testing` 为 true，
+否则关闭测试；按 `linkage` 应用链接策略；安装时将 `DESTDIR` 设为软件包
+暂存目录。`CMAKE_PREFIX_PATH` 和 `AMENT_PREFIX_PATH` 包含完整依赖闭包以及
+`build/<machine>/host/ros2-sdk`。`host_python: sdk` 时，CMake 和 ament 生成器
+使用 Host SDK 虚拟环境。toolchain、prefix、安装路径和 Python 参数不能由
+`cmake_args` 覆盖。安装后必须存在已声明的输出。
 
 ## CMake 可执行程序后端
 
