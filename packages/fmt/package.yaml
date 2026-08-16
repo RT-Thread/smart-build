@@ -1,0 +1,44 @@
+schema_version: 1
+kind: package
+name: fmt
+version: 11.1.4
+versions:
+  - 11.1.4
+default_version: 11.1.4
+type: library
+description: fmt C++ formatting library
+category: Libraries
+provides:
+  - fmt
+requires_toolchain:
+  - cxx
+  - static-library
+source:
+  type: archive
+  url: https://github.com/fmtlib/fmt/archive/11.1.4.tar.gz
+  archive: fmt-11.1.4.tar.gz
+  sha256: ac366b7b4c2e9f0dde63a59b3feb5ee59b67974b14ee5dc9ea8ad78aa2c1ee1e
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - include/fmt/core.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/fmt
+      - /usr/lib/libfmt.so
+      - /usr/lib/libfmt.so.11
+      - /usr/lib/libfmt.so.11.1.4
+    upstream_markers:
+      - CMakeLists.txt
+      - include/fmt/core.h
+install:
+  headers:
+    - usr/include/fmt
+  libraries:
+    - usr/lib/libfmt.so
+    - usr/lib/libfmt.so.11
+    - usr/lib/libfmt.so.11.1.4

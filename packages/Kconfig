@@ -62,6 +62,9 @@ endmenu
 
 menu "Libraries"
 
+source "packages/console-bridge/Kconfig"
+source "packages/cyclonedds/Kconfig"
+source "packages/fmt/Kconfig"
 source "packages/jemalloc/Kconfig"
 source "packages/json-c/Kconfig"
 source "packages/libabseil-cpp/Kconfig"
@@ -79,10 +82,13 @@ source "packages/libunwind/Kconfig"
 source "packages/liburcu/Kconfig"
 source "packages/libuv/Kconfig"
 source "packages/libxml2/Kconfig"
+source "packages/libyaml/Kconfig"
 source "packages/pcre/Kconfig"
 source "packages/pcre2/Kconfig"
 source "packages/poco/Kconfig"
 source "packages/protobuf/Kconfig"
+source "packages/spdlog/Kconfig"
+source "packages/tinyxml2/Kconfig"
 
 endmenu
 

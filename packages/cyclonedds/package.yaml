@@ -1,0 +1,48 @@
+schema_version: 1
+kind: package
+name: cyclonedds
+version: 11.0.1
+versions:
+  - 11.0.1
+default_version: 11.0.1
+type: library
+description: Eclipse CycloneDDS 11.0.1 with Iceoryx2 PSMX support
+category: Libraries
+provides:
+  - cyclonedds
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/eclipse-cyclonedds/cyclonedds/archive/refs/tags/11.0.1.tar.gz
+  archive: cyclonedds-11.0.1.tar.gz
+  sha256: c25d46075ad6b5cee564bda9e5f49509e9a6dbb1a8b858e708eb360d335cf973
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - files/rt-smart-ifaddrs.c
+    - files/cyclonedds.xml
+    - files/cyclonedds.network.xml
+  files:
+    - CMakeLists.txt
+    - rt-smart-ifaddrs.c
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/dds
+      - /usr/lib/libddsc.so
+      - /usr/lib/libddsc.so.11
+      - /usr/lib/libddsc.so.11.0.1
+      - /etc/cyclonedds.xml
+      - /etc/cyclonedds.network.xml
+    upstream_markers:
+      - CMakeLists.txt
+install:
+  headers:
+    - usr/include/dds
+  libraries:
+    - usr/lib/libddsc.so
+    - usr/lib/libddsc.so.11
+    - usr/lib/libddsc.so.11.0.1
