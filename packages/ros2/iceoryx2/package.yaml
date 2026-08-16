@@ -1,0 +1,45 @@
+schema_version: 1
+kind: package
+name: iceoryx2
+version: 0.9.3
+versions:
+  - 0.9.3
+default_version: 0.9.3
+type: library
+category: ROS 2
+description: Iceoryx2 C shared-memory transport library
+provides:
+  - iceoryx2
+requires_toolchain:
+  - c
+  - shared-library
+source:
+  type: archive
+  url: https://github.com/eclipse-iceoryx/iceoryx2/archive/refs/tags/v0.9.3.tar.gz
+  archive: iceoryx2-v0.9.3.tar.gz
+  sha256: 2b4438364614b390938354ac766c198bb2ad63a2bde84a142c53f555fe8f4bc1
+  strip_root: true
+  local_files:
+    - sbuild.py
+    - rust-targets/riscv64imafdc-unknown-linux-musl.json
+    - patches/rt-smart-musl.patch
+  patches:
+    - rt-smart-musl.patch
+  files:
+    - Cargo.toml
+    - Cargo.lock
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/iceoryx2/v0.9.3/iox2/iceoryx2.h
+      - /usr/lib/libiceoryx2_ffi_c.so
+      - /usr/lib/cmake/iceoryx2-c/iceoryx2-cConfig.cmake
+    upstream_markers:
+      - Cargo.toml
+      - Cargo.lock
+install:
+  headers:
+    - usr/include/iceoryx2/v0.9.3/iox2/iceoryx2.h
+  libraries:
+    - usr/lib/libiceoryx2_ffi_c.so

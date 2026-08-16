@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: rcl-interfaces
+version: 2.0.2
+versions:
+  - 2.0.2
+default_version: 2.0.2
+type: library
+category: ROS 2
+description: rcl parameter and graph interfaces
+depends:
+  - builtin-interfaces
+  - rosidl-default-runtime
+  - service-msgs
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rcl_interfaces-release/archive/release/jazzy/rcl_interfaces/2.0.2-1.tar.gz
+  archive: rcl_interfaces-2.0.2-1.tar.gz
+  sha256: 5be91660e77e3b8b7b75ca333761cab6c957509dd4ad2574dd457ff2b10694a8
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

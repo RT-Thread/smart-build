@@ -1,0 +1,137 @@
+diff --git a/iceoryx2-bb/posix/src/socket_ancillary.rs b/iceoryx2-bb/posix/src/socket_ancillary.rs
+index 511c7e0..b57a732 100644
+--- a/iceoryx2-bb/posix/src/socket_ancillary.rs
++++ b/iceoryx2-bb/posix/src/socket_ancillary.rs
+@@ -251,19 +251,14 @@ impl UdsMsgHeader {
+ 
+ impl Default for SocketAncillary {
+     fn default() -> Self {
++        let mut message = posix::msghdr::new_zeroed();
++        message.msg_iovlen = IOVEC_BUFFER_CAPACITY as _;
++        message.msg_controllen = buffer_capacity() as _;
+         let mut new_self = Self {
+             message_buffer: [0u8; BUFFER_CAPACITY],
+             iovec_buffer: [0u8; IOVEC_BUFFER_CAPACITY],
+             iovec: unsafe { core::mem::zeroed() },
+-            message: posix::msghdr {
+-                msg_name: core::ptr::null_mut::<posix::void>(),
+-                msg_namelen: 0,
+-                msg_iov: core::ptr::null_mut(),
+-                msg_iovlen: IOVEC_BUFFER_CAPACITY as _,
+-                msg_control: core::ptr::null_mut::<posix::void>(),
+-                msg_controllen: buffer_capacity() as _,
+-                msg_flags: 0,
+-            },
++            message,
+             file_descriptors: vec![],
+             credentials: None,
+             is_prepared_for_send: false,
+diff --git a/iceoryx2-pal/posix/src/linux/fcntl.rs b/iceoryx2-pal/posix/src/linux/fcntl.rs
+--- a/iceoryx2-pal/posix/src/linux/fcntl.rs
++++ b/iceoryx2-pal/posix/src/linux/fcntl.rs
+@@ -45,7 +45,27 @@ pub unsafe fn fcntl2(fd: int, cmd: int) -> int {
+     unsafe { libc::fcntl(fd, cmd) }
+ }
+ 
+ pub unsafe fn fchmod(fd: int, mode: mode_t) -> int {
+-    unsafe { libc::fchmod(fd, mode) }
++    #[cfg(rt_smart)]
++    {
++        const RT_SMART_FCHMOD_SYSCALL: libc::c_long = 215;
++        let result = unsafe {
++            libc::syscall(
++                RT_SMART_FCHMOD_SYSCALL,
++                fd as libc::c_long,
++                mode as libc::c_long,
++            )
++        };
++        if result < 0 {
++            unsafe { *libc::__errno_location() = -result as int };
++            -1
++        } else {
++            result as int
++        }
++    }
++    #[cfg(not(rt_smart))]
++    unsafe {
++        libc::fchmod(fd, mode)
++    }
+ }
+ 
+diff --git a/iceoryx2-pal/posix/src/linux/pthread.rs b/iceoryx2-pal/posix/src/linux/pthread.rs
+index e8f33b1..5ee540f 100644
+--- a/iceoryx2-pal/posix/src/linux/pthread.rs
++++ b/iceoryx2-pal/posix/src/linux/pthread.rs
+@@ -16,7 +16,15 @@
+ use crate::posix::*;
+ 
+ pub unsafe fn pthread_rwlockattr_setkind_np(attr: *mut pthread_rwlockattr_t, pref: int) -> int {
+-    unsafe { libc::pthread_rwlockattr_setkind_np(attr, pref) }
++    #[cfg(target_env = "musl")]
++    {
++        let _ = (attr, pref);
++        0
++    }
++    #[cfg(not(target_env = "musl"))]
++    unsafe {
++        libc::pthread_rwlockattr_setkind_np(attr, pref)
++    }
+ }
+ 
+ pub unsafe fn pthread_barrier_wait(barrier: *mut pthread_barrier_t) -> int {
+@@ -86,9 +94,14 @@ pub unsafe fn pthread_attr_setaffinity_np(
+     cpusetsize: size_t,
+     cpuset: *const cpu_set_t,
+ ) -> int {
++    #[cfg(target_env = "musl")]
++    {
++        let _ = (attr, cpusetsize, cpuset);
++        libc::ENOTSUP
++    }
++    #[cfg(not(target_env = "musl"))]
+     unsafe {
+-        let cpuset = core::mem::transmute::<cpu_set_t, native_cpu_set_t>(*cpuset);
+-
++        let cpuset = to_native_cpu_set(cpuset);
+         libc::pthread_attr_setaffinity_np(attr, cpusetsize, &cpuset)
+     }
+ }
+@@ -128,7 +141,7 @@ pub unsafe fn pthread_setaffinity_np(
+     cpuset: *const cpu_set_t,
+ ) -> int {
+     unsafe {
+-        let cpuset = core::mem::transmute::<cpu_set_t, native_cpu_set_t>(*cpuset);
++        let cpuset = to_native_cpu_set(cpuset);
+ 
+         libc::pthread_setaffinity_np(thread, cpusetsize, &cpuset)
+     }
+@@ -143,12 +156,28 @@ pub unsafe fn pthread_getaffinity_np(
+     unsafe {
+         let ret_val = libc::pthread_getaffinity_np(thread, cpusetsize, &mut native_cpuset);
+ 
+-        *cpuset = core::mem::transmute::<native_cpu_set_t, cpu_set_t>(native_cpuset);
++        core::ptr::copy_nonoverlapping(
++            &native_cpuset as *const native_cpu_set_t as *const u8,
++            cpuset as *mut u8,
++            core::mem::size_of::<cpu_set_t>(),
++        );
+ 
+         ret_val
+     }
+ }
+ 
++unsafe fn to_native_cpu_set(cpuset: *const cpu_set_t) -> native_cpu_set_t {
++    let mut native_cpuset = native_cpu_set_t::new_zeroed();
++    unsafe {
++        core::ptr::copy_nonoverlapping(
++            cpuset as *const u8,
++            &mut native_cpuset as *mut native_cpu_set_t as *mut u8,
++            core::mem::size_of::<cpu_set_t>(),
++        );
++    }
++    native_cpuset
++}
++
+ pub unsafe fn pthread_rwlockattr_init(attr: *mut pthread_rwlockattr_t) -> int {
+     unsafe { libc::pthread_rwlockattr_init(attr) }
+ }

@@ -1,0 +1,55 @@
+schema_version: 1
+kind: package
+name: rclcpp
+version: 28.1.12
+versions:
+  - 28.1.12
+default_version: 28.1.12
+type: library
+category: ROS 2
+description: ROS 2 C++ client library
+depends:
+  - ament-index-cpp
+  - builtin-interfaces
+  - libstatistics-collector
+  - rcl
+  - rcl-interfaces
+  - rcl-yaml-param-parser
+  - rcpputils
+  - rcutils
+  - rosgraph-msgs
+  - rmw
+  - rmw-implementation
+  - rosidl-dynamic-typesupport
+  - rosidl-runtime-cpp
+  - rosidl-typesupport-c
+  - rosidl-typesupport-cpp
+  - statistics-msgs
+  - tracetools
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rclcpp-release/archive/release/jazzy/rclcpp/28.1.12-1.tar.gz
+  archive: rclcpp-28.1.12-1.tar.gz
+  sha256: a2feebdfc7000ecf949807e1db2fec3a822119338e984349c36a0b41546c4b63
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+    cmake_args:
+      - -DCMAKE_CXX_FLAGS=-D_GNU_SOURCE
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

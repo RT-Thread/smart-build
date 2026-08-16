@@ -1,0 +1,38 @@
+schema_version: 1
+kind: package
+name: service-msgs
+version: 2.0.4
+versions:
+  - 2.0.4
+default_version: 2.0.4
+type: library
+category: ROS 2
+description: Common ROS 2 service event message definitions
+depends:
+  - builtin-interfaces
+  - rosidl-default-runtime
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rcl_interfaces-release/archive/refs/tags/release/jazzy/service_msgs/2.0.4-1.tar.gz
+  archive: service_msgs-2.0.4-1.tar.gz
+  sha256: fb0dc222fd3dd50f7786b9cdeea142a4d9ed4c4befeb9b09c8ddf2b089e5b341
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

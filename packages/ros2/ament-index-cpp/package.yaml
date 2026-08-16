@@ -1,0 +1,36 @@
+schema_version: 1
+kind: package
+name: ament-index-cpp
+version: 1.8.1
+versions:
+  - 1.8.1
+default_version: 1.8.1
+type: library
+category: ROS 2
+description: C++ API for the ament resource index
+depends: []
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/ament_index-release/archive/release/jazzy/ament_index_cpp/1.8.1-1.tar.gz
+  archive: ament_index_cpp-1.8.1-1.tar.gz
+  sha256: 64d33393e3daf648c396f0ea56c3254c81aed40b191f30b0b1587a83bd03d05a
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

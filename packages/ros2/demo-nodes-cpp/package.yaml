@@ -1,0 +1,37 @@
+schema_version: 1
+kind: package
+name: demo-nodes-cpp
+version: 0.33.11
+versions:
+  - 0.33.11
+default_version: 0.33.11
+type: executable
+category: ROS 2
+description: C++ talker and listener demo nodes
+depends:
+  - example-interfaces
+  - rclcpp
+  - rclcpp-components
+  - std-msgs
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/demos-release/archive/release/jazzy/demo_nodes_cpp/0.33.11-1.tar.gz
+  archive: demo_nodes_cpp-0.33.11-1.tar.gz
+  sha256: 761b46ab7047ffc5554f4993d5f4a162a6ec92bc55afc9754bfb81175613e362
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/lib
+      - /usr/share
+install:
+  libraries:
+    - usr/lib

@@ -132,6 +132,59 @@ source "packages/utest-h/Kconfig"
 
 endmenu
 
+menu "ROS 2"
+
+source "packages/ros2/action-msgs/Kconfig"
+source "packages/ros2/ament-index-cpp/Kconfig"
+source "packages/ros2/builtin-interfaces/Kconfig"
+source "packages/ros2/class-loader/Kconfig"
+source "packages/ros2/composition-interfaces/Kconfig"
+source "packages/ros2/console-bridge-vendor/Kconfig"
+source "packages/ros2/demo-nodes-cpp/Kconfig"
+source "packages/ros2/example-interfaces/Kconfig"
+source "packages/ros2/iceoryx2/Kconfig"
+source "packages/ros2/libstatistics-collector/Kconfig"
+source "packages/ros2/libyaml-vendor/Kconfig"
+source "packages/ros2/psmx-iox2/Kconfig"
+source "packages/ros2/rcl/Kconfig"
+source "packages/ros2/rcl-interfaces/Kconfig"
+source "packages/ros2/rcl-logging-interface/Kconfig"
+source "packages/ros2/rcl-logging-spdlog/Kconfig"
+source "packages/ros2/rcl-yaml-param-parser/Kconfig"
+source "packages/ros2/rclcpp/Kconfig"
+source "packages/ros2/rclcpp-components/Kconfig"
+source "packages/ros2/rcpputils/Kconfig"
+source "packages/ros2/rcutils/Kconfig"
+source "packages/ros2/rmw/Kconfig"
+source "packages/ros2/rmw-cyclonedds-cpp/Kconfig"
+source "packages/ros2/rmw-dds-common/Kconfig"
+source "packages/ros2/rmw-implementation/Kconfig"
+source "packages/ros2/rosgraph-msgs/Kconfig"
+source "packages/ros2/rosidl-default-runtime/Kconfig"
+source "packages/ros2/rosidl-dynamic-typesupport/Kconfig"
+source "packages/ros2/rosidl-runtime-c/Kconfig"
+source "packages/ros2/rosidl-runtime-cpp/Kconfig"
+source "packages/ros2/rosidl-typesupport-c/Kconfig"
+source "packages/ros2/rosidl-typesupport-cpp/Kconfig"
+source "packages/ros2/rosidl-typesupport-interface/Kconfig"
+source "packages/ros2/rosidl-typesupport-introspection-c/Kconfig"
+source "packages/ros2/rosidl-typesupport-introspection-cpp/Kconfig"
+source "packages/ros2/service-msgs/Kconfig"
+source "packages/ros2/spdlog-vendor/Kconfig"
+source "packages/ros2/statistics-msgs/Kconfig"
+source "packages/ros2/std-msgs/Kconfig"
+source "packages/ros2/tracetools/Kconfig"
+source "packages/ros2/type-description-interfaces/Kconfig"
+source "packages/ros2/unique-identifier-msgs/Kconfig"
+
+endmenu
+
+menu "Host tools"
+
+source "packages/host/ros2-host-sdk/Kconfig"
+
+endmenu
+
 menu "System utilities"
 
 source "packages/ipkg/Kconfig"

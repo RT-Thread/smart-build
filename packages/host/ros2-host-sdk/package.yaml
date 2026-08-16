@@ -1,0 +1,24 @@
+schema_version: 1
+kind: package
+name: ros2-host-sdk
+version: 2.5.5
+versions:
+  - 2.5.5
+default_version: 2.5.5
+type: library
+description: Host ament and rosidl generators for Jazzy
+category: Host tools
+source:
+  directory: packages/host/ros2-host-sdk/src
+  files:
+    - sources.json
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/share/ros2-host-sdk
+    upstream_markers:
+      - sources.json
+install:
+  headers:
+    - usr/share/ros2-host-sdk

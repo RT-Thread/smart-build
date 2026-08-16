@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: rmw-implementation
+version: 2.15.6
+versions:
+  - 2.15.6
+default_version: 2.15.6
+type: library
+category: ROS 2
+description: RMW implementation loader
+depends:
+  - ament-index-cpp
+  - rcpputils
+  - rcutils
+  - rmw
+  - rmw-cyclonedds-cpp
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rmw_implementation-release/archive/release/jazzy/rmw_implementation/2.15.6-1.tar.gz
+  archive: rmw_implementation-2.15.6-1.tar.gz
+  sha256: 90329f70219318b4916e895b01082048951c8ee3a64868c6d279468c336b01b9
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/lib
+      - /usr/share
+    cmake_args:
+      - -DRMW_IMPLEMENTATION_DISABLE_RUNTIME_SELECTION=OFF
+install:
+  libraries:
+    - usr/lib

@@ -1,0 +1,41 @@
+schema_version: 1
+kind: package
+name: rcutils
+version: 6.7.6
+versions:
+  - 6.7.6
+default_version: 6.7.6
+type: library
+category: ROS 2
+description: ROS 2 C utilities library
+host_depends:
+  - ros2-host-sdk
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rcutils-release/archive/release/jazzy/rcutils/6.7.6-1.tar.gz
+  archive: rcutils-release-6.7.6-1.tar.gz
+  sha256: ac599f6e8efb75f48221fc34287dcf3045f86e828c9b735687e05c79a41ebba3
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+    - include/rcutils/allocator.h
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    cmake_args:
+      - -DCMAKE_BUILD_TYPE=Release
+    outputs:
+      - /usr/lib
+      - /usr/include
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

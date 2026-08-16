@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: rosidl-typesupport-cpp
+version: 3.2.2
+versions:
+  - 3.2.2
+default_version: 3.2.2
+type: library
+category: ROS 2
+description: rosidl C++ typesupport dispatcher
+depends:
+  - rosidl-runtime-c
+  - rosidl-typesupport-c
+  - rosidl-typesupport-introspection-cpp
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rosidl_typesupport-release/archive/release/jazzy/rosidl_typesupport_cpp/3.2.2-1.tar.gz
+  archive: rosidl_typesupport_cpp-3.2.2-1.tar.gz
+  sha256: 0e9021ff53a9d614483c3d09f003b8f2499d927788b98a67f0f1ab113ec99fef
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

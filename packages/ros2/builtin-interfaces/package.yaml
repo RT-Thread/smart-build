@@ -1,0 +1,37 @@
+schema_version: 1
+kind: package
+name: builtin-interfaces
+version: 2.0.2
+versions:
+  - 2.0.2
+default_version: 2.0.2
+type: library
+category: ROS 2
+description: ROS 2 builtin message interfaces
+depends:
+  - rosidl-default-runtime
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rcl_interfaces-release/archive/release/jazzy/builtin_interfaces/2.0.2-1.tar.gz
+  archive: builtin_interfaces-2.0.2-1.tar.gz
+  sha256: a5fa7908472ec84f84528e0ab1ade4d6ef26127ba030232a95614fb9d7fb18b6
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

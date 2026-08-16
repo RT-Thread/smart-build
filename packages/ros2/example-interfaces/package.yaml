@@ -1,0 +1,41 @@
+schema_version: 1
+kind: package
+name: example-interfaces
+version: 0.12.1
+versions:
+  - 0.12.1
+default_version: 0.12.1
+type: library
+category: ROS 2
+description: Message and service definitions used by ROS 2 examples
+depends:
+  - action-msgs
+  - rosidl-default-runtime
+  - service-msgs
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/example_interfaces-release/archive/refs/tags/release/jazzy/example_interfaces/0.12.1-1.tar.gz
+  archive: example_interfaces-0.12.1-1.tar.gz
+  sha256: 2eafd72e89aeffaddf585a3dde1702c9af2e16395105efd5f0355ce1e8c0a40d
+  strip_root: true
+  local_files:
+    - files/package.xml
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: rosgraph-msgs
+version: 2.0.4
+versions:
+  - 2.0.4
+default_version: 2.0.4
+type: library
+category: ROS 2
+description: ROS 2 computation graph message definitions
+depends:
+  - builtin-interfaces
+  - rcl-interfaces
+  - rosidl-default-runtime
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rcl_interfaces-release/archive/refs/tags/release/jazzy/rosgraph_msgs/2.0.4-1.tar.gz
+  archive: rosgraph_msgs-2.0.4-1.tar.gz
+  sha256: 2d96c48ae9a7754b2b7a77d2844f2d25bb47fc512c5da3985a8f96cd2079c939
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

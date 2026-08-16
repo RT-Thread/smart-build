@@ -1,0 +1,42 @@
+schema_version: 1
+kind: package
+name: rcl-yaml-param-parser
+version: 9.2.7
+versions:
+  - 9.2.7
+default_version: 9.2.7
+type: library
+category: ROS 2
+description: YAML parameter parser for rcl
+depends:
+  - libyaml
+  - libyaml-vendor
+  - rcutils
+  - rmw
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rcl-release/archive/release/jazzy/rcl_yaml_param_parser/9.2.7-1.tar.gz
+  archive: rcl_yaml_param_parser-9.2.7-1.tar.gz
+  sha256: 45b4707642140ea2b96aafa31b54e22a8efa56bbf888453480793f98911efb00
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+    cmake_args:
+      - -DCMAKE_C_FLAGS=-D_GNU_SOURCE
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

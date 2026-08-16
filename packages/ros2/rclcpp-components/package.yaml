@@ -1,0 +1,41 @@
+schema_version: 1
+kind: package
+name: rclcpp-components
+version: 28.1.12
+versions:
+  - 28.1.12
+default_version: 28.1.12
+type: library
+category: ROS 2
+description: ROS 2 dynamically loadable component support
+depends:
+  - ament-index-cpp
+  - class-loader
+  - composition-interfaces
+  - rclcpp
+  - rcpputils
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rclcpp-release/archive/refs/tags/release/jazzy/rclcpp_components/28.1.12-1.tar.gz
+  archive: rclcpp_components-28.1.12-1.tar.gz
+  sha256: e76b31d51ae9d128073f02a440995a5a313df338c8906df688184180c5a07b75
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

@@ -1,0 +1,47 @@
+schema_version: 1
+kind: package
+name: rmw-cyclonedds-cpp
+version: 2.2.3
+versions:
+  - 2.2.3
+default_version: 2.2.3
+type: library
+category: ROS 2
+description: CycloneDDS RMW implementation
+depends:
+  - cyclonedds
+  - psmx-iox2
+  - rcutils
+  - rcpputils
+  - rmw
+  - rmw-dds-common
+  - rosidl-runtime-c
+  - rosidl-typesupport-introspection-c
+  - rosidl-typesupport-introspection-cpp
+  - tracetools
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rmw_cyclonedds-release/archive/release/jazzy/rmw_cyclonedds_cpp/2.2.3-1.tar.gz
+  archive: rmw_cyclonedds_cpp-2.2.3-1.tar.gz
+  sha256: aba4244bf29f70eda772b65b53de06505f3009b1fd492ee765e45b596e0f13e3
+  strip_root: true
+  local_files:
+    - patches/cyclonedds-11.patch
+  patches:
+    - cyclonedds-11.patch
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/lib
+      - /usr/share
+install:
+  libraries:
+    - usr/lib
