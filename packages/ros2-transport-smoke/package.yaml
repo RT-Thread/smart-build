@@ -1,0 +1,32 @@
+schema_version: 1
+kind: package
+name: ros2-transport-smoke
+version: 0.1.0
+type: executable
+category: Development and testing
+description: RT-Smart UDP recvmsg and POSIX shared-memory regression smoke test
+requires_toolchain:
+  - c
+source:
+  directory: apps/ros2-transport-smoke
+  files:
+    - CMakeLists.txt
+    - transport_smoke.c
+build:
+  cmake:
+    outputs:
+      static:
+        - /bin/ros2-transport-smoke-static
+      dynamic:
+        - /bin/ros2-transport-smoke
+      mixed:
+        - /bin/ros2-transport-smoke-static
+        - /bin/ros2-transport-smoke
+    options:
+      - -DCMAKE_BUILD_TYPE=Release
+install:
+  path: /bin/ros2-transport-smoke
+smoke:
+  command:
+    - /bin/ros2-transport-smoke
+  expected_stdout: "transport smoke: PASS\n"
