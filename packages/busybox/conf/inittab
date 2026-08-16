@@ -6,4 +6,5 @@
 # console::respawn:/sbin/getty 115200 /dev/console
 
 # or without login, a direct access to shell
+::sysinit:/etc/init.d/rcS
 console::respawn:-/bin/ash

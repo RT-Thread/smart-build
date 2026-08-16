@@ -125,3 +125,9 @@ source "packages/oprofile/Kconfig"
 source "packages/utest-h/Kconfig"
 
 endmenu
+
+menu "System utilities"
+
+source "packages/ipkg/Kconfig"
+
+endmenu

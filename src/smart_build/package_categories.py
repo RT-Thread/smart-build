@@ -12,6 +12,7 @@ PACKAGE_CATEGORIES = (
     "Graphics and multimedia",
     "Math and machine learning",
     "Development and testing",
+    "System utilities",
     OTHER_CATEGORY,
 )
 

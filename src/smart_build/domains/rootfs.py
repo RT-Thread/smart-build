@@ -16,6 +16,7 @@ ROOTFS_MANIFEST_NAME = "rootfs-minimal.manifest.json"
 REQUIRED_DIRS = (
     "bin",
     "dev",
+    "dev/shm",
     "etc",
     "lib",
     "mnt",

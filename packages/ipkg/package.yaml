@@ -1,0 +1,24 @@
+schema_version: 1
+kind: package
+name: ipkg
+version: 0.1.0
+type: executable
+category: System utilities
+description: Lightweight IPK package installer for RT-Thread Smart
+source:
+  directory: packages/ipkg/source
+  files:
+    - ipkg.sh
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/bin/ipkg
+    upstream_markers:
+      - ipkg.sh
+install:
+  path: /usr/bin/ipkg
+smoke:
+  command:
+    - /usr/bin/ipkg
+    - --help

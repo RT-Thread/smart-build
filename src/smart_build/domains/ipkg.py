@@ -1,5 +1,6 @@
 import gzip
 import io
+import os
 import tarfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -12,6 +13,8 @@ from ..tasks import Task
 IPKG_VERSION = b"2.0\n"
 AR_MAGIC = b"!<arch>\n"
 CONTROL_FIELDS = ("Package", "Version", "Architecture", "Depends", "Provides", "Description")
+CONTROL_STATUS_FIELDS = ("Package", "Version", "Architecture", "Depends", "Provides", "Description", "Status")
+IPKG_BACKEND_SOURCE = Path(__file__).resolve()
 
 
 @dataclass(frozen=True)
@@ -81,7 +84,7 @@ def _app_ipkg_task(paths, app_build_task, app):
         id=f"ipkg:{name}:package",
         domain="ipkg",
         action="package",
-        inputs=[app_build_task.outputs[0]],
+        inputs=[app_build_task.outputs[0], IPKG_BACKEND_SOURCE],
         outputs=[output],
         deps=[app_build_task.id],
         workdir=paths.work_dir / "ipkg" / name,
@@ -119,7 +122,7 @@ def _library_ipkg_task(paths, library_build_task, library):
         id=f"ipkg:{name}:package",
         domain="ipkg",
         action="package",
-        inputs=[library_build_task.outputs[0]],
+        inputs=[library_build_task.outputs[0], IPKG_BACKEND_SOURCE],
         outputs=[output],
         deps=[library_build_task.id],
         workdir=paths.work_dir / "ipkg" / name,
@@ -127,7 +130,7 @@ def _library_ipkg_task(paths, library_build_task, library):
         run_class="serial",
         cache_policy="inputs",
         log_path=paths.logs_dir / f"ipkg-{name}-package.log",
-        executor=_make_files_ipkg_executor(package_manifest),
+        executor=_make_files_ipkg_executor(package_manifest, library_build_task, "library"),
         cache_extra={"package": {key: value for key, value in package_manifest.items() if key != "checksum"}},
         manifest_fields={"package": package_manifest},
     )
@@ -159,7 +162,7 @@ def _executable_ipkg_task(paths, executable_build_task, executable):
         id=f"ipkg:{name}:package",
         domain="ipkg",
         action="package",
-        inputs=[executable_build_task.outputs[0]],
+        inputs=[executable_build_task.outputs[0], IPKG_BACKEND_SOURCE],
         outputs=[output],
         deps=[executable_build_task.id],
         workdir=paths.work_dir / "ipkg" / name,
@@ -167,7 +170,7 @@ def _executable_ipkg_task(paths, executable_build_task, executable):
         run_class="serial",
         cache_policy="inputs",
         log_path=paths.logs_dir / f"ipkg-{name}-package.log",
-        executor=_make_files_ipkg_executor(package_manifest),
+        executor=_make_files_ipkg_executor(package_manifest, executable_build_task, "executable"),
         cache_extra={"package": {key: value for key, value in package_manifest.items() if key != "checksum"}},
         manifest_fields={"package": package_manifest},
     )
@@ -230,6 +233,7 @@ def install_ipkg(path, rootfs_dir):
         raise SmartBuildError("IPKG", f"{package_path}: missing data.tar.gz")
     rootfs.mkdir(parents=True, exist_ok=True)
     records = []
+    created_files = []
     try:
         with tarfile.open(fileobj=io.BytesIO(data_bytes), mode="r:gz") as archive:
             for member in archive.getmembers():
@@ -248,7 +252,15 @@ def install_ipkg(path, rootfs_dir):
                 if handle is None:
                     raise SmartBuildError("IPKG", f"{package_path}: cannot read data member: {member.name}")
                 payload = handle.read()
-                _install_file(package_path, destination, payload, member.mode & 0o7777)
+                existed = destination.exists() or destination.is_symlink()
+                try:
+                    _install_file(package_path, destination, payload, member.mode & 0o7777)
+                except (SmartBuildError, OSError):
+                    if not existed and (destination.is_file() or destination.is_symlink()):
+                        destination.unlink()
+                    raise
+                if not existed:
+                    created_files.append(destination)
                 record = path_record(destination)
                 records.append(
                     {
@@ -260,10 +272,142 @@ def install_ipkg(path, rootfs_dir):
                     }
                 )
     except SmartBuildError:
+        for destination in reversed(created_files):
+            if destination.is_file() or destination.is_symlink():
+                destination.unlink()
         raise
     except (tarfile.TarError, OSError, EOFError) as exc:
+        for destination in reversed(created_files):
+            if destination.is_file() or destination.is_symlink():
+                destination.unlink()
         raise SmartBuildError("IPKG", f"{package_path}: invalid data.tar.gz: {exc}") from exc
     return records
+
+
+class IpkgDatabase:
+    """Small opkg-compatible status database for staged/runtime IPK tests."""
+
+    def __init__(self, state_dir):
+        self.state_dir = Path(state_dir)
+        self.info_dir = self.state_dir / "info"
+        self.status_path = self.state_dir / "status"
+
+    def records(self):
+        if not self.status_path.is_file():
+            return []
+        try:
+            text = self.status_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise SmartBuildError("IPKG", f"failed to read package status: {self.status_path}: {exc}") from exc
+        result = []
+        for stanza in text.split("\n\n"):
+            fields = _parse_status_stanza(stanza)
+            if fields.get("Package"):
+                result.append(fields)
+        return result
+
+    def get(self, package):
+        _validate_package_name(package)
+        return next((item for item in self.records() if item.get("Package") == package), None)
+
+    def commit(self, fields, records):
+        package = fields.get("Package", "")
+        _validate_package_name(package)
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        self.info_dir.mkdir(parents=True, exist_ok=True)
+        current = [item for item in self.records() if item.get("Package") != package]
+        installed = {key: str(fields.get(key, "")) for key in CONTROL_STATUS_FIELDS}
+        installed["Status"] = "install ok installed"
+        current.append(installed)
+        status_text = "\n\n".join(_format_status_stanza(item) for item in current) + "\n"
+        _atomic_write_text(self.status_path, status_text)
+        list_path = self.info_dir / f"{package}.list"
+        list_text = "".join(f"{item['path']}\n" for item in records)
+        _atomic_write_text(list_path, list_text)
+
+    def remove(self, package):
+        _validate_package_name(package)
+        records = self.records()
+        current = [item for item in records if item.get("Package") != package]
+        if len(current) == len(records):
+            raise SmartBuildError("IPKG", f"package is not installed: {package}")
+        status_text = "\n\n".join(_format_status_stanza(item) for item in current)
+        if status_text:
+            status_text += "\n"
+        _atomic_write_text(self.status_path, status_text)
+        list_path = self.info_dir / f"{package}.list"
+        if list_path.exists() or list_path.is_symlink():
+            list_path.unlink()
+
+
+def install_ipkg_runtime(path, rootfs_dir, state_dir=None):
+    """Install an IPK and record ownership in a compact opkg-style database."""
+
+    package_path = Path(path)
+    rootfs = Path(rootfs_dir)
+    fields = read_control_fields(package_path)
+    package = fields.get("Package", "")
+    _validate_package_name(package)
+    database = IpkgDatabase(state_dir or rootfs / "var/lib/opkg")
+    records = install_ipkg(package_path, rootfs)
+    database.commit(fields, records)
+    return records
+
+
+def remove_ipkg_runtime(package, rootfs_dir, state_dir=None):
+    """Remove files owned by an installed IPK and update the status database."""
+
+    rootfs = Path(rootfs_dir)
+    database = IpkgDatabase(state_dir or rootfs / "var/lib/opkg")
+    installed = database.get(package)
+    if installed is None:
+        raise SmartBuildError("IPKG", f"package is not installed: {package}")
+    list_path = database.info_dir / f"{package}.list"
+    if list_path.is_file():
+        for raw_path in list_path.read_text(encoding="utf-8").splitlines():
+            destination = _safe_destination(rootfs, raw_path)
+            if destination.is_file() or destination.is_symlink():
+                destination.unlink()
+    database.remove(package)
+
+
+def list_ipkg_runtime(state_dir):
+    return IpkgDatabase(state_dir).records()
+
+
+def _validate_package_name(package):
+    if not package or any(char not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._+-" for char in package):
+        raise SmartBuildError("IPKG", f"unsafe package name: {package}")
+
+
+def _parse_status_stanza(text):
+    fields = {}
+    for line in text.splitlines():
+        if not line or ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        fields[key] = value.lstrip()
+    return fields
+
+
+def _format_status_stanza(fields):
+    lines = []
+    for key in CONTROL_STATUS_FIELDS:
+        if fields.get(key, ""):
+            lines.append(f"{key}: {fields[key]}")
+    return "\n".join(lines)
+
+
+def _atomic_write_text(path, text):
+    destination = Path(path)
+    temporary = destination.with_name(f".{destination.name}.new")
+    try:
+        temporary.write_text(text, encoding="utf-8")
+        os.replace(temporary, destination)
+    except OSError as exc:
+        if temporary.exists() or temporary.is_symlink():
+            temporary.unlink()
+        raise SmartBuildError("IPKG", f"failed to update package database: {destination}: {exc}") from exc
 
 
 def _make_ipkg_executor(package_manifest):
@@ -298,11 +442,16 @@ def _make_ipkg_executor(package_manifest):
     return executor
 
 
-def _make_files_ipkg_executor(package_manifest):
+def _make_files_ipkg_executor(package_manifest, build_task=None, manifest_key=None):
     def executor(task, log):
         output = Path(package_manifest["file"])
         if output.exists() or output.is_symlink():
             _prepare_package_output(output)
+        if build_task is not None:
+            package_manifest["files"] = _package_files_from_manifest(
+                build_task.manifest_fields[manifest_key],
+                manifest_key,
+            )
         expanded_files = []
         for item in package_manifest["files"]:
             expanded_files.extend(_expanded_package_files(item))
@@ -469,7 +618,7 @@ def _parse_control(text):
         fields[key] = value.lstrip()
     for field in CONTROL_FIELDS:
         fields.setdefault(field, "")
-    return {field: fields[field] for field in CONTROL_FIELDS}
+    return fields
 
 
 def _data_member_name(raw_path):
@@ -489,8 +638,7 @@ def _safe_destination(rootfs, raw_name):
     destination = Path(rootfs).joinpath(*relative.parts)
     root = Path(rootfs).resolve()
     if destination.is_symlink():
-        _validate_existing_symlink_destination(destination, root, raw_name)
-    root = Path(rootfs).resolve()
+        raise SmartBuildError("IPKG", f"refusing existing symlink destination: {raw_name}")
     resolved_parent = destination.parent.resolve()
     try:
         resolved_parent.relative_to(root)
@@ -513,8 +661,6 @@ def _safe_relative_path(raw_path):
 
 
 def _install_file(package_path, destination, payload, mode):
-    if destination.is_symlink():
-        destination.unlink()
     if destination.exists():
         if not destination.is_file():
             raise SmartBuildError("IPKG", f"package file conflict: {destination}")
@@ -523,17 +669,6 @@ def _install_file(package_path, destination, payload, mode):
         return
     destination.write_bytes(payload)
     destination.chmod(mode)
-
-
-def _validate_existing_symlink_destination(destination, root, raw_name):
-    try:
-        resolved = destination.resolve(strict=True)
-    except OSError as exc:
-        raise SmartBuildError("IPKG", f"refusing broken rootfs symlink path: {raw_name}") from exc
-    try:
-        resolved.relative_to(root)
-    except ValueError as exc:
-        raise SmartBuildError("IPKG", f"rootfs path escapes rootfs: {raw_name}") from exc
 
 
 def _incoming_file_checksum(destination, payload, mode):

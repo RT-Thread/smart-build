@@ -1617,7 +1617,7 @@ def _python_install_files(staged_dir, output_paths):
                     {
                         "source": str(child),
                         "path": child_install_path,
-                        "mode": 0o755 if _is_executable_output_path(child_install_path) else 0o644,
+                        "mode": _python_install_mode(child, child_install_path),
                     }
                 )
             continue
@@ -1625,10 +1625,19 @@ def _python_install_files(staged_dir, output_paths):
             {
                 "source": str(candidate),
                 "path": install_path,
-                "mode": 0o755 if _is_executable_output_path(install_path) else 0o644,
+                "mode": _python_install_mode(candidate, install_path),
             }
         )
     return files
+
+
+def _python_install_mode(source, install_path):
+    candidate = Path(source)
+    if candidate.is_file() and not candidate.is_symlink():
+        source_mode = candidate.stat().st_mode & 0o777
+        if source_mode & 0o111:
+            return source_mode
+    return 0o755 if _is_executable_output_path(install_path) else 0o644
 
 
 def _require_python_outputs(staged_dir, output_paths):
@@ -2042,6 +2051,17 @@ def _verify_static_archive_architecture(toolchain, archive, runner, workdir, env
 def _verify_binary_architecture(toolchain, binary, runner, workdir, env, log):
     tool = _tool_path(toolchain, "readelf")
     expected = _expected_readelf_machine(toolchain)
+    artifact_kind = _binary_artifact_kind(binary)
+    if artifact_kind != "elf":
+        reason = f"{binary} is not an ELF executable"
+        log.write(f"architecture check skipped: {reason}\n")
+        return {
+            "status": "skipped",
+            "tool": str(tool),
+            "binary": str(binary),
+            "expected_machine": expected["display"],
+            "reason": reason,
+        }
     if not tool.is_file():
         reason = f"{tool} not found"
         log.write(f"architecture check skipped: {reason}\n")
@@ -2077,6 +2097,41 @@ def _verify_binary_architecture(toolchain, binary, runner, workdir, env, log):
         "expected_machine": expected["display"],
         "actual_machine": actual,
     }
+
+
+def _verify_ament_install_architectures(toolchain, install_files, runner, workdir, env, log):
+    checks = []
+    for item in install_files:
+        source = Path(item["source"])
+        artifact_kind = _binary_artifact_kind(source)
+        if artifact_kind == "elf":
+            check = _verify_binary_architecture(toolchain, source, runner, workdir, env, log)
+        elif artifact_kind == "archive":
+            check = _verify_static_archive_architecture(toolchain, source, runner, workdir, env, log)
+        else:
+            continue
+        checks.append({**check, "install_path": item["path"], "format": artifact_kind})
+
+    if not checks:
+        return {"status": "skipped", "reason": "no ELF files or static archives"}
+    return {
+        "status": "verified" if all(check["status"] == "verified" for check in checks) else "skipped",
+        "artifact_count": len(checks),
+        "checks": checks,
+    }
+
+
+def _binary_artifact_kind(path):
+    try:
+        with Path(path).open("rb") as stream:
+            magic = stream.read(8)
+    except OSError as exc:
+        raise SmartBuildError("BUILD", f"failed to inspect installed file {path}: {exc}") from exc
+    if magic.startswith(b"\x7fELF"):
+        return "elf"
+    if magic in (b"!<arch>\n", b"!<thin>\n"):
+        return "archive"
+    return None
 
 
 def _verify_cmake_output(
