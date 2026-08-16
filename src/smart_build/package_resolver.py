@@ -46,7 +46,7 @@ def resolve_package_selection(root, package_names, values):
         selected_names.add(provider)
         selected.append(provider)
         package = metadata[provider]
-        for dependency in package.depends:
+        for dependency in (*package.host_depends, *package.depends):
             include(dependency, _required_version(values, dependency))
         for selected_dependency in package.selects:
             include(selected_dependency, _required_version(values, selected_dependency), required=True)

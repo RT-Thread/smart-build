@@ -38,6 +38,7 @@ class Toolchain:
     libgcc_runtime: Path = None
     libgcc_static: Path = None
     libatomic_runtime: Path = None
+    libstdcxx_runtime: Path = None
     source: str = "env-sdk"
     configured_version: str = ""
 
@@ -90,10 +91,18 @@ class Toolchain:
                     self.sysroot_lib_dir / "libatomic.so.1",
                 ),
             )
+            libstdcxx_runtime = _find_optional_file(
+                "libstdc++.so.6",
+                (
+                    self.root / self.target / "lib64" / "libstdc++.so.6",
+                    self.sysroot_lib_dir / "libstdc++.so.6",
+                ),
+            )
         else:
             crt1 = None
             libgcc_runtime = None
             libatomic_runtime = None
+            libstdcxx_runtime = None
         libgcc_static = _find_optional_file(
             "libgcc.a",
             (
@@ -108,6 +117,11 @@ class Toolchain:
             raise SmartBuildError(
                 "TOOLCHAIN",
                 f"missing toolchain runtime: libgcc_s.so.1 under {self.root}",
+            )
+        if self.loader_name is not None and libstdcxx_runtime is None:
+            raise SmartBuildError(
+                "TOOLCHAIN",
+                f"missing toolchain C++ runtime: libstdc++.so.6 under {self.root}",
             )
         if libgcc_static is None:
             raise SmartBuildError(
@@ -131,6 +145,7 @@ class Toolchain:
             libgcc_runtime=libgcc_runtime,
             libgcc_static=libgcc_static,
             libatomic_runtime=libatomic_runtime,
+            libstdcxx_runtime=libstdcxx_runtime,
             source=self.source,
             configured_version=self.configured_version,
         )
@@ -153,11 +168,21 @@ class Toolchain:
                     self.sysroot_lib_dir / "libgcc_s.so.1",
                 ),
             )
+            cxx_runtime = _find_optional_file(
+                "libstdc++.so.6",
+                (
+                    self.root / self.target / "lib64" / "libstdc++.so.6",
+                    self.sysroot_lib_dir / "libstdc++.so.6",
+                ),
+            )
         else:
             runtime = True
+            cxx_runtime = True
         static = _find_first_by_name(self.root, "libgcc.a")
         if runtime is None:
             missing.append(f"{self.root}/{{libgcc_s.so.1}}")
+        if cxx_runtime is None:
+            missing.append(f"{self.root}/{{libstdc++.so.6}}")
         if static is None:
             missing.append(f"{self.root}/{{libgcc.a}}")
         return missing
@@ -197,6 +222,7 @@ class Toolchain:
             "libgcc_runtime": _path_sha256(self.libgcc_runtime),
             "libgcc_static": _path_sha256(self.libgcc_static),
             "libatomic_runtime": _path_sha256(self.libatomic_runtime),
+            "libstdcxx_runtime": _path_sha256(self.libstdcxx_runtime),
         }
         paths = {
             "gcc": str(self.gcc),
@@ -207,6 +233,7 @@ class Toolchain:
             "libgcc_runtime": str(self.libgcc_runtime) if self.libgcc_runtime else None,
             "libgcc_static": str(self.libgcc_static) if self.libgcc_static else None,
             "libatomic_runtime": str(self.libatomic_runtime) if self.libatomic_runtime else None,
+            "libstdcxx_runtime": str(self.libstdcxx_runtime) if self.libstdcxx_runtime else None,
         }
         fingerprint_payload = {
             "id": self.id,
@@ -242,6 +269,9 @@ class Toolchain:
             },
             "libatomic": {
                 "runtime": str(self.libatomic_runtime) if self.libatomic_runtime else None,
+            },
+            "libstdcxx": {
+                "runtime": str(self.libstdcxx_runtime) if self.libstdcxx_runtime else None,
             },
             "paths": paths,
             "checksums": checksums,

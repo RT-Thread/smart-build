@@ -10,6 +10,7 @@ from .env_packages import EnvPackages
 from .package_categories import grouped_packages
 from .package_metadata import (
     load_all_package_metadata,
+    package_kconfig_relative,
     package_option_choice_symbol,
     package_option_symbol,
     package_selection_symbol,
@@ -31,7 +32,7 @@ def generate_package_kconfig_files(root):
         if metadata.kconfig.mode == "native":
             native_package_symbols(metadata)
             continue
-        relative_path = f"packages/{metadata.name}/Kconfig"
+        relative_path = package_kconfig_relative(root, metadata)
         result[relative_path] = _package_kconfig(metadata, provider_map)
     return result
 
@@ -45,7 +46,7 @@ def generate_package_kconfig_index(root):
         for metadata in items:
             if metadata.kconfig.mode == "native":
                 native_package_symbols(metadata)
-            lines.append(f'source "packages/{metadata.name}/{metadata.kconfig.source}"')
+            lines.append(f'source "{package_kconfig_relative(root, metadata)}"')
         lines.append("")
         lines.append("endmenu")
         lines.append("")
@@ -137,7 +138,7 @@ def _package_lines(metadata, provider_map):
         f'    bool "{_escape_string(prompt)}"',
     ]
     selected_symbols = set()
-    for name in (*metadata.selects, *metadata.depends):
+    for name in (*metadata.selects, *metadata.depends, *metadata.host_depends):
         selected_symbol = _provided_dependency_symbol(metadata, name, provider_map)
         if selected_symbol is not None:
             selected_symbols.add(selected_symbol)

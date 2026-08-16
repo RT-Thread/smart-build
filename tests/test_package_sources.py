@@ -1,9 +1,11 @@
 import io
+import subprocess
 import tarfile
+from types import SimpleNamespace
 
 import pytest
 
-from smart_build.domains.package_sources import _extract_archive
+from smart_build.domains.package_sources import _apply_patches, _extract_archive, _run_command
 from smart_build.errors import SmartBuildError
 
 
@@ -47,3 +49,32 @@ def test_archive_extractor_rejects_links_escaping_archive_root(tmp_path, linknam
 
     with pytest.raises(SmartBuildError, match="unsafe archive member link"):
         _extract_archive(archive, tmp_path / "prepared", strip_root=True)
+
+
+def test_source_patch_is_applied_when_prepared_tree_is_inside_parent_git_repo(tmp_path):
+    repository = tmp_path / "repository"
+    prepared = repository / "build" / "sources" / "example-1.0"
+    prepared.mkdir(parents=True)
+    subprocess.run(
+        ["git", "init", "--quiet", str(repository)],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    (prepared / "target.txt").write_text("before\n", encoding="utf-8")
+    (prepared / "change.patch").write_text(
+        "diff --git a/target.txt b/target.txt\n"
+        "--- a/target.txt\n"
+        "+++ b/target.txt\n"
+        "@@ -1 +1 @@\n"
+        "-before\n"
+        "+after\n",
+        encoding="utf-8",
+    )
+    config = SimpleNamespace(prepared=prepared, patches=("change.patch",))
+    task = SimpleNamespace(log_path=tmp_path / "source.log")
+
+    _apply_patches(config, _run_command, task, io.StringIO())
+
+    assert (prepared / "target.txt").read_text(encoding="utf-8") == "after\n"

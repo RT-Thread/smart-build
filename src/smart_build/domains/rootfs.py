@@ -160,6 +160,7 @@ def _runtime_libraries(toolchain):
         toolchain.libc,
         toolchain.libgcc_runtime,
         getattr(toolchain, "libatomic_runtime", None),
+        getattr(toolchain, "libstdcxx_runtime", None),
     ]
     return [Path(path) for path in candidates if path is not None]
 

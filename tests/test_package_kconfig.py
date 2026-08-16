@@ -10,6 +10,7 @@ from smart_build.package_metadata import (
     DESCRIPTION_MAX_LENGTH,
     load_all_package_metadata,
     normalize_package_metadata,
+    package_kconfig_relative,
     shorten_package_description,
 )
 
@@ -66,12 +67,35 @@ def test_generated_package_kconfig_selects_dependencies(tmp_path):
     assert "    depends on PACKAGE_NCURSES" not in content
 
 
+def test_generated_package_kconfig_selects_host_dependencies(tmp_path):
+    packages = tmp_path / "packages"
+    for name in ("ros2-host-sdk", "rcutils"):
+        (packages / name).mkdir(parents=True)
+    (packages / "ros2-host-sdk" / "package.yaml").write_text(
+        "schema_version: 1\nkind: package\nname: ros2-host-sdk\nversion: '1.0'\n"
+        "type: library\ndescription: Host ROS 2 SDK\nsource:\n  directory: apps/hello\n"
+        "build:\n  python:\n    script: sbuild.py\n    outputs: [/usr/share/ros2-host-sdk]\n"
+        "install:\n  headers: [usr/share/ros2-host-sdk]\n",
+        encoding="utf-8",
+    )
+    (packages / "rcutils" / "package.yaml").write_text(
+        "schema_version: 1\nkind: package\nname: rcutils\nversion: '1.0'\n"
+        "type: library\ndescription: ROS 2 C utilities\nhost_depends: [ros2-host-sdk]\n"
+        "source:\n  directory: apps/hello\n"
+        "build:\n  ament_cmake:\n    outputs: [/usr/lib, /usr/include, /usr/share]\n",
+        encoding="utf-8",
+    )
+    (packages / "ros2-host-sdk" / "sbuild.py").write_text("", encoding="utf-8")
+    content = generate_package_kconfig_files(tmp_path)["packages/rcutils/Kconfig"]
+    assert "    select PACKAGE_ROS2_HOST_SDK" in content
+
+
 def test_repository_generated_package_kconfigs_do_not_gate_selection():
     root = Path(__file__).resolve().parents[1]
     gated = []
     for relative, content in generate_package_kconfig_files(root).items():
-        name = Path(relative).parent.name
-        metadata = normalize_package_metadata(load_description(root / "packages" / name / "package.yaml"))
+        yaml_path = root / Path(relative).parent / "package.yaml"
+        metadata = normalize_package_metadata(load_description(yaml_path))
         header = f"config {metadata.kconfig.symbol}\n"
         block = content.split(header, 1)
         if len(block) != 2:
@@ -144,7 +168,7 @@ def test_repository_package_kconfig_index_classifies_every_package():
     for title, items in grouped:
         assert f'menu "{title}"' in index
         for metadata in items:
-            assert f'source "packages/{metadata.name}/{metadata.kconfig.source}"' in index
+            assert f'source "{package_kconfig_relative(root, metadata)}"' in index
 
 
 def test_package_description_must_fit_menu_limit(tmp_path):
@@ -180,8 +204,8 @@ def test_repository_generated_package_kconfigs_include_descriptions():
     generated = generate_package_kconfig_files(root)
     missing = []
     for relative, content in generated.items():
-        name = Path(relative).parent.name
-        metadata = normalize_package_metadata(load_description(root / "packages" / name / "package.yaml"))
+        yaml_path = root / Path(relative).parent / "package.yaml"
+        metadata = normalize_package_metadata(load_description(yaml_path))
         if not metadata.description or metadata.description == metadata.name:
             missing.append(name)
             continue

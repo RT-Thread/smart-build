@@ -13,6 +13,8 @@ PACKAGE_CATEGORIES = (
     "Math and machine learning",
     "Development and testing",
     "System utilities",
+    "ROS 2",
+    "Host tools",
     OTHER_CATEGORY,
 )
 
@@ -105,6 +107,14 @@ def package_category(metadata):
     declared = getattr(metadata, "category", "") or ""
     if declared:
         return declared
+    path = getattr(metadata, "path", None)
+    if path is not None:
+        from .package_metadata import is_host_package_path, is_ros2_package_path
+
+        if is_host_package_path(path):
+            return "Host tools"
+        if is_ros2_package_path(path):
+            return "ROS 2"
     return _PACKAGE_CATEGORY_BY_NAME.get(metadata.name, OTHER_CATEGORY)
 
 
