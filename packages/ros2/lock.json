@@ -1,0 +1,424 @@
+{
+  "distro": "jazzy",
+  "packages": [
+    {
+      "name": "ament-index-cpp",
+      "version": "1.8.1",
+      "release": "1.8.1-1",
+      "repo": "ament_index",
+      "pkg": "ament_index_cpp",
+      "description": "C++ API for the ament resource index",
+      "depends": ["ros2-host-sdk"],
+      "type": "library"
+    },
+    {
+      "name": "rcpputils",
+      "version": "2.11.2",
+      "release": "2.11.2-1",
+      "repo": "rcpputils",
+      "pkg": "rcpputils",
+      "description": "C++ utilities for ROS 2",
+      "depends": ["ros2-host-sdk", "rcutils"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-typesupport-interface",
+      "version": "4.6.6",
+      "release": "4.6.6-1",
+      "repo": "rosidl",
+      "pkg": "rosidl_typesupport_interface",
+      "description": "rosidl typesupport interface headers",
+      "depends": ["ros2-host-sdk"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-runtime-c",
+      "version": "4.6.6",
+      "release": "4.6.6-1",
+      "repo": "rosidl",
+      "pkg": "rosidl_runtime_c",
+      "description": "rosidl C runtime",
+      "depends": ["ros2-host-sdk", "rcutils", "rosidl-typesupport-interface"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-runtime-cpp",
+      "version": "4.6.6",
+      "release": "4.6.6-1",
+      "repo": "rosidl",
+      "pkg": "rosidl_runtime_cpp",
+      "description": "rosidl C++ runtime",
+      "depends": ["ros2-host-sdk", "rosidl-runtime-c"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-typesupport-introspection-c",
+      "version": "4.6.6",
+      "release": "4.6.6-1",
+      "repo": "rosidl",
+      "pkg": "rosidl_typesupport_introspection_c",
+      "description": "rosidl C introspection typesupport",
+      "depends": ["ros2-host-sdk", "rosidl-runtime-c"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-typesupport-introspection-cpp",
+      "version": "4.6.6",
+      "release": "4.6.6-1",
+      "repo": "rosidl",
+      "pkg": "rosidl_typesupport_introspection_cpp",
+      "description": "rosidl C++ introspection typesupport",
+      "depends": ["ros2-host-sdk", "rosidl-runtime-cpp", "rosidl-typesupport-introspection-c"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-typesupport-c",
+      "version": "3.2.2",
+      "release": "3.2.2-1",
+      "repo": "rosidl_typesupport",
+      "pkg": "rosidl_typesupport_c",
+      "description": "rosidl C typesupport dispatcher",
+      "depends": ["ros2-host-sdk", "rcutils", "rosidl-runtime-c", "rosidl-typesupport-interface"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-typesupport-cpp",
+      "version": "3.2.2",
+      "release": "3.2.2-1",
+      "repo": "rosidl_typesupport",
+      "pkg": "rosidl_typesupport_cpp",
+      "description": "rosidl C++ typesupport dispatcher",
+      "depends": ["ros2-host-sdk", "rosidl-runtime-c", "rosidl-typesupport-c"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-dynamic-typesupport",
+      "version": "0.1.2",
+      "release": "0.1.2-1",
+      "repo": "rosidl_dynamic_typesupport",
+      "pkg": "rosidl_dynamic_typesupport",
+      "description": "rosidl dynamic typesupport",
+      "depends": ["ros2-host-sdk", "rcutils", "rosidl-runtime-c"],
+      "type": "library"
+    },
+    {
+      "name": "rosidl-default-runtime",
+      "version": "1.6.1",
+      "release": "1.6.1-1",
+      "repo": "rosidl_defaults",
+      "pkg": "rosidl_default_runtime",
+      "description": "Default rosidl runtime metapackage",
+      "depends": [
+        "ros2-host-sdk",
+        "rosidl-runtime-c",
+        "rosidl-runtime-cpp",
+        "rosidl-typesupport-c",
+        "rosidl-typesupport-cpp",
+        "rosidl-typesupport-introspection-c",
+        "rosidl-typesupport-introspection-cpp"
+      ],
+      "type": "library"
+    },
+    {
+      "name": "builtin-interfaces",
+      "version": "2.0.2",
+      "release": "2.0.2-2",
+      "repo": "rcl_interfaces",
+      "pkg": "builtin_interfaces",
+      "description": "ROS 2 builtin message interfaces",
+      "depends": ["ros2-host-sdk", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "unique-identifier-msgs",
+      "version": "2.5.0",
+      "release": "2.5.0-3",
+      "repo": "unique_identifier_msgs",
+      "pkg": "unique_identifier_msgs",
+      "description": "UUID message definitions",
+      "depends": ["ros2-host-sdk", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "std-msgs",
+      "version": "5.3.6",
+      "release": "5.3.6-1",
+      "repo": "common_interfaces",
+      "pkg": "std_msgs",
+      "description": "Standard ROS 2 message definitions",
+      "depends": ["ros2-host-sdk", "builtin-interfaces", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "statistics-msgs",
+      "version": "2.0.2",
+      "release": "2.0.2-2",
+      "repo": "rcl_interfaces",
+      "pkg": "statistics_msgs",
+      "description": "Statistics message definitions",
+      "depends": ["ros2-host-sdk", "builtin-interfaces", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "rcl-interfaces",
+      "version": "2.0.2",
+      "release": "2.0.2-2",
+      "repo": "rcl_interfaces",
+      "pkg": "rcl_interfaces",
+      "description": "rcl parameter and graph interfaces",
+      "depends": ["ros2-host-sdk", "builtin-interfaces", "rosidl-default-runtime", "service-msgs"],
+      "type": "library"
+    },
+    {
+      "name": "service-msgs",
+      "version": "2.0.4",
+      "release": "2.0.4-1",
+      "repo": "rcl_interfaces",
+      "pkg": "service_msgs",
+      "description": "Common ROS 2 service event message definitions",
+      "depends": ["ros2-host-sdk", "builtin-interfaces", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "type-description-interfaces",
+      "version": "2.0.4",
+      "release": "2.0.4-1",
+      "repo": "rcl_interfaces",
+      "pkg": "type_description_interfaces",
+      "description": "ROS 2 type description message and service definitions",
+      "depends": ["ros2-host-sdk", "service-msgs", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "rosgraph-msgs",
+      "version": "2.0.4",
+      "release": "2.0.4-1",
+      "repo": "rcl_interfaces",
+      "pkg": "rosgraph_msgs",
+      "description": "ROS 2 computation graph message definitions",
+      "depends": ["ros2-host-sdk", "builtin-interfaces", "rcl-interfaces", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "rmw",
+      "version": "7.3.2",
+      "release": "7.3.2-1",
+      "repo": "rmw",
+      "pkg": "rmw",
+      "description": "ROS 2 middleware interface",
+      "depends": ["ros2-host-sdk", "rcutils", "rosidl-runtime-c"],
+      "type": "library"
+    },
+    {
+      "name": "rmw-dds-common",
+      "version": "3.1.1",
+      "release": "3.1.1-1",
+      "repo": "rmw_dds_common",
+      "pkg": "rmw_dds_common",
+      "description": "Common helpers for DDS RMW implementations",
+      "depends": ["ros2-host-sdk", "rcpputils", "rcutils", "rmw", "rosidl-runtime-cpp"],
+      "type": "library"
+    },
+    {
+      "name": "rmw-cyclonedds-cpp",
+      "version": "2.2.3",
+      "release": "2.2.3-1",
+      "repo": "rmw_cyclonedds",
+      "pkg": "rmw_cyclonedds_cpp",
+      "description": "CycloneDDS RMW implementation",
+      "depends": [
+        "ros2-host-sdk",
+        "cyclonedds",
+        "rcutils",
+        "rcpputils",
+        "rmw",
+        "rmw-dds-common",
+        "rosidl-runtime-c",
+        "rosidl-typesupport-introspection-c",
+        "rosidl-typesupport-introspection-cpp",
+        "tracetools"
+      ],
+      "type": "library"
+    },
+    {
+      "name": "rmw-implementation",
+      "version": "2.15.6",
+      "release": "2.15.6-1",
+      "repo": "rmw_implementation",
+      "pkg": "rmw_implementation",
+      "description": "RMW implementation loader",
+      "depends": ["ros2-host-sdk", "rcpputils", "rcutils", "rmw", "rmw-cyclonedds-cpp"],
+      "type": "library"
+    },
+    {
+      "name": "tracetools",
+      "version": "8.2.4",
+      "release": "8.2.4-1",
+      "repo": "ros2_tracing",
+      "pkg": "tracetools",
+      "description": "LTTng tracing stubs used by rclcpp",
+      "depends": ["ros2-host-sdk"],
+      "type": "library"
+    },
+    {
+      "name": "rcl-logging-interface",
+      "version": "3.1.1",
+      "release": "3.1.1-1",
+      "repo": "rcl_logging",
+      "pkg": "rcl_logging_interface",
+      "description": "rcl logging plugin interface",
+      "depends": ["ros2-host-sdk", "rcutils"],
+      "type": "library"
+    },
+    {
+      "name": "rcl-logging-spdlog",
+      "version": "3.1.1",
+      "release": "3.1.1-1",
+      "repo": "rcl_logging",
+      "pkg": "rcl_logging_spdlog",
+      "description": "spdlog backend for rcl logging",
+      "depends": ["ros2-host-sdk", "rcl-logging-interface", "rcpputils", "rcutils", "spdlog"],
+      "type": "library"
+    },
+    {
+      "name": "rcl-yaml-param-parser",
+      "version": "9.2.7",
+      "release": "9.2.7-1",
+      "repo": "rcl",
+      "pkg": "rcl_yaml_param_parser",
+      "description": "YAML parameter parser for rcl",
+      "depends": ["ros2-host-sdk", "libyaml", "rcutils", "rmw"],
+      "type": "library"
+    },
+    {
+      "name": "rcl",
+      "version": "9.2.7",
+      "release": "9.2.7-1",
+      "repo": "rcl",
+      "pkg": "rcl",
+      "description": "ROS 2 C client library",
+      "depends": [
+        "ros2-host-sdk",
+        "rcl-interfaces",
+        "rcl-logging-interface",
+        "rcl-logging-spdlog",
+        "rcl-yaml-param-parser",
+        "rcutils",
+        "rmw",
+        "rmw-implementation",
+        "rosidl-runtime-c",
+        "tracetools",
+        "libyaml"
+      ],
+      "type": "library"
+    },
+    {
+      "name": "libstatistics-collector",
+      "version": "1.7.4",
+      "release": "1.7.4-1",
+      "repo": "libstatistics_collector",
+      "pkg": "libstatistics_collector",
+      "description": "Topic statistics collector",
+      "depends": ["ros2-host-sdk", "rcl", "rcpputils", "statistics-msgs"],
+      "type": "library"
+    },
+    {
+      "name": "rclcpp",
+      "version": "28.1.12",
+      "release": "28.1.12-1",
+      "repo": "rclcpp",
+      "pkg": "rclcpp",
+      "description": "ROS 2 C++ client library",
+      "depends": [
+        "ros2-host-sdk",
+        "ament-index-cpp",
+        "builtin-interfaces",
+        "libstatistics-collector",
+        "rcl",
+        "rcl-interfaces",
+        "rcl-yaml-param-parser",
+        "rcpputils",
+        "rcutils",
+        "rmw",
+        "rmw-implementation",
+        "rosidl-dynamic-typesupport",
+        "rosidl-runtime-cpp",
+        "rosidl-typesupport-c",
+        "rosidl-typesupport-cpp",
+        "statistics-msgs",
+        "tracetools"
+      ],
+      "type": "library"
+    },
+    {
+      "name": "composition-interfaces",
+      "version": "2.0.4",
+      "release": "2.0.4-1",
+      "repo": "rcl_interfaces",
+      "pkg": "composition_interfaces",
+      "description": "ROS 2 component composition message and service definitions",
+      "depends": ["ros2-host-sdk", "rcl-interfaces", "rosidl-default-runtime"],
+      "type": "library"
+    },
+    {
+      "name": "console-bridge-vendor",
+      "version": "1.7.2",
+      "release": "1.7.2-1",
+      "repo": "console_bridge_vendor",
+      "pkg": "console_bridge_vendor",
+      "description": "ROS 2 vendor metadata for the staged console_bridge library",
+      "depends": ["ros2-host-sdk", "console-bridge"],
+      "type": "library"
+    },
+    {
+      "name": "class-loader",
+      "version": "2.7.1",
+      "release": "2.7.1-1",
+      "repo": "class_loader",
+      "pkg": "class_loader",
+      "description": "Runtime C++ plugin class loader",
+      "depends": ["ros2-host-sdk", "console-bridge-vendor", "rcpputils"],
+      "type": "library"
+    },
+    {
+      "name": "rclcpp-components",
+      "version": "28.1.12",
+      "release": "28.1.12-1",
+      "repo": "rclcpp",
+      "pkg": "rclcpp_components",
+      "description": "ROS 2 dynamically loadable component support",
+      "depends": ["ros2-host-sdk", "ament-index-cpp", "class-loader", "composition-interfaces", "rclcpp", "rcpputils"],
+      "type": "library"
+    },
+    {
+      "name": "action-msgs",
+      "version": "2.0.4",
+      "release": "2.0.4-1",
+      "repo": "rcl_interfaces",
+      "pkg": "action_msgs",
+      "description": "Messages and service definitions common to ROS 2 actions",
+      "depends": ["ros2-host-sdk", "builtin-interfaces", "rosidl-default-runtime", "service-msgs", "unique-identifier-msgs"],
+      "type": "library"
+    },
+    {
+      "name": "example-interfaces",
+      "version": "0.12.1",
+      "release": "0.12.1-1",
+      "repo": "example_interfaces",
+      "pkg": "example_interfaces",
+      "description": "Message and service definitions used by ROS 2 examples",
+      "depends": ["ros2-host-sdk", "action-msgs", "rosidl-default-runtime", "service-msgs"],
+      "type": "library"
+    },
+    {
+      "name": "demo-nodes-cpp",
+      "version": "0.33.11",
+      "release": "0.33.11-1",
+      "repo": "demos",
+      "pkg": "demo_nodes_cpp",
+      "description": "C++ talker and listener demo nodes",
+      "depends": ["ros2-host-sdk", "example-interfaces", "rclcpp", "rclcpp-components", "std-msgs"],
+      "type": "executable"
+    }
+  ]
+}

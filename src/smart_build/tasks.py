@@ -845,6 +845,7 @@ def _package_config_values(paths):
 def _resolved_package_tasks(paths, selected_packages, toolchain):
     from .domains.ipkg import ipkg_tasks
     from .domains.package import package_task
+    from .package_metadata import is_host_package_path
 
     selected = list(reversed(tuple(selected_packages)))
     package_names = {package.name for package in selected}
@@ -857,12 +858,28 @@ def _resolved_package_tasks(paths, selected_packages, toolchain):
     total = len(selected)
     for index, package in enumerate(selected, start=1):
         report_items("tasks", index, total, package.name)
-        build_task = package_task(paths, package.name, toolchain=toolchain)
+        prefix_package_names = _package_dependency_closure(package, selected_packages)
+        build_task = package_task(
+            paths,
+            package.name,
+            toolchain=toolchain,
+            prefix_package_names=prefix_package_names,
+        )
         build_tasks = build_task if isinstance(build_task, list) else [build_task]
-        dependency_ipkgs = _package_dependency_ipkg_ids(package, package_names, providers)
-        build_tasks = _with_package_dependency_deps(paths, build_tasks, dependency_ipkgs)
+        host_names = {
+            item.name
+            for item in selected
+            if is_host_package_path(item.metadata.path, paths.root)
+        }
+        dependency_ids = _package_dependency_task_ids(
+            package, package_names, providers, host_names
+        )
+        build_tasks = _with_package_dependency_deps(paths, build_tasks, dependency_ids)
         package_inputs = [task for task in build_tasks if _has_ipkg_manifest(task)]
-        tasks.extend([*build_tasks, *ipkg_tasks(paths, package_inputs)])
+        if is_host_package_path(package.metadata.path, paths.root):
+            tasks.extend(build_tasks)
+        else:
+            tasks.extend([*build_tasks, *ipkg_tasks(paths, package_inputs)])
     return tasks
 
 
@@ -880,16 +897,61 @@ def _library_or_executable_selected_packages(paths, selected_packages):
     return result
 
 
-def _package_dependency_ipkg_ids(package, package_names, providers):
+def _package_dependency_ipkg_ids(package, package_names, providers, host_names=()):
+    return _package_dependency_task_ids(package, package_names, providers, host_names)
+
+
+def _package_dependency_task_ids(package, package_names, providers, host_names=()):
     deps = []
-    for raw_dependency in (*package.metadata.depends, *package.metadata.selects):
+    for raw_dependency in (
+        *getattr(package.metadata, "host_depends", ()),
+        *package.metadata.depends,
+        *package.metadata.selects,
+    ):
         dependency = raw_dependency if raw_dependency in package_names else providers.get(raw_dependency)
         if dependency is None or dependency == package.name:
             continue
-        task_id = f"ipkg:{dependency}:package"
+        if dependency in host_names:
+            task_id = f"package:{dependency}:build"
+        else:
+            task_id = f"ipkg:{dependency}:package"
         if task_id not in deps:
             deps.append(task_id)
     return deps
+
+
+def _package_dependency_closure(package, selected_packages):
+    selected_by_name = {item.name: item for item in selected_packages}
+    providers = {
+        provided: item.name
+        for item in selected_packages
+        for provided in item.metadata.provides
+    }
+    result = []
+    visited = set()
+
+    def visit(raw_name):
+        name = raw_name if raw_name in selected_by_name else providers.get(raw_name)
+        if name is None or name == package.name or name in visited:
+            return
+        visited.add(name)
+        result.append(name)
+        dependency = selected_by_name[name].metadata
+        for child in (
+            *dependency.depends,
+            *getattr(dependency, "host_depends", ()),
+            *dependency.selects,
+        ):
+            visit(child)
+
+    metadata = package.metadata
+    for dependency in (
+        *getattr(metadata, "host_depends", ()),
+        *metadata.depends,
+        *metadata.selects,
+    ):
+        visit(dependency)
+    return tuple(result)
 
 
 def _with_package_dependency_deps(paths, build_tasks, dependency_ipkgs):

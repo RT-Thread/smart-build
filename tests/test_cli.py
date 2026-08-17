@@ -57,4 +57,4 @@ def test_buildroot_menuconfig_dispatches_to_importer(monkeypatch):
     monkeypatch.setattr(cli, "run_buildroot_menuconfig", menuconfig)
     args = SimpleNamespace(buildroot_command="menuconfig", machine="test-machine")
     assert cli._run_buildroot(args) == 0
-    assert captured["root"].name == "smart-build"
+    assert (captured["root"] / "smart-build").is_file()

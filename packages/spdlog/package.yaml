@@ -1,0 +1,46 @@
+schema_version: 1
+kind: package
+name: spdlog
+version: 1.15.3
+versions:
+  - 1.15.3
+default_version: 1.15.3
+type: library
+description: spdlog fast C++ logging library
+category: Libraries
+depends:
+  - fmt
+provides:
+  - spdlog
+requires_toolchain:
+  - cxx
+  - static-library
+source:
+  type: archive
+  url: https://github.com/gabime/spdlog/archive/v1.15.3.tar.gz
+  archive: spdlog-1.15.3.tar.gz
+  sha256: 15a04e69c222eb6c01094b5c7ff8a249b36bb22788d72519646fb85feb267e67
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - include/spdlog/spdlog.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/spdlog
+      - /usr/lib/libspdlog.so
+      - /usr/lib/libspdlog.so.1.15
+      - /usr/lib/libspdlog.so.1.15.3
+    upstream_markers:
+      - CMakeLists.txt
+      - include/spdlog/spdlog.h
+install:
+  headers:
+    - usr/include/spdlog
+  libraries:
+    - usr/lib/libspdlog.so
+    - usr/lib/libspdlog.so.1.15
+    - usr/lib/libspdlog.so.1.15.3

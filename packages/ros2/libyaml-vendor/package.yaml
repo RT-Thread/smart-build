@@ -1,0 +1,35 @@
+schema_version: 1
+kind: package
+name: libyaml-vendor
+version: 1.6.4
+versions:
+  - 1.6.4
+default_version: 1.6.4
+type: library
+category: ROS 2
+description: ROS 2 vendor metadata for the staged libyaml library
+depends:
+  - libyaml
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/libyaml_vendor-release/archive/release/jazzy/libyaml_vendor/1.6.4-2.tar.gz
+  archive: libyaml_vendor-1.6.4-2.tar.gz
+  sha256: 2f99d6b24d015e2501bd15a952a6e32f6b4bdae72b3befbd861f671733eb4e65
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - libyaml_vendor-extras.cmake
+    - package.xml
+    - cmake/Modules/Findyaml.cmake
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/share
+install:
+  resources:
+    - usr/share

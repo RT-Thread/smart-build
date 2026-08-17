@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: tinyxml2
+version: 11.0.0
+versions:
+  - 11.0.0
+default_version: 11.0.0
+type: library
+description: TinyXML2 C++ XML parser
+category: Libraries
+provides:
+  - tinyxml2
+requires_toolchain:
+  - cxx
+  - static-library
+source:
+  type: archive
+  url: https://github.com/leethomason/tinyxml2/archive/11.0.0.tar.gz
+  archive: tinyxml2-11.0.0.tar.gz
+  sha256: 5556deb5081fb246ee92afae73efd943c889cef0cafea92b0b82422d6a18f289
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - tinyxml2.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/tinyxml2.h
+      - /usr/lib/libtinyxml2.so
+    upstream_markers:
+      - CMakeLists.txt
+      - tinyxml2.h
+install:
+  headers:
+    - usr/include/tinyxml2.h
+  libraries:
+    - usr/lib/libtinyxml2.so

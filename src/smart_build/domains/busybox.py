@@ -231,11 +231,12 @@ def busybox_stage_rootfs_task(paths):
     rootfs = busybox_rootfs_dir(paths)
     manifest_path = paths.staging_dir / BUSYBOX_ROOTFS_MANIFEST_NAME
     inittab = busybox_inittab_path(paths)
+    init_script = busybox_init_script_path(paths)
     return Task(
         id="busybox:stage-rootfs",
         domain="busybox",
         action="stage-rootfs",
-        inputs=[source_install, inittab],
+        inputs=[source_install, inittab, init_script],
         outputs=[rootfs, manifest_path],
         deps=["busybox:build"],
         workdir=paths.work_dir / "busybox" / "stage-rootfs",
@@ -243,12 +244,20 @@ def busybox_stage_rootfs_task(paths):
         run_class="serial",
         cache_policy="never",
         log_path=paths.logs_dir / "busybox-stage-rootfs.log",
-        executor=_make_stage_rootfs_executor(paths, source_install, rootfs, manifest_path, inittab),
+        executor=_make_stage_rootfs_executor(
+            paths,
+            source_install,
+            rootfs,
+            manifest_path,
+            inittab,
+            init_script,
+        ),
         cache_extra={
             "busybox_rootfs": {
                 "install_dir": str(source_install),
                 "path": str(rootfs),
                 "inittab": str(inittab),
+                "init_script": str(init_script),
                 "required_dirs": list(REQUIRED_ROOTFS_DIRS),
             }
         },
@@ -259,6 +268,7 @@ def busybox_stage_rootfs_task(paths):
                 "path": str(rootfs),
                 "manifest": str(manifest_path),
                 "inittab": str(inittab),
+                "init_script": str(init_script),
                 "required_dirs": list(REQUIRED_ROOTFS_DIRS),
             }
         },
@@ -338,6 +348,10 @@ def busybox_config_path(paths):
 
 def busybox_inittab_path(paths):
     return busybox_reference_dir(paths) / "conf" / "inittab"
+
+
+def busybox_init_script_path(paths):
+    return busybox_reference_dir(paths) / "conf" / "rcS"
 
 
 def busybox_patch_paths(paths):
@@ -627,12 +641,14 @@ def _time64_compat_source():
     )
 
 
-def _make_stage_rootfs_executor(paths, source_install, rootfs, manifest_path, inittab):
+def _make_stage_rootfs_executor(paths, source_install, rootfs, manifest_path, inittab, init_script):
     def executor(task, log):
         if not source_install.is_dir():
             raise SmartBuildError("ROOTFS", f"busybox install directory not found: {source_install}")
         if not inittab.is_file():
             raise SmartBuildError("ROOTFS", f"busybox inittab not found: {inittab}")
+        if not init_script.is_file():
+            raise SmartBuildError("ROOTFS", f"busybox init script not found: {init_script}")
         _validate_staging_output(paths, rootfs)
         _remove_path(rootfs)
         rootfs.parent.mkdir(parents=True, exist_ok=True)
@@ -651,6 +667,12 @@ def _make_stage_rootfs_executor(paths, source_install, rootfs, manifest_path, in
         destination = _rootfs_child(rootfs, "etc/inittab")
         shutil.copy2(inittab, destination)
         source_map[destination.relative_to(rootfs).as_posix()] = str(inittab)
+
+        destination = _rootfs_child(rootfs, "etc/init.d/rcS")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(init_script, destination)
+        destination.chmod(0o755)
+        source_map[destination.relative_to(rootfs).as_posix()] = str(init_script)
 
         var_run = _rootfs_child(rootfs, "var/run")
         if var_run.exists() or var_run.is_symlink():

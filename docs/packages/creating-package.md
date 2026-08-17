@@ -2,10 +2,13 @@
 
 # Adding a package
 
-Each package owns a lowercase, hyphenated directory:
+Each package owns a lowercase, hyphenated directory. The package name is the
+final directory name and cannot contain `/`.
 
 ```text
-packages/<name>/
+packages/<name>/                 # target packages
+packages/ros2/<name>/            # target ROS 2 packages
+packages/host/<name>/            # host-only tools (not installed into rootfs)
   package.yaml
   Kconfig          # generated metadata backend
   sbuild.py        # for a Python build backend
@@ -17,6 +20,18 @@ packages/<name>/
   patches/         # optional
   conf/            # optional
 ```
+
+Lookup order for a name is `packages/<name>/`, then `packages/ros2/<name>/`,
+then `packages/host/<name>/`. The same name must not appear in more than one of
+those locations. Packages under `packages/host/` are built for the development
+host and are omitted from rootfs and IPKG assembly. Ungrouped packages keep
+their existing category map; `packages/ros2/` defaults to ROS 2 and
+`packages/host/` defaults to Host tools.
+
+For ROS 2 packages, put target runtime and target C/C++ libraries under
+`packages/ros2/`. Put ament, Python, rosidl generator, and other build-host-only
+content under `packages/host/`. Use `host_depends` for the latter so the build
+graph selects and builds it without treating it as a target runtime dependency.
 
 For the default backends, `package.yaml` is the source for package selection
 metadata and `Kconfig` is generated from it. An independent RT-Thread SCons
@@ -31,12 +46,19 @@ Use the simplest backend that matches the package:
 - `build.cmake` builds a repository-local CMake executable.
 - `build.python.script` runs trusted repository-local Python build code for an
   upstream package requiring custom adaptation.
+- `build.ament_cmake` cross-compiles an ament CMake package into the package
+  staging directory.
 - `build.rtthread_scons` runs an adjusted independent RT-Thread package through
   its fixed `source/SConstruct` entry and `install` target.
 
 Custom `sbuild.py` scripts are trusted code. They execute with the build user's
 permissions and must validate required inputs and create only declared staged
 outputs.
+
+Normal ROS 2 C/C++ packages should use `build.ament_cmake` directly and should
+not add an empty `configure:` block or a package-local `sbuild.py`. Reserve a
+custom script for packages with a genuinely different build or install flow,
+such as Rust FFI or a PSMX adapter.
 
 RT-Thread SCons files are trusted code as well. This backend is not a generic
 SCons adapter: first make the package self-contained under `source/`, remove

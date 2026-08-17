@@ -1,0 +1,38 @@
+schema_version: 1
+kind: package
+name: class-loader
+version: 2.7.1
+versions:
+  - 2.7.1
+default_version: 2.7.1
+type: library
+category: ROS 2
+description: Runtime C++ plugin class loader
+depends:
+  - console-bridge-vendor
+  - rcpputils
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/class_loader-release/archive/refs/tags/release/jazzy/class_loader/2.7.1-1.tar.gz
+  archive: class_loader-2.7.1-1.tar.gz
+  sha256: 1f4f508fc7497ff7f0676983508e7b15658bc9906149be54540353b58b8cb249
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

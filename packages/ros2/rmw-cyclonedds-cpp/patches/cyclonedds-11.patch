@@ -1,0 +1,201 @@
+--- a/src/serdata.cpp
++++ b/src/serdata.cpp
+@@ -25,6 +25,7 @@
+ #include "TypeSupport2.hpp"
+ #include "bytewise.hpp"
+ #include "dds/ddsi/q_radmin.h"
++#include "dds/ddsc/dds_psmx.h"
+ #include "rmw/error_handling.h"
+ #include "MessageTypeSupport.hpp"
+ #include "ServiceTypeSupport.hpp"
+@@ -137,6 +138,25 @@
+ 
+ static void serialize_into_serdata_rmw_on_demand(serdata_rmw * d)
+ {
++  if (d->loan && d->data() == nullptr) {
++    const dds_psmx_metadata_t * metadata = d->loan->metadata;
++    switch (metadata->sample_state) {
++      case DDS_LOANED_SAMPLE_STATE_SERIALIZED_KEY:
++      case DDS_LOANED_SAMPLE_STATE_SERIALIZED_DATA:
++        d->resize(metadata->sample_size);
++        memcpy(d->data(), d->loan->sample_ptr, metadata->sample_size);
++        break;
++      case DDS_LOANED_SAMPLE_STATE_RAW_KEY:
++      case DDS_LOANED_SAMPLE_STATE_RAW_DATA:
++        serialize_into_serdata_rmw(d, d->loan->sample_ptr);
++        break;
++      case DDS_LOANED_SAMPLE_STATE_UNITIALIZED:
++        RMW_SET_ERROR_MSG("Received PSMX sample is uninitialized");
++        break;
++      default:
++        RMW_SET_ERROR_MSG("Received PSMX sample has an invalid state");
++        break;
++    }
++  }
+ #ifdef DDS_HAS_SHM
+   auto type = const_cast<sertype_rmw *>(static_cast<const sertype_rmw *>(d->type));
+   {
+@@ -172,6 +192,10 @@
+ {
+   auto * d = static_cast<serdata_rmw *>(dcmn);
+ 
++  if (d->loan) {
++    dds_loaned_sample_unref(d->loan);
++    d->loan = nullptr;
++  }
+ #ifdef DDS_HAS_SHM
+   if (d->iox_chunk && d->iox_subscriber) {
+     free_iox_chunk(static_cast<iox_sub_t *>(d->iox_subscriber), &d->iox_chunk);
+@@ -265,6 +289,78 @@
+   }
+ }
+ 
++static struct ddsi_serdata * serdata_rmw_from_loaned_sample(
++  const struct ddsi_sertype * typecmn, enum ddsi_serdata_kind kind,
++  const char * sample, dds_loaned_sample_t * loaned_sample,
++  bool will_require_cdr)
++{
++  auto type = static_cast<const struct sertype_rmw *>(typecmn);
++  assert(sample == loaned_sample->sample_ptr);
++
++  std::unique_ptr<serdata_rmw> data;
++  if (will_require_cdr) {
++    data.reset(static_cast<serdata_rmw *>(serdata_rmw_from_sample(type, kind, sample)));
++  } else {
++    data = std::make_unique<serdata_rmw>(type, kind);
++  }
++  if (!data) {
++    return nullptr;
++  }
++  data->loan = loaned_sample;
++  return data.release();
++}
++
++static bool loaned_sample_state_to_serdata_kind(
++  dds_loaned_sample_state_t state, enum ddsi_serdata_kind & kind)
++{
++  switch (state) {
++    case DDS_LOANED_SAMPLE_STATE_RAW_KEY:
++    case DDS_LOANED_SAMPLE_STATE_SERIALIZED_KEY:
++      kind = SDK_KEY;
++      return true;
++    case DDS_LOANED_SAMPLE_STATE_RAW_DATA:
++    case DDS_LOANED_SAMPLE_STATE_SERIALIZED_DATA:
++      kind = SDK_DATA;
++      return true;
++    case DDS_LOANED_SAMPLE_STATE_UNITIALIZED:
++      return false;
++    default:
++      return false;
++  }
++}
++
++static struct ddsi_serdata * serdata_rmw_from_psmx(
++  const struct ddsi_sertype * typecmn, dds_loaned_sample_t * loaned_sample)
++{
++  const dds_psmx_metadata_t * metadata = loaned_sample->metadata;
++  enum ddsi_serdata_kind kind;
++  if (!loaned_sample_state_to_serdata_kind(metadata->sample_state, kind)) {
++    return nullptr;
++  }
++
++  switch (metadata->sample_state) {
++    case DDS_LOANED_SAMPLE_STATE_SERIALIZED_KEY:
++    case DDS_LOANED_SAMPLE_STATE_SERIALIZED_DATA:
++      return serdata_rmw_from_serialized_message(
++        typecmn, loaned_sample->sample_ptr, metadata->sample_size);
++    case DDS_LOANED_SAMPLE_STATE_RAW_KEY:
++    case DDS_LOANED_SAMPLE_STATE_RAW_DATA:
++      try {
++        auto data = std::make_unique<serdata_rmw>(typecmn, kind);
++        data->statusinfo = metadata->statusinfo;
++        data->timestamp.v = metadata->timestamp;
++        data->loan = loaned_sample;
++        dds_loaned_sample_ref(data->loan);
++        return data.release();
++      } catch (std::exception & e) {
++        RMW_SET_ERROR_MSG(e.what());
++        return nullptr;
++      }
++    case DDS_LOANED_SAMPLE_STATE_UNITIALIZED:
++    default:
++      return nullptr;
++  }
++}
++
+ #ifdef DDS_HAS_SHM
+ static struct ddsi_serdata * serdata_rmw_from_iox(
+   const struct ddsi_sertype * typecmn,
+@@ -495,11 +591,8 @@
+   serdata_rmw_free,
+   serdata_rmw_print,
+   serdata_rmw_get_keyhash
+-#ifdef DDS_HAS_SHM
+-  , ddsi_serdata_iox_size,
+-  serdata_rmw_from_iox
+-#endif  // DDS_HAS_SHM
++  , serdata_rmw_from_loaned_sample,
++  serdata_rmw_from_psmx
+ };
+ 
+ static void sertype_rmw_free(struct ddsi_sertype * tpcmn)
+@@ -585,7 +678,12 @@
+   return h1 ^ h2;
+ }
+ 
+-size_t sertype_get_serialized_size(const struct ddsi_sertype * d, const void * sample)
++dds_return_t sertype_get_serialized_size(
++  const struct ddsi_sertype * d,
++  enum ddsi_serdata_kind kind,
++  const void * sample,
++  size_t * size,
++  uint16_t * encoding_identifier)
+ {
+   const struct sertype_rmw * type = static_cast<const struct sertype_rmw *>(d);
+   size_t serialized_size = 0;
+@@ -603,13 +701,21 @@
+     RMW_SET_ERROR_MSG(e.what());
+   }
+ 
+-  return serialized_size;
++  static_cast<void>(kind);
++  if (serialized_size < 4) {
++    return DDS_RETCODE_ERROR;
++  }
++  *size = serialized_size - 4;
++  *encoding_identifier =
++    native_endian() == endian::little ? DDSI_RTPS_CDR_LE : DDSI_RTPS_CDR_BE;
++  return DDS_RETCODE_OK;
+ }
+ 
+ bool sertype_serialize_into(
+   const struct ddsi_sertype * d,
++  enum ddsi_serdata_kind kind,
+   const void * sample,
+   void * dst_buffer,
+   size_t dst_size)
+ {
++  static_cast<void>(kind);
+   const struct sertype_rmw * type = static_cast<const struct sertype_rmw *>(d);
+   try {
+     // ignore destination size (assuming that the destination buffer is resized before correctly)
+@@ -701,12 +807,16 @@
+ {
+   struct sertype_rmw * st = new struct sertype_rmw;
+   std::string type_name = get_type_name(type_support_identifier, type_support);
++  dds_data_type_properties_t properties = 0;
+   uint32_t flags = DDSI_SERTYPE_FLAG_TOPICKIND_NO_KEY;
+   if (is_fixed_type) {
+     flags |= DDSI_SERTYPE_FLAG_FIXED_SIZE;
++    properties |= DDS_DATA_TYPE_IS_MEMCPY_SAFE;
+   }
+-  ddsi_sertype_init_flags(
++  ddsi_sertype_init_props(
+     static_cast<struct ddsi_sertype *>(st),
+-    type_name.c_str(), &sertype_rmw_ops, &serdata_rmw_ops, flags);
+-  st->allowed_data_representation = DDS_DATA_REPRESENTATION_FLAG_XCDR1;
++    type_name.c_str(), &sertype_rmw_ops, &serdata_rmw_ops,
++    sample_size, properties, DDS_DATA_REPRESENTATION_FLAG_XCDR1, flags);
+ #ifdef DDS_HAS_SHM
+   // TODO(Sumanth) needs some API in cyclone to set this
+   st->iox_size = sample_size;

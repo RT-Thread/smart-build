@@ -1,0 +1,30 @@
+schema_version: 1
+kind: package
+name: spdlog-vendor
+version: 1.6.2
+versions:
+  - 1.6.2
+default_version: 1.6.2
+type: library
+category: ROS 2
+description: ROS 2 vendor wrapper for the staged spdlog library
+depends:
+  - spdlog
+host_depends:
+  - ros2-host-sdk
+requires_toolchain:
+  - cxx
+source:
+  type: git
+  url: https://github.com/ros2-gbp/spdlog_vendor-release.git
+  commit: 61e3eea73ab0b9eeb4b58b09d0bb2dfde801e22c
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/share

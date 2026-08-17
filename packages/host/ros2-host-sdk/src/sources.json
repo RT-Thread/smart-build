@@ -1,0 +1,84 @@
+{
+  "python_packages": [
+    "empy==3.3.4",
+    "lark==1.1.9",
+    "catkin-pkg==1.0.0",
+    "packaging",
+    "pyparsing",
+    "numpy"
+  ],
+  "archives": [
+    {
+      "name": "ament_package",
+      "url": "https://github.com/ament/ament_package/archive/refs/tags/0.16.4.tar.gz",
+      "archive": "ament_package-0.16.4.tar.gz",
+      "sha256": "502514615d2d38454eb66ec3f78de0278f000fbdbb841a991e13bc661be6872c"
+    },
+    {
+      "name": "ament_cmake",
+      "url": "https://github.com/ament/ament_cmake/archive/refs/tags/2.5.5.tar.gz",
+      "archive": "ament_cmake-2.5.5.tar.gz",
+      "sha256": "6eb6a1a598ced326892e98201d2e1c6650099fe8b1359b0b5a8b1eb024e6bbc1"
+    },
+    {
+      "name": "ament_cmake_ros",
+      "url": "https://github.com/ros2/ament_cmake_ros/archive/refs/tags/0.12.0.tar.gz",
+      "archive": "ament_cmake_ros-0.12.0.tar.gz",
+      "sha256": "cbc0ea301b18ddbab676c6cfb3e93d9099576d8abb47995b04239f7d8b880e25"
+    },
+    {
+      "name": "ament_index",
+      "url": "https://github.com/ament/ament_index/archive/refs/tags/1.8.1.tar.gz",
+      "archive": "ament_index-1.8.1.tar.gz",
+      "sha256": "ddc8a03a9bd2a7ae3cc8a69ceaca77762d8524addc2d7260a99261ced410f29b"
+    },
+    {
+      "name": "osrf_pycommon",
+      "url": "https://github.com/osrf/osrf_pycommon/archive/refs/tags/2.1.4.tar.gz",
+      "archive": "osrf_pycommon-2.1.4.tar.gz",
+      "sha256": "a5c57a1021d1620cfe4620c4f1611e040de86e7afcce53509e968a4098ce1fa2"
+    },
+    {
+      "name": "rosidl",
+      "url": "https://github.com/ros2/rosidl/archive/refs/tags/4.6.6.tar.gz",
+      "archive": "rosidl-4.6.6.tar.gz",
+      "sha256": "834390cf1fea54f158c45b83cd5e2cc442e0c7c275fda172c01d57f67ce8fcbf"
+    },
+    {
+      "name": "rosidl_defaults",
+      "url": "https://github.com/ros2/rosidl_defaults/archive/refs/tags/1.6.1.tar.gz",
+      "archive": "rosidl_defaults-1.6.1.tar.gz",
+      "sha256": "09a50086cd7fd944375c78a67d9b5bca312403eb916586dd14c141fae54b157e"
+    },
+    {
+      "name": "rosidl_typesupport",
+      "url": "https://github.com/ros2/rosidl_typesupport/archive/refs/tags/3.2.2.tar.gz",
+      "archive": "rosidl_typesupport-3.2.2.tar.gz",
+      "sha256": "f3a16b95e6f92bf2ce55a5b1afd70d7d2a1afe20684451bb17703d808482dd32"
+    },
+    {
+      "name": "rosidl_dynamic_typesupport",
+      "url": "https://github.com/ros2/rosidl_dynamic_typesupport/archive/refs/tags/0.1.2.tar.gz",
+      "archive": "rosidl_dynamic_typesupport-0.1.2.tar.gz",
+      "sha256": "3a7076212e7450411dd728300efe09ef10c1c0714b1e98b805da2142f98e0f6f"
+    },
+    {
+      "name": "rosidl_core_generators",
+      "url": "https://github.com/ros2-gbp/rosidl_core-release/archive/release/jazzy/rosidl_core_generators/0.2.1-1.tar.gz",
+      "archive": "rosidl_core_generators-0.2.1-1.tar.gz",
+      "sha256": "b0885887c002dfe395e2cf11532d921df8da465c148c86f74efb79674bd10202"
+    },
+    {
+      "name": "rosidl_core_runtime",
+      "url": "https://github.com/ros2-gbp/rosidl_core-release/archive/release/jazzy/rosidl_core_runtime/0.2.1-1.tar.gz",
+      "archive": "rosidl_core_runtime-0.2.1-1.tar.gz",
+      "sha256": "316fa8c54bb45c24faa6054d92b046c099f0837abaf2edf77dbf48f02a86779a"
+    },
+    {
+      "name": "rmw",
+      "url": "https://github.com/ros2/rmw/archive/refs/tags/7.3.2.tar.gz",
+      "archive": "rmw-7.3.2.tar.gz",
+      "sha256": "46f4ca1cf6a50ade9cfbb303f7c3e6417222575dcf350edb1a6d441b18826106"
+    }
+  ]
+}

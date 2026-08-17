@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: libyaml
+version: 0.2.5
+versions:
+  - 0.2.5
+default_version: 0.2.5
+type: library
+description: LibYAML C YAML 1.1 parser and emitter
+category: Libraries
+provides:
+  - yaml
+requires_toolchain:
+  - c
+  - static-library
+source:
+  type: archive
+  url: https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz
+  archive: yaml-0.2.5.tar.gz
+  sha256: c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - include/yaml.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include/yaml.h
+      - /usr/lib/libyaml.so
+    upstream_markers:
+      - CMakeLists.txt
+      - include/yaml.h
+install:
+  headers:
+    - usr/include/yaml.h
+  libraries:
+    - usr/lib/libyaml.so

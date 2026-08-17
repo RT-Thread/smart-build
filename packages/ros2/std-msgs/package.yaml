@@ -1,0 +1,38 @@
+schema_version: 1
+kind: package
+name: std-msgs
+version: 5.3.6
+versions:
+  - 5.3.6
+default_version: 5.3.6
+type: library
+category: ROS 2
+description: Standard ROS 2 message definitions
+depends:
+  - builtin-interfaces
+  - rosidl-default-runtime
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/common_interfaces-release/archive/release/jazzy/std_msgs/5.3.6-1.tar.gz
+  archive: std_msgs-5.3.6-1.tar.gz
+  sha256: 76b47a6cb5d93e9620dfc5d4b4514b3f2d7123fb2c640dc667a2b30c1c5e7019
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

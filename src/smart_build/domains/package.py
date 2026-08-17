@@ -6,6 +6,14 @@ from copy import deepcopy
 from pathlib import Path, PurePosixPath
 
 from ..cache import Cache
+from ..ament_package import (
+    ament_cmake_commands,
+    ament_python_executable,
+    ament_prefix_dirs,
+    ament_python_paths,
+    ament_toolchain_text,
+    parse_ament_cmake_build,
+)
 from ..cmake_package import (
     cmake_commands,
     cmake_toolchain_text,
@@ -25,7 +33,11 @@ from ..configure import (
 from ..descriptions import load_description
 from ..doctor import resolve_host_tool
 from ..errors import SmartBuildError
-from ..package_metadata import normalize_package_metadata, package_description_path
+from ..package_metadata import (
+    is_host_package_path,
+    normalize_package_metadata,
+    package_description_path,
+)
 from ..paths import board_defconfig_path, validate_safe_name
 from ..scheduler import Scheduler
 from ..tasks import Task, TaskGraph
@@ -34,6 +46,10 @@ from .toolchain import resolve_toolchain, toolchain_task_fields
 
 
 PACKAGE_STAGE_DIR = "packages"
+AMENT_BACKEND_SOURCES = (
+    Path(__file__).resolve(),
+    Path(__file__).resolve().parents[1] / "ament_package.py",
+)
 
 
 def package_tasks(paths, toolchain=None, package_names=None, command_runner=None, env_packages=None):
@@ -54,13 +70,33 @@ def package_tasks(paths, toolchain=None, package_names=None, command_runner=None
     return tasks
 
 
-def package_task(paths, package_name, toolchain=None, command_runner=None, env_packages=None):
+def package_task(
+    paths,
+    package_name,
+    toolchain=None,
+    command_runner=None,
+    env_packages=None,
+    prefix_package_names=None,
+):
     name = validate_safe_name(package_name, "package")
     description = _load_package_description(paths, name)
     package_type = description.data.get("type")
     if package_type not in {"library", "executable"}:
         raise SmartBuildError("PACKAGE", f"{description.path}: package type must be library or executable")
     build = description.data.get("build")
+    if isinstance(build, dict) and "ament_cmake" in build:
+        source_task = package_source_task(paths, name, description)
+        return _with_source_task(
+            source_task,
+            _ament_package_task(
+                paths,
+                name,
+                description,
+                toolchain=toolchain,
+                command_runner=command_runner,
+                prefix_package_names=prefix_package_names,
+            ),
+        )
     if isinstance(build, dict) and "rtthread_scons" in build:
         from .rtthread_scons_package import rtthread_scons_package_task
 
@@ -388,6 +424,8 @@ def selected_rootfs_package_names(paths):
     names = []
     for package in selection.packages:
         description = _load_package_description(paths, validate_safe_name(package, "package"))
+        if is_host_package_path(description.path, paths.root):
+            continue
         if description.data.get("type") in {"library", "executable"}:
             names.append(description.name)
     return names
@@ -917,6 +955,206 @@ def _make_python_library_executor(
         return 0
 
     return executor
+
+
+def _ament_package_task(
+    paths,
+    name,
+    description,
+    toolchain=None,
+    command_runner=None,
+    prefix_package_names=None,
+):
+    selected = _selected_package(paths, name, description)
+    version = selected.version
+    selected_options = dict(selected.options)
+    package_description = str(description.data.get("description", name))
+    depends = _package_depends(description)
+    host_depends = _package_host_depends(description)
+    depend_names = _package_depend_names(description)
+    source_context = _source_context(paths, name, description)
+    source_dir = source_context["source_dir"]
+    ament_build = parse_ament_cmake_build(description)
+    source = description.data.get("source")
+    if not source_context["deferred"] and isinstance(source, dict) and source.get("files"):
+        _validate_sources(source_dir, _source_files(description))
+
+    resolved_toolchain = toolchain if toolchain is not None else resolve_toolchain()
+    fields = toolchain_task_fields(resolved_toolchain)
+    workdir = paths.work_dir / PACKAGE_STAGE_DIR / name
+    staged_dir = paths.staging_dir / PACKAGE_STAGE_DIR / name
+    _validate_existing_stage(staged_dir, paths.staging_dir)
+    _validate_existing_package_paths(staged_dir, ament_build.outputs)
+    install_files = _python_install_files(staged_dir, ament_build.outputs)
+    host_sdk_dir = paths.machine_dir / "host" / "ros2-sdk"
+    manifest_kind = "library" if description.data.get("type") == "library" else "executable"
+    manifest_fields = {
+        manifest_kind: {
+            "name": name,
+            "description": str(description.path),
+            "package_description": package_description,
+            "version": version,
+            "selected_options": selected_options,
+            "depends": depends,
+            "build_depends": host_depends,
+            "provides": _package_provides(selected),
+            "type": description.data.get("type"),
+            "build_system": "ament_cmake",
+            "source_dir": str(source_dir),
+            "staged_dir": str(staged_dir),
+            "outputs": [f"/{path.as_posix()}" for path in ament_build.outputs],
+            "install_files": install_files,
+            "architecture_check": {
+                "status": "pending",
+                "tool": str(_tool_path(resolved_toolchain, "readelf")),
+                "expected_machine": _expected_readelf_machine(resolved_toolchain)["display"],
+            },
+            "host": is_host_package_path(description.path, paths.root),
+        }
+    }
+    if source_context["manifest"] is not None:
+        manifest_fields[manifest_kind]["source"] = source_context["manifest"]
+    return Task(
+        id=f"package:{name}:build",
+        domain="package",
+        action="build",
+        inputs=[
+            description.path,
+            *AMENT_BACKEND_SOURCES,
+            *source_context["inputs"],
+        ],
+        outputs=[staged_dir],
+        deps=["toolchain:check", *source_context["deps"]],
+        workdir=workdir,
+        env={"MACHINE": paths.machine, **fields["env"]},
+        run_class="build",
+        cache_policy="inputs",
+        log_path=paths.logs_dir / f"package-{name}-build.log",
+        executor=_make_ament_package_executor(
+            name,
+            source_dir,
+            workdir,
+            staged_dir,
+            paths.staging_dir,
+            paths.staging_dir / PACKAGE_STAGE_DIR,
+            host_sdk_dir,
+            tuple(prefix_package_names or _package_depend_names(description)),
+            ament_build,
+            manifest_kind,
+            resolved_toolchain,
+            command_runner,
+        ),
+        manifest_fields=manifest_fields,
+    )
+
+
+def _make_ament_package_executor(
+    name,
+    source_dir,
+    workdir,
+    staged_dir,
+    staging_root,
+    packages_staging_dir,
+    host_sdk_dir,
+    depend_names,
+    ament_build,
+    manifest_kind,
+    toolchain,
+    command_runner,
+):
+    runner = command_runner or _run_command
+
+    def executor(task, log):
+        workdir.mkdir(parents=True, exist_ok=True)
+        _prepare_stage(staged_dir, staging_root)
+        env = _sbuild_env(task.env, name, source_dir, workdir, staged_dir, staging_root, toolchain)
+        cmake = resolve_host_tool("cmake")
+        toolchain_file = workdir / "toolchain.cmake"
+        toolchain_file.write_text(ament_toolchain_text(toolchain), encoding="utf-8")
+        target_prefix_dirs = list(ament_prefix_dirs(packages_staging_dir, depend_names))
+        prefix_dirs = list(target_prefix_dirs)
+        sdk = Path(host_sdk_dir)
+        if sdk.is_dir():
+            prefix_dirs.insert(0, sdk)
+        python_paths = [str(path) for path in ament_python_paths(prefix_dirs)]
+        if python_paths:
+            existing = env.get("PYTHONPATH", "")
+            env["PYTHONPATH"] = ":".join([*python_paths, existing] if existing else python_paths)
+        if ament_build.host_python == "sdk":
+            python_executable = str(ament_python_executable(sdk))
+            venv_bin = sdk / "venv" / "bin"
+            env["VIRTUAL_ENV"] = str(venv_bin.parent)
+            env["PATH"] = f"{venv_bin}:{env.get('PATH', '')}"
+        else:
+            python_executable = shutil.which("python3") or "python3"
+        build_dir = workdir / "build"
+        commands = ament_cmake_commands(
+            cmake,
+            source_dir,
+            build_dir,
+            toolchain_file,
+            "/usr",
+            prefix_dirs,
+            ament_build.testing,
+            ament_build.cmake_args,
+            python_executable=python_executable,
+            linkage=ament_build.linkage,
+            link_prefix_path=target_prefix_dirs,
+        )
+        env["DESTDIR"] = str(staged_dir)
+        env["AMENT_PREFIX_PATH"] = ":".join(str(path) for path in prefix_dirs)
+        for command in commands:
+            completed = runner(list(command), cwd=workdir, env=env)
+            _write_completed_command(log, command, workdir, completed)
+            if completed.returncode != 0:
+                raise SmartBuildError(
+                    "BUILD",
+                    "package {name} ament_cmake failed: command={command} exit code {exit_code} log={log_path}".format(
+                        name=name,
+                        command=" ".join(str(item) for item in command),
+                        exit_code=completed.returncode,
+                        log_path=task.log_path,
+                    ),
+                )
+        install_files = _require_python_outputs(staged_dir, ament_build.outputs)
+        task.manifest_fields[manifest_kind]["install_files"] = install_files
+        task.manifest_fields[manifest_kind]["architecture_check"] = _verify_ament_install_architectures(
+            toolchain,
+            install_files,
+            runner,
+            workdir,
+            env,
+            log,
+        )
+        log.write(f"staged ament_cmake package: {staged_dir}\n")
+        return 0
+
+    return executor
+
+
+def _package_depend_names(description):
+    names = []
+    for field in ("depends", "host_depends"):
+        depends = description.data.get(field, [])
+        if isinstance(depends, str):
+            values = [item.strip() for item in depends.split(",") if item.strip()]
+        elif isinstance(depends, list):
+            values = [str(item) for item in depends if item]
+        else:
+            raise SmartBuildError("PACKAGE", f"{description.path}: {field} must be a string or list")
+        for value in values:
+            if value not in names:
+                names.append(value)
+    return tuple(names)
+
+
+def _package_host_depends(description):
+    depends = description.data.get("host_depends", [])
+    if isinstance(depends, str):
+        return ", ".join(item.strip() for item in depends.split(",") if item.strip())
+    if not isinstance(depends, list):
+        raise SmartBuildError("PACKAGE", f"{description.path}: host_depends must be a string or list")
+    return ", ".join(str(item) for item in depends if item)
 
 
 def _make_executable_host_executor(
@@ -1617,7 +1855,7 @@ def _python_install_files(staged_dir, output_paths):
                     {
                         "source": str(child),
                         "path": child_install_path,
-                        "mode": 0o755 if _is_executable_output_path(child_install_path) else 0o644,
+                        "mode": _python_install_mode(child, child_install_path),
                     }
                 )
             continue
@@ -1625,10 +1863,19 @@ def _python_install_files(staged_dir, output_paths):
             {
                 "source": str(candidate),
                 "path": install_path,
-                "mode": 0o755 if _is_executable_output_path(install_path) else 0o644,
+                "mode": _python_install_mode(candidate, install_path),
             }
         )
     return files
+
+
+def _python_install_mode(source, install_path):
+    candidate = Path(source)
+    if candidate.is_file() and not candidate.is_symlink():
+        source_mode = candidate.stat().st_mode & 0o777
+        if source_mode & 0o111:
+            return source_mode
+    return 0o755 if _is_executable_output_path(install_path) else 0o644
 
 
 def _require_python_outputs(staged_dir, output_paths):
@@ -2042,6 +2289,17 @@ def _verify_static_archive_architecture(toolchain, archive, runner, workdir, env
 def _verify_binary_architecture(toolchain, binary, runner, workdir, env, log):
     tool = _tool_path(toolchain, "readelf")
     expected = _expected_readelf_machine(toolchain)
+    artifact_kind = _binary_artifact_kind(binary)
+    if artifact_kind != "elf":
+        reason = f"{binary} is not an ELF executable"
+        log.write(f"architecture check skipped: {reason}\n")
+        return {
+            "status": "skipped",
+            "tool": str(tool),
+            "binary": str(binary),
+            "expected_machine": expected["display"],
+            "reason": reason,
+        }
     if not tool.is_file():
         reason = f"{tool} not found"
         log.write(f"architecture check skipped: {reason}\n")
@@ -2077,6 +2335,41 @@ def _verify_binary_architecture(toolchain, binary, runner, workdir, env, log):
         "expected_machine": expected["display"],
         "actual_machine": actual,
     }
+
+
+def _verify_ament_install_architectures(toolchain, install_files, runner, workdir, env, log):
+    checks = []
+    for item in install_files:
+        source = Path(item["source"])
+        artifact_kind = _binary_artifact_kind(source)
+        if artifact_kind == "elf":
+            check = _verify_binary_architecture(toolchain, source, runner, workdir, env, log)
+        elif artifact_kind == "archive":
+            check = _verify_static_archive_architecture(toolchain, source, runner, workdir, env, log)
+        else:
+            continue
+        checks.append({**check, "install_path": item["path"], "format": artifact_kind})
+
+    if not checks:
+        return {"status": "skipped", "reason": "no ELF files or static archives"}
+    return {
+        "status": "verified" if all(check["status"] == "verified" for check in checks) else "skipped",
+        "artifact_count": len(checks),
+        "checks": checks,
+    }
+
+
+def _binary_artifact_kind(path):
+    try:
+        with Path(path).open("rb") as stream:
+            magic = stream.read(8)
+    except OSError as exc:
+        raise SmartBuildError("BUILD", f"failed to inspect installed file {path}: {exc}") from exc
+    if magic.startswith(b"\x7fELF"):
+        return "elf"
+    if magic in (b"!<arch>\n", b"!<thin>\n"):
+        return "archive"
+    return None
 
 
 def _verify_cmake_output(

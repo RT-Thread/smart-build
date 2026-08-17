@@ -86,6 +86,7 @@ def _fake_toolchain_archive(tmp_path):
     (target_lib / "libc.so").write_text("libc\n", encoding="utf-8")
     (target_lib / "crt1.o").write_text("crt1\n", encoding="utf-8")
     (target_lib / "libgcc_s.so.1").write_text("runtime\n", encoding="utf-8")
+    (target_lib / "libstdc++.so.6").write_text("cxx runtime\n", encoding="utf-8")
     (source / "lib" / "gcc" / TARGET / "12.2.0" / "libgcc.a").write_text("static\n", encoding="utf-8")
     (target_lib / "ld-musl-test.so.1").symlink_to("/lib/libc.so")
     archive = tmp_path / "test-toolchain.tar.bz2"
@@ -130,6 +131,8 @@ def test_install_toolchain_downloads_verifies_and_resolves(tmp_path):
     installed = install_toolchain(metadata, downloader=downloader, output=io.StringIO())
     assert installed.source == "downloads"
     assert installed.configured_version == "1.0"
+    assert installed.libstdcxx_runtime == installed.root / TARGET / "lib" / "libstdc++.so.6"
+    assert installed.manifest_record()["libstdcxx"]["runtime"] == str(installed.libstdcxx_runtime)
     assert calls and calls[0][0].startswith("https://")
     assert resolve_toolchain(machine=metadata).root == installed.root
 

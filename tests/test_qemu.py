@@ -11,6 +11,8 @@ def test_aarch64_qemu_command_passes_rootfs_bootargs():
         qemu_cpu="max",
     )
     command = qemu_command(machine, rootfs_format="ext4")
+    assert command[command.index("-smp") + 1] == "1"
+    assert command[command.index("-m") + 1] == "256M"
     assert "-append" in command
     bootargs = command[command.index("-append") + 1]
     assert "console=ttyAMA0" in bootargs

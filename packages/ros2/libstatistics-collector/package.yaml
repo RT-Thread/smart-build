@@ -1,0 +1,40 @@
+schema_version: 1
+kind: package
+name: libstatistics-collector
+version: 1.7.4
+versions:
+  - 1.7.4
+default_version: 1.7.4
+type: library
+category: ROS 2
+description: Topic statistics collector
+depends:
+  - rcl
+  - rcpputils
+  - statistics-msgs
+  - rmw
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/libstatistics_collector-release/archive/release/jazzy/libstatistics_collector/1.7.4-1.tar.gz
+  archive: libstatistics_collector-1.7.4-1.tar.gz
+  sha256: d475da13d4578843dc174a0ba0c3cccbdaaa03cae976a9239bf38dbd22fbbc34
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/include
+      - /usr/lib
+      - /usr/share
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

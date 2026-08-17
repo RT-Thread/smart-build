@@ -1,0 +1,33 @@
+schema_version: 1
+kind: package
+name: console-bridge-vendor
+version: 1.7.2
+versions:
+  - 1.7.2
+default_version: 1.7.2
+type: library
+category: ROS 2
+description: ROS 2 vendor metadata for the staged console_bridge library
+depends:
+  - console-bridge
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/console_bridge_vendor-release/archive/refs/tags/release/jazzy/console_bridge_vendor/1.7.2-1.tar.gz
+  archive: console_bridge_vendor-1.7.2-1.tar.gz
+  sha256: 45819ea2807982fc81b22fa0cb85ba05860c2c814e9477bf4ee95a8f7e7b405b
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    outputs:
+      - /usr/share
+install:
+  resources:
+    - usr/share

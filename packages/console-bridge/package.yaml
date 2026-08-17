@@ -1,0 +1,39 @@
+schema_version: 1
+kind: package
+name: console-bridge
+version: 1.0.2
+versions:
+  - 1.0.2
+default_version: 1.0.2
+type: library
+description: console_bridge logging library used by class_loader
+category: Libraries
+provides:
+  - console_bridge
+requires_toolchain:
+  - cxx
+source:
+  type: archive
+  url: https://github.com/ros/console_bridge/archive/refs/tags/1.0.2.tar.gz
+  archive: console_bridge-1.0.2.tar.gz
+  sha256: 303a619c01a9e14a3c82eb9762b8a428ef5311a6d46353872ab9a904358be4a4
+  strip_root: true
+  local_files:
+    - sbuild.py
+  files:
+    - CMakeLists.txt
+    - include/console_bridge/console.h
+build:
+  python:
+    script: sbuild.py
+    outputs:
+      - /usr/include
+      - /usr/lib
+    upstream_markers:
+      - CMakeLists.txt
+      - include/console_bridge/console.h
+install:
+  headers:
+    - usr/include
+  libraries:
+    - usr/lib

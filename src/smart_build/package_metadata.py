@@ -11,9 +11,10 @@ _metadata_cache = contextvars.ContextVar("smart_build_package_metadata_cache", d
 
 
 OPTION_TYPES = frozenset(("bool", "choice", "string"))
-RELATION_FIELDS = ("depends", "selects", "conflicts", "provides", "requires_toolchain")
+RELATION_FIELDS = ("depends", "host_depends", "selects", "conflicts", "provides", "requires_toolchain")
 KCONFIG_SYMBOL_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 DESCRIPTION_MAX_LENGTH = 80
+PACKAGE_GROUP_DIRECTORIES = frozenset(("ros2", "host"))
 
 
 @dataclass(frozen=True)
@@ -43,11 +44,13 @@ class PackageMetadata:
     category: str
     options: tuple[PackageOption, ...]
     depends: tuple[str, ...]
+    host_depends: tuple[str, ...]
     selects: tuple[str, ...]
     conflicts: tuple[str, ...]
     provides: tuple[str, ...]
     requires_toolchain: tuple[str, ...]
     kconfig: PackageKconfig
+    path: Path
 
 
 def normalize_package_metadata(description):
@@ -71,11 +74,13 @@ def normalize_package_metadata(description):
         category=_category(description),
         options=options,
         depends=_relation_list(description, "depends"),
+        host_depends=_relation_list(description, "host_depends"),
         selects=_relation_list(description, "selects"),
         conflicts=_relation_list(description, "conflicts"),
         provides=provides,
         requires_toolchain=_relation_list(description, "requires_toolchain"),
         kconfig=kconfig,
+        path=description.path,
     )
 
 
@@ -136,16 +141,18 @@ def load_all_package_metadata(root):
 
 def package_description_path(root, name):
     package_dir = Path(root) / "packages"
-    directory_path = package_dir / name / "package.yaml"
+    candidates = [package_dir / name / "package.yaml"]
+    candidates.extend(package_dir / group / name / "package.yaml" for group in sorted(PACKAGE_GROUP_DIRECTORIES))
+    found = [path for path in candidates if path.is_file()]
     legacy_path = package_dir / f"{name}.yaml"
-    if directory_path.is_file():
-        if legacy_path.is_file():
-            raise SmartBuildError(
-                "PACKAGE",
-                f"duplicate package description for {name}: {directory_path} and {legacy_path}",
-            )
-        return directory_path
-    return legacy_path
+    if legacy_path.is_file():
+        found.append(legacy_path)
+    if len(found) > 1:
+        listed = ", ".join(path.as_posix() for path in found)
+        raise SmartBuildError("PACKAGE", f"duplicate package description for {name}: {listed}")
+    if found:
+        return found[0]
+    return candidates[0]
 
 
 def package_description_paths(root):
@@ -155,10 +162,45 @@ def package_description_paths(root):
     paths = [
         path
         for path in package_dir.glob("*/package.yaml")
-        if path.parent.is_dir()
+        if path.parent.is_dir() and path.parent.name not in PACKAGE_GROUP_DIRECTORIES
     ]
+    for group in sorted(PACKAGE_GROUP_DIRECTORIES):
+        group_dir = package_dir / group
+        if not group_dir.is_dir():
+            continue
+        paths.extend(path for path in group_dir.glob("*/package.yaml") if path.parent.is_dir())
     paths.extend(package_dir.glob("*.yaml"))
     return tuple(sorted(paths))
+
+
+def package_kconfig_relative(root, metadata):
+    root_path = Path(root).resolve()
+    kconfig_path = Path(metadata.path).parent / metadata.kconfig.source
+    try:
+        return kconfig_path.resolve(strict=False).relative_to(root_path).as_posix()
+    except ValueError as exc:
+        raise SmartBuildError(
+            "PACKAGE",
+            f"{metadata.path}: Kconfig path escapes project: {kconfig_path}",
+        ) from exc
+
+
+def is_host_package_path(path, root=None):
+    candidate = Path(path)
+    parts = candidate.parts
+    if "packages" not in parts:
+        return False
+    index = parts.index("packages")
+    return index + 1 < len(parts) and parts[index + 1] == "host"
+
+
+def is_ros2_package_path(path):
+    candidate = Path(path)
+    parts = candidate.parts
+    if "packages" not in parts:
+        return False
+    index = parts.index("packages")
+    return index + 1 < len(parts) and parts[index + 1] == "ros2"
 
 
 def package_symbol(name):
@@ -372,7 +414,7 @@ def _choice_values(description, option_name, values):
 def _relation_list(description, field):
     value = description.data.get(field, [])
     if isinstance(value, str):
-        if field == "depends":
+        if field in {"depends", "host_depends"}:
             return tuple(item.strip() for item in value.split(",") if item.strip())
         raise SmartBuildError("PACKAGE", f"{description.path}: {field} must be a list")
     return _string_tuple(description, value, field)

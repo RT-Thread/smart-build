@@ -1,0 +1,35 @@
+schema_version: 1
+kind: package
+name: tracetools
+version: 8.2.4
+versions:
+  - 8.2.4
+default_version: 8.2.4
+type: library
+category: ROS 2
+description: LTTng tracing stubs used by rclcpp
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/ros2_tracing-release/archive/release/jazzy/tracetools/8.2.4-1.tar.gz
+  archive: tracetools-8.2.4-1.tar.gz
+  sha256: 67ef512dec4fc1432620e9c4feef6760f4650305c9ec8eb17cec24977193f18d
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: shared
+    host_python: sdk
+    cmake_args:
+      - -DTRACETOOLS_DISABLED=ON
+      - -DTRACETOOLS_STATUS_CHECKING_TOOL=OFF
+    outputs:
+      - /usr/include
+      - /usr/share
+install:
+  headers:
+    - usr/include

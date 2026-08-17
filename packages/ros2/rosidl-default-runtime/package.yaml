@@ -1,0 +1,36 @@
+schema_version: 1
+kind: package
+name: rosidl-default-runtime
+version: 1.6.1
+versions:
+  - 1.6.1
+default_version: 1.6.1
+type: library
+category: ROS 2
+description: Default rosidl runtime metapackage
+depends:
+  - rosidl-runtime-c
+  - rosidl-runtime-cpp
+  - rosidl-typesupport-c
+  - rosidl-typesupport-cpp
+  - rosidl-typesupport-introspection-c
+  - rosidl-typesupport-introspection-cpp
+host_depends:
+  - ros2-host-sdk
+source:
+  type: archive
+  url: https://github.com/ros2-gbp/rosidl_defaults-release/archive/release/jazzy/rosidl_default_runtime/1.6.1-1.tar.gz
+  archive: rosidl_default_runtime-1.6.1-1.tar.gz
+  sha256: 435fb0cf9fb8912e39bc4808b0ea5a53a060e968e9c1060d92d7ec4636b0fb68
+  strip_root: true
+  files:
+    - CMakeLists.txt
+    - package.xml
+build:
+  ament_cmake:
+    testing: false
+    linkage: mixed
+    host_python: sdk
+    outputs:
+      - /usr/share
+install: {}

@@ -34,6 +34,7 @@ class PackageSourceConfig:
     prepared: Path
     description_path: Path
     local_files: tuple
+    patches: tuple
     configuration: dict | None = None
     archive: Path | None = None
     sha256: str | None = None
@@ -70,6 +71,7 @@ def package_source_config(paths, name, description):
     strip_root = _strip_root(source, description.path)
     prepared = paths.work_dir / "sources" / f"{safe_name}-{version}"
     local_files = _local_files(paths.root, source, description.path)
+    patches = _patch_files(source, local_files, description.path)
     return PackageSourceConfig(
         task_id=f"package:{safe_name}:source",
         kind="archive",
@@ -79,6 +81,7 @@ def package_source_config(paths, name, description):
         prepared=prepared,
         description_path=Path(description.path),
         local_files=local_files,
+        patches=patches,
         configuration=description.data.get("configure"),
         archive=paths.root / "downloads" / archive_name,
         sha256=sha256,
@@ -121,6 +124,7 @@ def _git_source_config(paths, safe_name, description, source):
     revision = _git_revision(source, description.path)
     prepared = paths.work_dir / "sources" / f"{safe_name}-{version}"
     local_files = _local_files(paths.root, source, description.path)
+    patches = _patch_files(source, local_files, description.path)
     return PackageSourceConfig(
         task_id=f"package:{safe_name}:source",
         kind="git",
@@ -130,6 +134,7 @@ def _git_source_config(paths, safe_name, description, source):
         prepared=prepared,
         description_path=Path(description.path),
         local_files=local_files,
+        patches=patches,
         configuration=description.data.get("configure"),
         revision=revision,
     )
@@ -148,6 +153,7 @@ def _make_source_executor(config, command_runner):
             reused = _ensure_archive_available(config, runner, task, log)
             _extract_archive(config.archive, config.prepared, config.strip_root)
         _copy_local_files(config.local_files, config.prepared)
+        _apply_patches(config, runner, task, log)
         restored = restore_configuration_sync(
             config.configuration,
             config.prepared,
@@ -156,6 +162,7 @@ def _make_source_executor(config, command_runner):
         )
         manifest["reused"] = reused
         manifest["local_files"] = _local_file_manifest(config.local_files)
+        manifest["patches"] = list(config.patches)
         manifest["restored_configuration"] = [str(path) for path in restored]
         if config.archive is not None:
             manifest["archive_sha256"] = _sha256_file(config.archive)
@@ -454,6 +461,7 @@ def _source_manifest(config, reused):
         "prepared": str(config.prepared),
         "reused": bool(reused),
         "local_files": _local_file_manifest(config.local_files),
+        "patches": list(config.patches),
         "prepared_checksum": path_record(config.prepared).get("sha256") if config.prepared.exists() else None,
     }
     if config.kind == "archive":
@@ -546,6 +554,45 @@ def _local_files(repo_root, source, description_path):
             raise SmartBuildError("SOURCE", f"{description_path}: source.local_files entry not found: {raw_file}")
         result.append((source_path, relative.name))
     return tuple(result)
+
+
+def _patch_files(source, local_files, description_path):
+    raw_patches = source.get("patches", [])
+    if raw_patches is None:
+        return ()
+    if not isinstance(raw_patches, list):
+        raise SmartBuildError("SOURCE", f"{description_path}: source.patches must be a list")
+    local_names = {destination for _source, destination in local_files}
+    result = []
+    for raw_patch in raw_patches:
+        if not isinstance(raw_patch, str) or not raw_patch:
+            raise SmartBuildError("SOURCE", f"{description_path}: source.patches entries must be strings")
+        patch_name = _safe_relative_file_path(
+            raw_patch, "source.patches", description_path
+        ).name
+        if patch_name not in local_names:
+            raise SmartBuildError(
+                "SOURCE",
+                f"{description_path}: source patch must also be listed in source.local_files: {raw_patch}",
+            )
+        if patch_name not in result:
+            result.append(patch_name)
+    return tuple(result)
+
+
+def _apply_patches(config, runner, task, log):
+    env = os.environ.copy()
+    env["GIT_CEILING_DIRECTORIES"] = str(config.prepared.parent.resolve())
+    for patch_name in config.patches:
+        patch_path = config.prepared / patch_name
+        command = ["git", "apply", "--recount", "--whitespace=nowarn", str(patch_path)]
+        completed = runner(command, cwd=config.prepared, env=env)
+        _write_completed_command(log, command, config.prepared, completed)
+        if completed.returncode != 0:
+            raise SmartBuildError(
+                "SOURCE",
+                f"failed to apply source patch {patch_name}; log={task.log_path}",
+            )
 
 
 def _local_file_candidate(repository, description_dir, relative, raw_file, description_path):
