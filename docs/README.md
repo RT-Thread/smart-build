@@ -21,6 +21,9 @@ configuration, including native Kconfig for independent RT-Thread SCons packages
 The command reference describes planning progress before tasks start, verbose
 task output, and detailed RT-Thread kernel builds.
 
+The supported boards guide covers the default QEMU-supplied device tree on
+the AArch64 and RISC-V virt boards.
+
 It also documents the optional Buildroot package import workflow. Buildroot is
 used to select packages; imported packages use smart-build metadata and fetch
 their upstream sources during normal builds. A never-import list blocks C

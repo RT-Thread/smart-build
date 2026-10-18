@@ -18,6 +18,9 @@ toolchains, and the RT-Thread source tree are kept outside version control.
 | `qemu-virt-riscv64` | RISC-V 64 | `qemu-virt64-riscv` | `virt-riscv64` |
 | `qemu-vexpress-a9` | Arm | `qemu-vexpress-a9` | `vexpress-a9` |
 
+The AArch64 and RISC-V virt boards enable the device model and OFW by default,
+using the device tree supplied by QEMU rather than a built-in DTB.
+
 The currently implemented root filesystem image format is ext4. FAT and romfs
 appear in the configuration interface but are not yet buildable.
 

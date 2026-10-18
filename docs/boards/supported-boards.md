@@ -32,3 +32,14 @@ must also be implemented by smart-build. The `virt-aarch64` and
 `virt-riscv64` profiles pass a root filesystem on virtio-blk and set
 `root=vda0` in the kernel command line (`ttyAMA0` on AArch64, `ttyS0` on
 RISC-V).
+
+Both virt boards enable `RT_USING_DM` and `RT_USING_OFW` in their kernel
+defconfigs and leave `RT_USING_BUILTIN_FDT` disabled. By default QEMU supplies
+the DTB at boot, including the kernel command line; no separate DTS
+compilation or `-dtb` argument is needed. Serial, interrupt-controller and
+virtio-mmio drivers discover devices through this tree. The RISC-V board uses
+the unified RISC-V port (`RT_USING_RISCV_NEW_COMMON`), the 8250 serial driver
+and SiFive PLIC; its command line selects `earlycon=sbi` and reserves DMA
+memory with `cma=8M coherent_pool=2M`. Its QEMU CPU disables Sv48/Sv57 to match
+the Smart kernel's Sv39 virtual address layout, and virtio-mmio uses modern
+transport. The vexpress-a9 board retains its existing non-OFW configuration.

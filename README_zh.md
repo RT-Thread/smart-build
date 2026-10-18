@@ -17,6 +17,9 @@ smart-build 是面向 RT-Thread Smart 的独立构建系统。它提供统一的
 | `qemu-virt-riscv64` | RISC-V 64 | `qemu-virt64-riscv` | `virt-riscv64` |
 | `qemu-vexpress-a9` | Arm | `qemu-vexpress-a9` | `vexpress-a9` |
 
+AArch64 和 RISC-V virt 板卡默认启用设备模型和 OFW，使用 QEMU 传入的设备树，
+而不是内置 DTB。
+
 目前已实现的根文件系统镜像格式为 ext4。FAT 和 romfs 会显示在配置界面中，
 但尚不能构建。
 

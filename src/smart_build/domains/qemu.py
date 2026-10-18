@@ -106,6 +106,8 @@ def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
             machine.qemu_binary,
             "-M",
             machine.qemu_machine,
+            "-cpu",
+            f"{machine.qemu_cpu or 'rv64'},sv48=off,sv57=off",
             "-m",
             "256M",
             "-kernel",
@@ -113,6 +115,8 @@ def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
             "-append",
             _riscv64_bootargs(rootfs_format),
             "-nographic",
+            "-global",
+            "virtio-mmio.force-legacy=false",
             "-drive",
             "if=none,file=images/${ROOTFS_IMAGE},format=raw,id=blk0",
             "-device",
@@ -263,7 +267,10 @@ def _aarch64_bootargs(rootfs_format):
 
 def _riscv64_bootargs(rootfs_format):
     filesystem = _rootfs_driver(rootfs_format, "virt-riscv64")
-    return f"console=ttyS0 earlycon root=vda0 rootfstype={filesystem} rootwait rw"
+    return (
+        "console=ttyS0 earlycon=sbi cma=8M coherent_pool=2M "
+        f"root=vda0 rootfstype={filesystem} rootwait rw"
+    )
 
 
 def _rootfs_driver(rootfs_format, profile):
