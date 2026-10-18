@@ -45,6 +45,12 @@ qemu:
   profile: virt-aarch64
   machine: virt
   cpu: max
+
+# Optional custom device tree. Omit this mapping to use QEMU's automatic DTB.
+devicetree:
+  source: devicetree/virt.dts
+  include_dirs:
+    - devicetree/include
 ```
 
 Required fields are `arch`, `bsp`, `kernel_defconfig`, the four toolchain
@@ -57,6 +63,14 @@ must provide the declared compiler prefix. `toolchain.versions` is optional for
 legacy boards; each entry may provide a package name and a verified HTTPS
 `source` (`url`, archive filename, and SHA-256). Entries without `source` are
 installed by Env SDK or supplied through `TOOLCHAIN_PATH`.
+
+The optional `devicetree.source` must be an existing board-relative `.dts` or
+`.dtb`. A DTS is preprocessed with host `cpp` and compiled with `dtc`; a DTB is
+validated and copied to the machine image directory. `include_dirs` are also
+board-relative. The selected QEMU virt launcher uses the custom DTB by default;
+its command-line options can select QEMU's automatic DTB or another explicit
+DTB at smoke-test time. An optional `qemu.bootargs` string replaces the
+profile's default kernel command line.
 
 ## Add Kconfig selection
 

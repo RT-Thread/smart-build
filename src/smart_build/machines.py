@@ -43,6 +43,9 @@ class Machine:
     root: Path = Path(".")
     toolchain_version: str = ""
     toolchain_releases: tuple[ToolchainRelease, ...] = ()
+    devicetree_source: Path | None = None
+    devicetree_include_dirs: tuple[Path, ...] = ()
+    qemu_bootargs: str | None = None
 
 
 def load_machine(root, machine):
@@ -65,6 +68,7 @@ def load_machine(root, machine):
     data = description.data
     toolchain = _required_mapping(board_path, data, "toolchain")
     qemu = _required_mapping(board_path, data, "qemu")
+    tree_source, tree_includes = _devicetree_paths(owner_dir, board_path, data)
     loader = _optional_string(board_path, toolchain, "toolchain.loader")
 
     package = validate_safe_name(
@@ -108,7 +112,42 @@ def load_machine(root, machine):
         qemu_profile=_required_string(board_path, qemu, "qemu.profile"),
         qemu_machine=_required_string(board_path, qemu, "qemu.machine"),
         qemu_cpu=_optional_string(board_path, qemu, "qemu.cpu"),
+        qemu_bootargs=_optional_string(board_path, qemu, "qemu.bootargs"),
+        devicetree_source=tree_source,
+        devicetree_include_dirs=tree_includes,
     )
+
+
+def _devicetree_paths(owner_dir, board_path, data):
+    tree = data.get("devicetree")
+    if tree is None:
+        return None, ()
+    if not isinstance(tree, dict):
+        raise SmartBuildError("CONFIG", f"{board_path}: devicetree must be a mapping")
+    source = _board_tree_path(
+        owner_dir, _required_string(board_path, tree, "devicetree.source"), "source"
+    )
+    if source.suffix not in {".dts", ".dtb"} or not source.is_file():
+        raise SmartBuildError("CONFIG", f"devicetree.source must be an existing .dts or .dtb: {source}")
+    includes = tree.get("include_dirs", [])
+    if not isinstance(includes, list):
+        raise SmartBuildError("CONFIG", f"{board_path}: devicetree.include_dirs must be a list")
+    directories = tuple(_board_tree_path(owner_dir, value, "include directory") for value in includes)
+    for directory in directories:
+        if not directory.is_dir():
+            raise SmartBuildError("CONFIG", f"device tree include directory not found: {directory}")
+    return source, directories
+
+
+def _board_tree_path(owner_dir, value, label):
+    if not isinstance(value, str) or not value.strip():
+        raise SmartBuildError("CONFIG", f"device tree {label} must be a non-empty path")
+    relative = Path(value)
+    owner = owner_dir.resolve()
+    resolved = (owner / relative).resolve()
+    if relative.is_absolute() or ".." in relative.parts or not resolved.is_relative_to(owner):
+        raise SmartBuildError("CONFIG", f"device tree {label} must stay under {owner_dir}: {value}")
+    return resolved
 
 
 def _non_empty_string(field, value):

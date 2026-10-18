@@ -107,6 +107,7 @@ ownership 映射保存在 `packages/.imports/buildroot-ownership.yaml`。
 | `full-rootfs` | 选中时构建完整软件包根文件系统 |
 | `package:<name>` | 单个软件包及其解析出的依赖 |
 | `qemu-script` | QEMU 启动脚本 |
+| `devicetree` | 配置的自定义 DTB 或 QEMU 生成的 DTB |
 
 在任何构建任务开始前，`build` 会分析所选机器、工具链、软件包和任务图。交互
 式终端会在扫描软件包元数据和创建软件包任务时显示实时的 `plan:` 进度条。重
@@ -140,11 +141,33 @@ manifest。
 
 ```sh
 ./smart-build qemu-smoke [--machine MACHINE] [--timeout SECONDS] \
-  [--rootfs-image minirootfs.img|busybox-rootfs.img|rootfs.img]
+  [--rootfs-image minirootfs.img|busybox-rootfs.img|rootfs.img] \
+  [--dtb FILE|--auto-dtb] [--append TEXT]
 ```
 
 所选镜像必须已经存在。该命令会在对应机器的构建目录下写入 QEMU 冒烟测试
 日志。
+
+virt 机器默认使用 QEMU 自动生成的 DTB。板卡可以在 `board.yaml` 中声明板卡目录
+内的 `devicetree.source`（`.dts` 或 `.dtb`），并可选声明板卡目录内的
+`devicetree.include_dirs`。DTS 会先由 `cpp` 预处理，再由 `dtc` 编译为
+`build/<machine>/images/devicetree.dtb`；输入 DTB 会先校验再复制到该位置。
+生成的启动脚本默认使用这个自定义 DTB。运行时可以用 `--auto-dtb` 或
+`--dtb FILE` 选择设备树，用 `--append TEXT` 替换内核命令行：
+
+```sh
+./smart-build build devicetree --machine qemu-virt-aarch64
+./smart-build devicetree dump --machine qemu-virt-aarch64 -o qemu.dtb
+./smart-build devicetree decompile --machine qemu-virt-aarch64 \
+  build/qemu-virt-aarch64/images/qemu.dtb -o qemu.dts
+./smart-build qemu-smoke --machine qemu-virt-aarch64 --auto-dtb
+./smart-build qemu-smoke --machine qemu-virt-aarch64 --dtb /path/to/tree.dtb \
+  --append 'console=ttyAMA0 root=vda0 rootfstype=ext rootwait rw'
+```
+
+`devicetree dump` 会导出实际 QEMU virt 机器使用的设备树。转换命令只写入所选
+机器的 `images/` 目录，日志位于 `build/<machine>/logs/`。自动设备树运行不需要
+`dtc`，但 DTS 编译和 DTB 反编译需要安装 `dtc`。
 
 ## 清理
 

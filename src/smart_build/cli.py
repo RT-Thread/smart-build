@@ -10,6 +10,7 @@ from .config import DEFAULT_MACHINE, load_defconfig, load_workspace_config
 from .configure import configure_target
 from .doctor import host_tools_record, run_doctor, toolchain_manifest_record
 from .domains.qemu import ALLOWED_ROOTFS_IMAGES, run_qemu_smoke
+from .domains.devicetree import convert_tree, dump_qemu_tree
 from .domains.toolchain import (
     install_toolchain,
     resolve_toolchain,
@@ -80,6 +81,23 @@ def build_parser():
         default=30,
         help="seconds to wait for QEMU boot output",
     )
+    tree_selection = qemu_smoke.add_mutually_exclusive_group()
+    tree_selection.add_argument("--dtb", default=None, help="use a custom DTB file")
+    tree_selection.add_argument("--auto-dtb", action="store_true", help="use QEMU's automatic device tree")
+    qemu_smoke.add_argument("--append", default=None, help="replace the kernel command line")
+
+    devicetree = subparsers.add_parser("devicetree", help="compile, decompile, or dump device trees")
+    tree_actions = devicetree.add_subparsers(dest="devicetree_command", metavar="action")
+    for action in ("compile", "decompile", "dump"):
+        tree_parser = tree_actions.add_parser(action, help=f"{action} a device tree")
+        tree_parser.add_argument("--machine", default=None, help="target machine")
+        tree_parser.add_argument("-o", "--output", default=None, help="output filename inside machine images/")
+        if action != "dump":
+            tree_parser.add_argument("source", help="DTS input" if action == "compile" else "DTB input")
+        if action == "compile":
+            tree_parser.add_argument("-I", "--include-dir", action="append", default=[], help="include directory")
+        if action == "dump":
+            tree_parser.add_argument("--append", default=None, help="replace the kernel command line")
 
     toolchain = subparsers.add_parser("toolchain", help="manage cross toolchains")
     toolchain_subparsers = toolchain.add_subparsers(dest="toolchain_command", metavar="action")
@@ -153,7 +171,7 @@ def _run_build(args):
         progress.phase("loading machine")
         metadata = None if args.dry_run else _load_machine_if_available(paths, machine)
         toolchain = None
-        if not args.dry_run:
+        if not args.dry_run and args.target != "devicetree":
             progress.phase("resolving toolchain")
             toolchain = _resolve_or_offer_toolchain(metadata, paths, progress=progress)
         progress.phase("analyzing target")
@@ -196,7 +214,7 @@ def _run_build(args):
         verbose=args.verbose,
         display_path=paths.display_path,
     ).run()
-    toolchain_record = (
+    toolchain_record = {} if args.target == "devicetree" else (
         toolchain.manifest_record()
         if toolchain is not None
         else toolchain_manifest_record(machine=metadata)
@@ -209,7 +227,10 @@ def _run_build(args):
         config={"MACHINE": machine, "TARGET": args.target},
         tasks=ordered_tasks,
         artifacts=_collect_artifacts(graph),
-        host_tools=_host_tools_record_for_cli(metadata),
+        host_tools=(
+            _devicetree_host_tools(metadata)
+            if args.target == "devicetree" else _host_tools_record_for_cli(metadata)
+        ),
         extra_sections=extra_sections,
     )
     _print_build_summary(results)
@@ -282,8 +303,28 @@ def _run_qemu_smoke(args):
         paths,
         timeout_seconds=args.timeout,
         rootfs_image=args.rootfs_image,
+        dtb=args.dtb,
+        auto_dtb=args.auto_dtb,
+        bootargs=args.append,
     )
     print(f"qemu-smoke: pass machine={machine} log={paths.display_path(log_path)}")
+    return 0
+
+
+def _run_devicetree(args):
+    paths = BuildPaths.for_machine(_selected_machine(args))
+    load_machine(paths.root, paths.machine)
+    action = args.devicetree_command
+    if action == "dump":
+        output = dump_qemu_tree(paths, output_name=args.output or "qemu.dtb", bootargs=args.append)
+    elif action in {"compile", "decompile"}:
+        output = convert_tree(
+            paths, args.source, action, args.output,
+            include_dirs=getattr(args, "include_dir", ()),
+        )
+    else:
+        raise SmartBuildError("CONFIG", "devicetree requires compile, decompile, or dump")
+    print(f"devicetree: {action} machine={paths.machine} output={paths.display_path(output)}")
     return 0
 
 
@@ -397,6 +438,8 @@ def main(argv=None):
             return _run_buildroot(args)
         if args.command == "qemu-smoke":
             return _run_qemu_smoke(args)
+        if args.command == "devicetree":
+            return _run_devicetree(args)
         if args.command == "toolchain":
             return _run_toolchain(args)
         if args.command in ("clean", "distclean", "download-clean"):
@@ -502,6 +545,13 @@ def _host_tools_record_for_cli(metadata):
     if metadata is None:
         return host_tools_record()
     return host_tools_record(machine=metadata)
+
+
+def _devicetree_host_tools(metadata):
+    names = [metadata.qemu_binary]
+    if metadata.devicetree_source is not None and metadata.devicetree_source.suffix == ".dts":
+        names.extend(("cpp", "dtc"))
+    return {name: path for name in names if (path := shutil.which(name))}
 
 
 def _exit_code_for_error(code):

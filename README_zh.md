@@ -89,11 +89,17 @@ python -m pip install -e .
 ./smart-build build kernel
 ./smart-build build kernel --verbose
 ./smart-build build rootfs
+./smart-build build devicetree
 ./smart-build graph
 ./smart-build qemu-smoke
 ./smart-build clean
 ./smart-build download-clean
 ```
+
+QEMU virt 机器默认使用自动设备树。板卡可通过 `devicetree.source` 配置 `.dts`
+或 `.dtb`；smart-build 会预处理并编译 DTS、校验 DTB，并提供
+`devicetree dump` 与 `devicetree decompile`。启动脚本和 `qemu-smoke` 支持
+`--auto-dtb`、`--dtb FILE` 和 `--append TEXT`。
 
 `webclient` 等使用 native Kconfig 的独立 RT-Thread SCons 包，可以通过软件包
 configure 命令进入其 RT-Thread 软件包配置界面。

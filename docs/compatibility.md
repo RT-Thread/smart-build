@@ -60,3 +60,12 @@ the package index's moving source and can access the network on every update.
 The smoke check detects broad boot markers. It does not prove that every
 filesystem, network service, driver, or packaged application initialized
 successfully. Inspect logs and run target-specific checks for release testing.
+
+## Device trees
+
+QEMU virt boards use QEMU's automatic DTB unless `devicetree.source` is set in
+the board description. Custom DTS files require host `cpp` and `dtc`; custom
+DTB files do not require conversion tools. The custom tree must describe the
+same machine devices, memory, interrupt controller, and console expected by
+the selected RT-Thread BSP. smart-build does not merge arbitrary overlays or
+embed a DTB into the kernel image.

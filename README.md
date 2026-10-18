@@ -95,11 +95,18 @@ participate in the kernel build are removed with a warning.
 ./smart-build build kernel
 ./smart-build build kernel --verbose
 ./smart-build build rootfs
+./smart-build build devicetree
 ./smart-build graph
 ./smart-build qemu-smoke
 ./smart-build clean
 ./smart-build download-clean
 ```
+
+QEMU virt machines use an automatic device tree by default. Custom board
+`devicetree.source` entries can be `.dts` or `.dtb`; smart-build preprocesses
+and compiles DTS files, validates DTBs, and exposes `devicetree dump` and
+`devicetree decompile`. Launchers and `qemu-smoke` accept `--auto-dtb`,
+`--dtb FILE`, and `--append TEXT`.
 
 Independent RT-Thread SCons packages with native Kconfig, such as `webclient`,
 use the package configure command to open their RT-Thread package options.

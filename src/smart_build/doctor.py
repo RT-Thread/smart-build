@@ -32,6 +32,8 @@ def run_doctor(paths, machine=None):
         DoctorCheck("env-pkgs", str(env_packages.command), str(env_packages.command)),
         DoctorCheck("env-package-index", str(env_packages.index), str(env_packages.index)),
     ]
+    if metadata.devicetree_source is not None and metadata.devicetree_source.suffix == ".dts":
+        checks.extend((_check_host_tool("cpp"), _check_host_tool("dtc")))
     try:
         toolchain = resolve_toolchain(machine=metadata)
     except SmartBuildError as exc:
@@ -66,6 +68,8 @@ def host_tools_record(machine=None):
         DoctorCheck("env-pkgs", str(env_packages.command), str(env_packages.command)),
         DoctorCheck("env-package-index", str(env_packages.index), str(env_packages.index)),
     ]
+    if metadata.devicetree_source is not None and metadata.devicetree_source.suffix == ".dts":
+        checks.extend((_check_host_tool("cpp"), _check_host_tool("dtc")))
     return host_tools_from_checks(checks)
 
 

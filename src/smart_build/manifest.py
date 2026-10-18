@@ -59,6 +59,8 @@ def task_manifest_sections(tasks):
             sections.setdefault("busybox_images", {}).update(fields["busybox_images"])
         if "qemu" in fields:
             sections.setdefault("qemu", {}).update(fields["qemu"])
+        if "devicetree" in fields:
+            sections["devicetree"] = deepcopy(fields["devicetree"])
     if apps:
         sections["apps"] = apps
     if packages:

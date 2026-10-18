@@ -19,7 +19,8 @@
 native Kconfig 配置入口。
 命令参考介绍任务开始前的规划进度、详细任务输出和 RT-Thread 内核详细构建。
 
-支持的板卡说明介绍 AArch64 和 RISC-V virt 板卡默认使用的 QEMU 设备树。
+支持的板卡说明介绍 AArch64 和 RISC-V virt 板卡默认使用的 QEMU 设备树；命令
+参考介绍自定义 DTS/DTB 转换、QEMU DTB 导出和启动时设备树选择。
 
 命令参考同时说明可选的 Buildroot 软件包导入流程。Buildroot 只用于选择软件包，
 导入后的软件包使用 smart-build 元数据，并在普通构建时下载上游源码。永不导入名单会

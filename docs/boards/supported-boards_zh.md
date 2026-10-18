@@ -31,7 +31,8 @@ QEMU 支持取决于具体 profile。在板卡描述中填写任意 QEMU 值，�
 
 两个 virt 板卡的内核 defconfig 均启用 `RT_USING_DM` 和 `RT_USING_OFW`，
 并关闭 `RT_USING_BUILTIN_FDT`。默认情况下 QEMU 在启动时传入包含内核命令行的
-DTB，无需单独编译 DTS 或指定 `-dtb`。串口、中断控制器和 virtio-mmio 驱动通过
+DTB，无需单独编译 DTS 或指定 `-dtb`。板卡也可以通过可选的
+`devicetree.source` 编译或部署自定义 DTB。串口、中断控制器和 virtio-mmio 驱动通过
 设备树发现设备。RISC-V 板卡使用统一 RISC-V 移植层
 （`RT_USING_RISCV_NEW_COMMON`）、8250 串口驱动和 SiFive PLIC；命令行设置
 `earlycon=sbi`，并通过 `cma=8M coherent_pool=2M` 预留 DMA 内存。

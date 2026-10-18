@@ -45,6 +45,12 @@ qemu:
   profile: virt-aarch64
   machine: virt
   cpu: max
+
+# 可选的自定义设备树。省略此段时使用 QEMU 自动 DTB。
+devicetree:
+  source: devicetree/virt.dts
+  include_dirs:
+    - devicetree/include
 ```
 
 必填字段包括 `arch`、`bsp`、`kernel_defconfig`，除可选 `loader` 外的四个
@@ -56,6 +62,12 @@ toolchain 字符串，以及 QEMU 的 `binary`、`profile` 和 `machine`。
 前缀。旧板卡可以不声明 `toolchain.versions`；新增条目可以指定软件包名称和
 经过校验的 HTTPS `source`（URL、归档文件名和 SHA-256）。没有 `source` 的条目
 需要由 Env SDK 安装，或通过 `TOOLCHAIN_PATH` 提供。
+
+可选的 `devicetree.source` 必须是板卡目录内已存在的 `.dts` 或 `.dtb`。DTS 会由
+宿主机 `cpp` 预处理并由 `dtc` 编译；DTB 会先校验再复制到机器镜像目录。
+`include_dirs` 也必须位于板卡目录内。所选 QEMU virt 启动脚本默认使用自定义
+DTB；冒烟测试时可以选择 QEMU 自动 DTB 或另一个显式 DTB。可选的
+`qemu.bootargs` 字符串可以替换 profile 的默认内核命令行。
 
 ## 添加 Kconfig 选项
 

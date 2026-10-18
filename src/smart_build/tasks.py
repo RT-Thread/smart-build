@@ -236,6 +236,19 @@ def create_default_plan(
         )
         kernel_plan_tasks = [kernel_package_task, kernel_task]
 
+    tree_tasks = []
+    if resolve_real:
+        from .domains.devicetree import devicetree_task
+        from .machines import load_machine
+
+        metadata = machine if isinstance(machine, Machine) else load_machine(paths.root, paths.machine)
+        if metadata.devicetree_source is not None:
+            report_phase("analyzing device tree")
+            tree_tasks = [devicetree_task(paths, metadata)]
+            kernel_plan_tasks[-1] = replace(
+                kernel_plan_tasks[-1], deps=(*kernel_plan_tasks[-1].deps, "devicetree:build")
+            )
+
     minirootfs_tasks = (
         _minirootfs_tasks(paths, toolchain, selection=rootfs_selection, force_minirootfs=force_minirootfs_image)
         if resolve_real and real_minirootfs and include_package_rootfs
@@ -286,9 +299,11 @@ def create_default_plan(
 
         qemu_task = qemu_script_task(paths)
         if rootfs_selection is not None and not rootfs_disabled:
-            qemu_task = replace(qemu_task, deps=tuple(_qemu_placeholder_deps(rootfs_task_ids)))
+            qemu_task = replace(qemu_task, deps=tuple(dict.fromkeys(
+                (*qemu_task.deps, *_qemu_placeholder_deps(rootfs_task_ids))
+            )))
         elif rootfs_disabled:
-            qemu_task = replace(qemu_task, deps=("kernel:build",))
+            qemu_task = replace(qemu_task, deps=tuple(dict.fromkeys(("kernel:build", *qemu_task.deps))))
     else:
         qemu_task = _placeholder_task(
             "qemu-script:generate",
@@ -316,6 +331,7 @@ def create_default_plan(
         config_task,
         toolchain_task,
         rt_thread_task,
+        *tree_tasks,
         *kernel_plan_tasks,
         *minirootfs_tasks[:-2],
         *([rootfs_task] if rootfs_task is not None else []),
@@ -336,6 +352,15 @@ def tasks_for_target(
     verbose=False,
 ):
     report_phase("resolving configuration")
+    if target == "devicetree":
+        if resolve_real:
+            from .domains.devicetree import devicetree_task
+
+            return [devicetree_task(paths, machine if isinstance(machine, Machine) else None)]
+        return [_placeholder_task(
+            "devicetree:build", "devicetree", "build", [],
+            [paths.images_dir / "qemu.dtb"], [], paths,
+        )]
     rootfs_selection = _rootfs_selection_for_target(target, paths)
     _reject_disabled_rootfs_target(target, paths, selection=rootfs_selection)
     _reject_unsupported_package_target(target, paths, selection=rootfs_selection)

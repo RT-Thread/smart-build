@@ -8,6 +8,7 @@ from ..errors import SmartBuildError
 from ..machines import load_machine
 from ..paths import board_defconfig_path
 from ..tasks import Task
+from .devicetree import CUSTOM_DTB_NAME, DEVICETREE_TASK_ID, VIRT_PROFILES, validate_dtb
 
 
 QEMU_SCRIPT_TASK_ID = "qemu-script:generate"
@@ -43,11 +44,11 @@ def qemu_script_task(paths):
         "machine": machine.qemu_machine,
         "cpu": machine.qemu_cpu,
         "rootfs_format": rootfs_format,
+        "devicetree_mode": "custom" if machine.devicetree_source else "automatic",
+        "dtb": str(paths.images_dir / CUSTOM_DTB_NAME) if machine.devicetree_source else None,
     }
-    if machine.qemu_profile == "virt-aarch64":
-        manifest["bootargs"] = _aarch64_bootargs(rootfs_format)
-    elif machine.qemu_profile == "virt-riscv64":
-        manifest["bootargs"] = _riscv64_bootargs(rootfs_format)
+    if "-append" in command:
+        manifest["bootargs"] = command[command.index("-append") + 1]
     manifest.update(_rootfs_manifest(paths, machine))
     return Task(
         id=QEMU_SCRIPT_TASK_ID,
@@ -55,7 +56,7 @@ def qemu_script_task(paths):
         action="script",
         inputs=[],
         outputs=[script],
-        deps=["kernel:build"],
+        deps=["kernel:build", *([DEVICETREE_TASK_ID] if machine.devicetree_source else [])],
         workdir=paths.work_dir / "qemu-script",
         env={"MACHINE": paths.machine},
         run_class="serial",
@@ -67,7 +68,14 @@ def qemu_script_task(paths):
     )
 
 
-def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
+def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT, dtb=None, bootargs=None):
+    if dtb is None and getattr(machine, "devicetree_source", None) is not None:
+        dtb = f"images/{CUSTOM_DTB_NAME}"
+    if machine.qemu_profile not in VIRT_PROFILES and (
+        dtb is not None or bootargs is not None or getattr(machine, "devicetree_source", None)
+        or getattr(machine, "qemu_bootargs", None) is not None
+    ):
+        raise SmartBuildError("CONFIG", "device tree and bootargs overrides require a QEMU virt profile")
     if machine.qemu_profile == "virt-aarch64":
         if not machine.qemu_cpu:
             raise SmartBuildError("CONFIG", "qemu profile 'virt-aarch64' requires qemu.cpu")
@@ -83,8 +91,7 @@ def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
             "256M",
             "-kernel",
             "images/rtthread.bin",
-            "-append",
-            _aarch64_bootargs(rootfs_format),
+            *_virt_tree_args(machine, rootfs_format, dtb, bootargs),
             "-nographic",
             "-serial",
             "mon:stdio",
@@ -112,8 +119,7 @@ def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
             "256M",
             "-kernel",
             "images/rtthread.bin",
-            "-append",
-            _riscv64_bootargs(rootfs_format),
+            *_virt_tree_args(machine, rootfs_format, dtb, bootargs),
             "-nographic",
             "-global",
             "virtio-mmio.force-legacy=false",
@@ -144,8 +150,28 @@ def qemu_command(machine, rootfs_format=DEFAULT_ROOTFS_IMAGE_FORMAT):
     raise SmartBuildError("CONFIG", f"unsupported qemu profile {machine.qemu_profile!r}")
 
 
-def run_qemu_smoke(paths, timeout_seconds=30, rootfs_image=None, env=None):
+def _virt_tree_args(machine, rootfs_format, dtb, bootargs):
+    if bootargs is None:
+        bootargs = getattr(machine, "qemu_bootargs", None)
+    if bootargs is None:
+        bootargs = (
+            _aarch64_bootargs(rootfs_format) if machine.qemu_profile == "virt-aarch64"
+            else _riscv64_bootargs(rootfs_format)
+        )
+    if not isinstance(bootargs, str) or "\0" in bootargs:
+        raise SmartBuildError("CONFIG", "QEMU bootargs must be a string without NUL bytes")
+    return ["-append", bootargs, *(["-dtb", str(dtb)] if dtb is not None and dtb is not False else [])]
+
+
+def run_qemu_smoke(
+    paths, timeout_seconds=30, rootfs_image=None, env=None, dtb=None, auto_dtb=False, bootargs=None,
+):
     machine = load_machine(paths.root, paths.machine)
+    if dtb is not None and auto_dtb:
+        raise SmartBuildError("CONFIG", "--dtb and --auto-dtb are mutually exclusive")
+    if (dtb is not None or auto_dtb or bootargs is not None) and machine.qemu_profile not in VIRT_PROFILES:
+        raise SmartBuildError("CONFIG", "device tree and bootargs overrides require a QEMU virt profile")
+    tree = validate_dtb(dtb) if dtb is not None else None
     launcher = paths.machine_dir / QEMU_SCRIPT_NAME
     log_path = paths.logs_dir / QEMU_SMOKE_LOG_NAME
     if not launcher.is_file():
@@ -153,6 +179,16 @@ def run_qemu_smoke(paths, timeout_seconds=30, rootfs_image=None, env=None):
     rootfs_argument, cleanup_paths = _qemu_smoke_rootfs_argument(paths, machine, rootfs_image)
 
     command = [str(launcher), *rootfs_argument]
+    if tree is not None:
+        command.extend(["--dtb", str(tree)])
+    elif auto_dtb:
+        command.append("--auto-dtb")
+    if bootargs is not None:
+        if not isinstance(bootargs, str) or "\0" in bootargs:
+            for path in cleanup_paths:
+                path.unlink(missing_ok=True)
+            raise SmartBuildError("CONFIG", "QEMU bootargs must be a string without NUL bytes")
+        command.extend(["--append", bootargs])
     paths.logs_dir.mkdir(parents=True, exist_ok=True)
     try:
         try:
@@ -329,24 +365,34 @@ def _write_qemu_script(script, command, machine, default_image=DEFAULT_ROOTFS_IM
 
 def _script_text(command, machine, default_image=DEFAULT_ROOTFS_IMAGE):
     if _qemu_profile_accepts_rootfs_image(machine.qemu_profile):
-        return _virt_script_text(command, default_image)
+        return _virt_script_text(command, default_image, machine)
     raise SmartBuildError("CONFIG", f"unsupported qemu profile {machine.qemu_profile!r}")
 
 
-def _virt_script_text(command, default_image=DEFAULT_ROOTFS_IMAGE):
+def _virt_script_text(command, default_image, machine):
+    supports_tree = machine.qemu_profile in VIRT_PROFILES
+    tree_usage = " [--dtb FILE|--auto-dtb] [--append TEXT]" if supports_tree else ""
+    default_dtb = '"${SCRIPT_DIR}/images/devicetree.dtb"' if getattr(machine, "devicetree_source", None) else "''"
+    bootargs = command[command.index("-append") + 1] if supports_tree else ""
     return (
         f"{_script_header()}"
         'usage() {\n'
-        '    echo "usage: $(basename "$0") [minirootfs.img|busybox-rootfs.img|rootfs.img]" >&2\n'
+        f'    echo "usage: $(basename "$0") [minirootfs.img|busybox-rootfs.img|rootfs.img]{tree_usage}" >&2\n'
         "}\n"
-        f"{_rootfs_argument_text(default_image)}"
+        f"DTB={default_dtb}\n"
+        f"BOOTARGS={shlex.quote(bootargs)}\n"
+        f"{_rootfs_argument_text(default_image, supports_tree)}"
         f"{_kernel_check_text()}"
         'if [ ! -f "${ROOTFS}" ]; then\n'
         '    echo "missing rootfs image: ${ROOTFS}" >&2\n'
         "    exit 1\n"
         "fi\n"
         "\n"
-        f"{_qemu_command_text(command)}\n"
+        'if [ -n "${DTB}" ] && [ ! -f "${DTB}" ]; then\n'
+        '    echo "missing device tree: ${DTB}" >&2\n'
+        '    exit 1\n'
+        'fi\n'
+        f"{_qemu_command_text(command, supports_tree)}\n"
     )
 
 
@@ -374,16 +420,38 @@ def _script_header():
     )
 
 
-def _rootfs_argument_text(default_image=DEFAULT_ROOTFS_IMAGE):
+def _rootfs_argument_text(default_image=DEFAULT_ROOTFS_IMAGE, supports_tree=False):
+    tree_options = (
+        '        --dtb|--auto-dtb)\n'
+        '            if [ "${DTB_SET}" -ne 0 ]; then usage; exit 2; fi\n'
+        '            DTB_SET=1\n'
+        '            if [ "$1" = "--auto-dtb" ]; then\n'
+        '                DTB=""; shift\n'
+        '            else\n'
+        '                if [ "$#" -lt 2 ] || [ -z "$2" ]; then usage; exit 2; fi\n'
+        '                DTB="$2"; shift 2\n'
+        '            fi\n'
+        '            ;;\n'
+        '        --append)\n'
+        '            if [ "$#" -lt 2 ]; then usage; exit 2; fi\n'
+        '            BOOTARGS="$2"; shift 2\n'
+        '            ;;\n'
+    ) if supports_tree else ""
     return (
-        'if [ "$#" -gt 1 ]; then\n'
-        "    usage\n"
-        "    exit 2\n"
-        "fi\n"
         f'ROOTFS_IMAGE="{default_image}"\n'
-        'if [ "$#" -eq 1 ]; then\n'
-        '    ROOTFS_IMAGE="$1"\n'
-        "fi\n"
+        'ROOTFS_SET=0\n'
+        'DTB_SET=0\n'
+        'while [ "$#" -gt 0 ]; do\n'
+        '    case "$1" in\n'
+        f'{tree_options}'
+        '        --help|-h) usage; exit 0 ;;\n'
+        '        -*) usage; exit 2 ;;\n'
+        '        *)\n'
+        '            if [ "${ROOTFS_SET}" -ne 0 ]; then usage; exit 2; fi\n'
+        '            ROOTFS_SET=1; ROOTFS_IMAGE="$1"; shift\n'
+        '            ;;\n'
+        '    esac\n'
+        'done\n'
         'case "${ROOTFS_IMAGE}" in\n'
         "    minirootfs.img|busybox-rootfs.img|rootfs.img|qemu-smoke-minirootfs.img|qemu-smoke-busybox-rootfs.img|qemu-smoke-rootfs.img) ;;\n"
         "    *)\n"
@@ -407,11 +475,24 @@ def _kernel_check_text():
     )
 
 
-def _qemu_command_text(command):
-    parts = [_script_command_part(part) for part in command]
+def _qemu_command_text(command, supports_tree=False):
+    parts = []
+    index = 0
+    while index < len(command):
+        part = command[index]
+        if supports_tree and part == "-dtb":
+            index += 2
+            continue
+        if supports_tree and index > 0 and command[index - 1] == "-append":
+            parts.append('"${BOOTARGS}"')
+        else:
+            parts.append(_script_command_part(part))
+        index += 1
     lines = ["cmd=("]
     lines.extend(f"  {part}" for part in parts)
     lines.append(")")
+    if supports_tree:
+        lines.extend(['if [ -n "${DTB}" ]; then', '  cmd+=(-dtb "${DTB}")', 'fi'])
     lines.append('exec "${cmd[@]}"')
     return "\n".join(lines)
 

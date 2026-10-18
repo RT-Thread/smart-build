@@ -22,9 +22,10 @@ The command reference describes planning progress before tasks start, verbose
 task output, and detailed RT-Thread kernel builds.
 
 The supported boards guide covers the default QEMU-supplied device tree on
-the AArch64 and RISC-V virt boards.
+the AArch64 and RISC-V virt boards. The command reference covers custom DTS
+and DTB conversion, QEMU DTB capture, and launch-time tree selection.
 
-It also documents the optional Buildroot package import workflow. Buildroot is
+The command reference also documents the optional Buildroot package import workflow. Buildroot is
 used to select packages; imported packages use smart-build metadata and fetch
 their upstream sources during normal builds. A never-import list blocks C
 libraries, Linux kernel packages, packages that need kernel features
