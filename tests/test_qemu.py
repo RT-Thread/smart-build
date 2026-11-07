@@ -21,6 +21,8 @@ def test_virt_kernel_defaults_use_qemu_device_tree(machine, serial_driver, inter
     config = load_defconfig(root / "boards" / machine / "kernel_defconfig")
     for symbol in (
         "RT_USING_SMART",
+        "RT_USING_DFS_PROCFS",
+        "RT_USING_DFS_PROCFS_OFW",
         "RT_USING_DM",
         "RT_USING_OFW",
         "RT_USING_DMA",

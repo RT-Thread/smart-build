@@ -39,3 +39,6 @@ DTB，无需单独编译 DTS 或指定 `-dtb`。板卡也可以通过可选的
 QEMU CPU 关闭 Sv48/Sv57，以匹配 Smart 内核的 Sv39 虚拟地址布局，
 virtio-mmio 使用现代传输模式。
 vexpress-a9 板卡保留现有的非 OFW 配置。
+
+两个 virt 内核配置还启用了 `RT_USING_DFS_PROCFS_OFW`。已解析的设备树通过
+`/proc/device-tree` 只读访问：节点对应目录，属性文件返回设备树原始字节。

@@ -107,6 +107,8 @@ QEMU virt machines use an automatic device tree by default. Custom board
 and compiles DTS files, validates DTBs, and exposes `devicetree dump` and
 `devicetree decompile`. Launchers and `qemu-smoke` accept `--auto-dtb`,
 `--dtb FILE`, and `--append TEXT`.
+The AArch64 and RISC-V virt kernels also expose the active OFW tree read-only
+at `/proc/device-tree`; property files contain the raw device-tree bytes.
 
 Independent RT-Thread SCons packages with native Kconfig, such as `webclient`,
 use the package configure command to open their RT-Thread package options.

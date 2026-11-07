@@ -100,6 +100,8 @@ QEMU virt 机器默认使用自动设备树。板卡可通过 `devicetree.source
 或 `.dtb`；smart-build 会预处理并编译 DTS、校验 DTB，并提供
 `devicetree dump` 与 `devicetree decompile`。启动脚本和 `qemu-smoke` 支持
 `--auto-dtb`、`--dtb FILE` 和 `--append TEXT`。
+AArch64 和 RISC-V virt 内核还会在 `/proc/device-tree` 只读导出当前 OFW 树；
+属性文件保留设备树中的原始字节。
 
 `webclient` 等使用 native Kconfig 的独立 RT-Thread SCons 包，可以通过软件包
 configure 命令进入其 RT-Thread 软件包配置界面。
