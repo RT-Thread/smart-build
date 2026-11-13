@@ -44,3 +44,7 @@ its command line selects `earlycon=sbi` and reserves DMA memory with
 `cma=8M coherent_pool=2M`. Its QEMU CPU disables Sv48/Sv57 to match the Smart
 kernel's Sv39 virtual address layout, and virtio-mmio uses modern transport.
 The vexpress-a9 board retains its existing non-OFW configuration.
+
+Both virt kernel defconfigs also enable `RT_USING_DFS_PROCFS_OFW`. The parsed
+tree is available read-only at `/proc/device-tree`; directories represent OFW
+nodes and property files return their raw device-tree bytes.
