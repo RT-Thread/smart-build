@@ -36,6 +36,9 @@ def test_virt_kernel_defaults_use_qemu_device_tree(machine, serial_driver, inter
     ):
         assert config.get(f"CONFIG_{symbol}") == "y", symbol
     assert config["CONFIG_RT_USING_BUILTIN_FDT"] == "n"
+    assert config["CONFIG_RT_USING_FDT"] == "n"
+    assert config["CONFIG_RT_USING_LEGACY_VIRTIO"] == "n"
+    assert config["CONFIG_RT_VER_NUM"] == "0x50400"
     assert config["CONFIG_RT_VIRTIO_9P"] == "n"
     assert config["CONFIG_RT_VIRTIO_GPU"] == "n"
     if machine == "qemu-virt-riscv64":
